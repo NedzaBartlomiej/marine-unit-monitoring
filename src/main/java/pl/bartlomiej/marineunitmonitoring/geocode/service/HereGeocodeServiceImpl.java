@@ -1,9 +1,12 @@
 package pl.bartlomiej.marineunitmonitoring.geocode.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,8 +17,13 @@ import reactor.core.publisher.Flux;
 @Slf4j
 @RequiredArgsConstructor
 public class HereGeocodeServiceImpl implements GeocodeService {
-    private static final String GEOCODE_API_KEY = "TQeBKTVelWEdjylTOY9K6XAXapgtQ3CxZa830ZToHh8";
+
+    public static final String LAT = "lat";
+    public static final String LNG = "lng";
+    public static final int FIRST_GEOCODE_SUGGESTION = 0;
     private final WebClient webClient;
+    @Value("${secrets.geocode-api.api-key}")
+    private String GEOCODE_API_KEY;
 
     @Cacheable("AddressCoords")
     public Flux<Position> getAddressCoords(String address) {
@@ -28,7 +36,7 @@ public class HereGeocodeServiceImpl implements GeocodeService {
     private Flux<JsonNode> getGeocodeFromApi(String address) {
         if (address == null || address.trim().isEmpty()) {
             log.error("Null address, skipping request sending.");
-            return Flux.empty();
+            return Flux.just(this.createDefaultPositionNode());
         }
         return webClient
                 .get()
@@ -39,8 +47,8 @@ public class HereGeocodeServiceImpl implements GeocodeService {
 
     private Position getPositionFromResponse(JsonNode response, String address) {
         try {
-            JsonNode position = response.get("items").get(0).get("position");
-            return new Position(position.get("lat").asDouble(), position.get("lng").asDouble());
+            JsonNode position = response.get("items").get(FIRST_GEOCODE_SUGGESTION).get("position");
+            return new Position(position.get(LAT).asDouble(), position.get(LNG).asDouble());
         } catch (NullPointerException e) {
             log.error("Geocode not found for: {}", address);
             return new Position(0, 0);
@@ -51,5 +59,12 @@ public class HereGeocodeServiceImpl implements GeocodeService {
         return "https://geocode.search.hereapi.com/v1/geocode?q=" +
                 address +
                 "&apiKey=" + GEOCODE_API_KEY;
+    }
+
+    private JsonNode createDefaultPositionNode() {
+        ObjectNode positionNode = JsonNodeFactory.instance.objectNode();
+        positionNode.put(LAT, 0);
+        positionNode.put(LNG, 0);
+        return positionNode;
     }
 }

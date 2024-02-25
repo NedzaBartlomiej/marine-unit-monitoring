@@ -1,4 +1,26 @@
+spring:
+  cache:
+    type: redis
 logging:
   level:
     web: debug
     org.springframework.cache: debug
+    org.springframework.data.redis.cache: debug
+    org.springframework.data.redis: debug
+secrets:
+  ais-api:
+    auth:
+      url: https://id.barentswatch.no/connect/token
+      client-id: bartek21122006@gmail.com:bartek21122006@gmail.com
+      scope: ais
+      client-secret: Bartek2006bartek
+      grant-type: client_credentials
+    latest-ais-url: https://live.ais.barentswatch.no/v1/latest/combined?modelType=Full&modelFormat=Geojson
+  geocode-api:
+    api-key: TQeBKTVelWEdjylTOY9K6XAXapgtQ3CxZa830ZToHh8
+#vars:
+#  cache:
+#    address-coords:
+#      name: AddressCoords
+#    ais-auth-token:
+#      name: AisAuthToken

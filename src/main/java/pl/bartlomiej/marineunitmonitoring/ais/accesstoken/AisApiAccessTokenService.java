@@ -3,14 +3,13 @@ package pl.bartlomiej.marineunitmonitoring.ais.accesstoken;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
-import java.time.Duration;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
@@ -21,14 +20,19 @@ import static org.springframework.web.reactive.function.BodyInserters.fromFormDa
 @RequiredArgsConstructor
 public class AisApiAccessTokenService {
 
-    private static final String CLIENT_ID = "bartek21122006@gmail.com:bartek21122006@gmail.com";
-    private static final String SCOPE = "ais";
-    private static final String CLIENT_SECRET = "Bartek2006bartek";
-    private static final String GRANT_TYPE = "client_credentials";
-    private static final String ACCESS_TOKEN_API_URL = "https://id.barentswatch.no/connect/token";
     private final WebClient webClient;
+    @Value("${secrets.ais-api.auth.client-id}")
+    private String CLIENT_ID;
+    @Value("${secrets.ais-api.auth.scope}")
+    private String SCOPE;
+    @Value("${secrets.ais-api.auth.client-secret}")
+    private String CLIENT_SECRET;
+    @Value("${secrets.ais-api.auth.grant-type}")
+    private String GRANT_TYPE;
+    @Value("${secrets.ais-api.auth.url}")
+    private String ACCESS_TOKEN_API_URL;
 
-    private static MultiValueMap<String, String> getAuthBody() {
+    private MultiValueMap<String, String> getAuthBody() {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("client_id", CLIENT_ID);
         body.add("scope", SCOPE);

@@ -6,8 +6,6 @@ import org.springframework.web.bind.annotation.RestController;
 import pl.bartlomiej.marineunitmonitoring.ais.service.AisService;
 import reactor.core.publisher.Flux;
 
-import java.time.Duration;
-
 import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
 
 @RestController
