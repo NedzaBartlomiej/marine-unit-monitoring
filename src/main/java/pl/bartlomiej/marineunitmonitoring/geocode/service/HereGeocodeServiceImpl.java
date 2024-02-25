@@ -1,45 +1,39 @@
 package pl.bartlomiej.marineunitmonitoring.geocode.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.geocode.Position;
-
-import static org.springframework.http.HttpMethod.GET;
+import reactor.core.publisher.Flux;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class HereGeocodeServiceImpl implements GeocodeService {
-    private static final String GEOCODE_API_KEY = "dcHxXlEttoO4p9UOC6mGknjJHIwQpcrMizZ9qecuLSc";
-    private final RestTemplate restTemplate;
+    private static final String GEOCODE_API_KEY = "efxdpJLDw0gSytalN90kAh8L63kk6X8Yrmb2Gfa6Q2o";
+    private final WebClient webClient;
 
-    @Cacheable(cacheNames = "AddressCoords")
-    @Override
-    public Position getAddressCoords(String address) {
-        return this.getPositionFromResponse(this.getGeocodeFromApi(address), address);
+    //    @Cacheable(cacheNames = "AddressCoords")
+    public Flux<Position> getAddressCoords(String address) {
+        return this.getGeocodeFromApi(address)
+                .map(response -> this.getPositionFromResponse(response, address));
     }
 
-    @SneakyThrows
-    private JsonNode getGeocodeFromApi(String address) {
-        if (address == null) {
+    @NonNull
+    private Flux<JsonNode> getGeocodeFromApi(String address) {
+        if (address == null || address.trim().isEmpty()) {
             log.error("Null address, skipping request sending.");
-            return null;
+            return Flux.empty();
         }
-        ResponseEntity<JsonNode> exchange = restTemplate.exchange(
-                getGeocodeApiUrl(address),
-                GET,
-                HttpEntity.EMPTY,
-                JsonNode.class);
         log.info("Requesting geocode for address: {}", address);
-        Thread.sleep(250);
-        return exchange.getBody();
+        return webClient
+                .get()
+                .uri(this.getGeocodeApiUrl(address))
+                .retrieve()
+                .bodyToFlux(JsonNode.class);
     }
 
     private Position getPositionFromResponse(JsonNode response, String address) {

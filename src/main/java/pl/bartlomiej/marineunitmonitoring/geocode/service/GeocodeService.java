@@ -1,7 +1,8 @@
 package pl.bartlomiej.marineunitmonitoring.geocode.service;
 
 import pl.bartlomiej.marineunitmonitoring.geocode.Position;
+import reactor.core.publisher.Flux;
 
 public interface GeocodeService {
-    Position getAddressCoords(String address);
+    Flux<Position> getAddressCoords(String address);
 }
