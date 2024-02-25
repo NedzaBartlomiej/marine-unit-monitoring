@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.geocode.Position;
@@ -13,13 +14,14 @@ import reactor.core.publisher.Flux;
 @Slf4j
 @RequiredArgsConstructor
 public class HereGeocodeServiceImpl implements GeocodeService {
-    private static final String GEOCODE_API_KEY = "efxdpJLDw0gSytalN90kAh8L63kk6X8Yrmb2Gfa6Q2o";
+    private static final String GEOCODE_API_KEY = "TQeBKTVelWEdjylTOY9K6XAXapgtQ3CxZa830ZToHh8";
     private final WebClient webClient;
 
-    //    @Cacheable(cacheNames = "AddressCoords")
+    @Cacheable("AddressCoords")
     public Flux<Position> getAddressCoords(String address) {
         return this.getGeocodeFromApi(address)
-                .map(response -> this.getPositionFromResponse(response, address));
+                .map(response -> this.getPositionFromResponse(response, address))
+                .cache();
     }
 
     @NonNull
@@ -28,7 +30,6 @@ public class HereGeocodeServiceImpl implements GeocodeService {
             log.error("Null address, skipping request sending.");
             return Flux.empty();
         }
-        log.info("Requesting geocode for address: {}", address);
         return webClient
                 .get()
                 .uri(this.getGeocodeApiUrl(address))

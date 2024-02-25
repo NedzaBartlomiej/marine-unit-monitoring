@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.map;
+package pl.bartlomiej.marineunitmonitoring.point;
 
 public record Point(
         String name,

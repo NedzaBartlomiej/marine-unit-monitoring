@@ -2,13 +2,16 @@ package pl.bartlomiej.marineunitmonitoring.ais.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.Ais;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
 import pl.bartlomiej.marineunitmonitoring.geocode.service.GeocodeService;
-import pl.bartlomiej.marineunitmonitoring.map.Point;
+import pl.bartlomiej.marineunitmonitoring.point.Point;
 import reactor.core.publisher.Flux;
+
+import java.time.Duration;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
@@ -16,7 +19,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @RequiredArgsConstructor
 @Slf4j
 public class AisServiceImpl implements AisService {
-    public static final long RESULT_LIMIT = 50L;
+    public static final long RESULT_LIMIT = 3L;
     private static final int X_CORDS_INDEX = 0;
     private static final int Y_CORDS_INDEX = 1;
     private static final String AIS_API_URL = "https://live.ais.barentswatch.no/v1/latest/combined?modelType=Full&modelFormat=Geojson";
@@ -24,8 +27,6 @@ public class AisServiceImpl implements AisService {
     private final AisApiAccessTokenService accessTokenService;
     private final WebClient webClient;
 
-    //todo cache
-//    @Cacheable("LatestAisPoints")
     public Flux<Point> getLatestAisPoints() {
         return this.getAisesFromApi()
                 .take(RESULT_LIMIT)
@@ -45,7 +46,7 @@ public class AisServiceImpl implements AisService {
     }
 
     private Flux<Ais> getAisesFromApi() {
-        return accessTokenService.getRefreshedToken()
+        return accessTokenService.getAisAuthToken()
                 .flatMapMany(token -> webClient
                         .get()
                         .uri(AIS_API_URL)

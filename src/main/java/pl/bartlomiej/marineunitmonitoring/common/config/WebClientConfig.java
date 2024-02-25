@@ -44,4 +44,5 @@ public class WebClientConfig {
     private boolean isTooManyRequestsException(final Throwable throwable) {
         return throwable instanceof WebClientResponseException.TooManyRequests;
     }
+    
 }

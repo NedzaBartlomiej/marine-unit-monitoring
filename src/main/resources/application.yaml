@@ -1,4 +1,4 @@
-spring:
-  cache:
-    jcache:
-      config: classpath:ehcache.xml
+logging:
+  level:
+    web: debug
+    org.springframework.cache: debug
