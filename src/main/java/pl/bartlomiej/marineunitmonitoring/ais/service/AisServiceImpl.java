@@ -44,6 +44,8 @@ public class AisServiceImpl implements AisService {
                 ));
     }
 
+
+    //todo: for history: modifier -> package-private -> to AisHistoryService
     private Flux<Ais> getAisesFromApi() {
         return accessTokenService.getAisAuthToken()
                 .flatMapMany(token -> webClient

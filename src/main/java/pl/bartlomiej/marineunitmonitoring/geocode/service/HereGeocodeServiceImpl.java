@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import pl.bartlomiej.marineunitmonitoring.common.cache.CacheNameProvider;
 import pl.bartlomiej.marineunitmonitoring.geocode.Position;
 import reactor.core.publisher.Flux;
 
@@ -22,10 +23,11 @@ public class HereGeocodeServiceImpl implements GeocodeService {
     public static final String LNG = "lng";
     public static final int FIRST_GEOCODE_SUGGESTION = 0;
     private final WebClient webClient;
+    private final CacheNameProvider cacheNameProvider;
     @Value("${secrets.geocode-api.api-key}")
     private String GEOCODE_API_KEY;
 
-    @Cacheable("AddressCoords")
+    @Cacheable(cacheNames = "#{cacheNameProvider.getAddressCoordsName()}")
     public Flux<Position> getAddressCoords(String address) {
         return this.getGeocodeFromApi(address)
                 .map(response -> this.getPositionFromResponse(response, address))

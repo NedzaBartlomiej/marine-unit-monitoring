@@ -18,9 +18,9 @@ secrets:
     latest-ais-url: https://live.ais.barentswatch.no/v1/latest/combined?modelType=Full&modelFormat=Geojson
   geocode-api:
     api-key: TQeBKTVelWEdjylTOY9K6XAXapgtQ3CxZa830ZToHh8
-#vars:
-#  cache:
-#    address-coords:
-#      name: AddressCoords
-#    ais-auth-token:
-#      name: AisAuthToken
+vars:
+  cache:
+    address-coords:
+      name: AddressCoords
+    ais-auth-token:
+      name: AisAuthToken
