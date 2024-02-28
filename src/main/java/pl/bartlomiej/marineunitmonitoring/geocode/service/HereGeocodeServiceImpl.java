@@ -53,7 +53,7 @@ public class HereGeocodeServiceImpl implements GeocodeService {
             return new Position(position.get(LAT).asDouble(), position.get(LNG).asDouble());
         } catch (NullPointerException e) {
             log.error("Geocode not found for: {}", address);
-            return new Position(0, 0);
+            return new Position(0.0, 0.0);
         }
     }
 

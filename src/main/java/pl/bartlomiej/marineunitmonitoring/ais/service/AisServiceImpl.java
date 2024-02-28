@@ -35,6 +35,7 @@ public class AisServiceImpl implements AisService {
     private Flux<Point> mapAisToPoint(Ais ais) {
         return geocodeService.getAddressCoords(ais.properties().destination())
                 .map(position -> new Point(
+                        ais.properties().mmsi(),
                         ais.properties().name() == null ? "UNKNOWN (not reported)" : ais.properties().name(),
                         ais.geometry().coordinates().get(X_CORDS_INDEX),
                         ais.geometry().coordinates().get(Y_CORDS_INDEX),
