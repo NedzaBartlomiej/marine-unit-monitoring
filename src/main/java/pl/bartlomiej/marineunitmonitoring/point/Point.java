@@ -4,9 +4,9 @@ public record Point(
 
         Long mmsi,
         String name,
-        double pointX,
-        double pointY,
+        Double pointX,
+        Double pointY,
         String destinationName,
-        double destinationX,
-        double destinationY) {
+        Double destinationX,
+        Double destinationY) {
 }

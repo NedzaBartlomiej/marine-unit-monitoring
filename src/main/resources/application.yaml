@@ -1,4 +1,9 @@
 spring:
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: marine_unit_monitoring
   cache:
     type: redis
 logging:
@@ -16,6 +21,7 @@ secrets:
       client-secret: Bartek2006bartek
       grant-type: client_credentials
     latest-ais-url: https://live.ais.barentswatch.no/v1/latest/combined?modelType=Full&modelFormat=Geojson
+    latest-ais-bymmsi-url: https://live.ais.barentswatch.no/v1/latest/combined
   geocode-api:
     api-key: TQeBKTVelWEdjylTOY9K6XAXapgtQ3CxZa830ZToHh8
 vars:
@@ -24,3 +30,5 @@ vars:
       name: AddressCoords
     ais-auth-token:
       name: AisAuthToken
+
+#todo: re-arange secrets and vars (urls not secrets)

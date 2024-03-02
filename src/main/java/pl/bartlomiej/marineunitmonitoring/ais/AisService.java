@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.ais.service;
+package pl.bartlomiej.marineunitmonitoring.ais;
 
 import pl.bartlomiej.marineunitmonitoring.point.Point;
 import reactor.core.publisher.Flux;

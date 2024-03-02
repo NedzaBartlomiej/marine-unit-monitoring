@@ -50,7 +50,7 @@ public class HereGeocodeServiceImpl implements GeocodeService {
     private Position getPositionFromResponse(JsonNode response, String address) {
         try {
             JsonNode position = response.get("items").get(FIRST_GEOCODE_SUGGESTION).get("position");
-            return new Position(position.get(LAT).asDouble(), position.get(LNG).asDouble());
+            return new Position(position.get(LNG).asDouble(), position.get(LAT).asDouble());
         } catch (NullPointerException e) {
             log.error("Geocode not found for: {}", address);
             return new Position(0.0, 0.0);
@@ -65,8 +65,8 @@ public class HereGeocodeServiceImpl implements GeocodeService {
 
     private JsonNode createDefaultPositionNode() {
         ObjectNode positionNode = JsonNodeFactory.instance.objectNode();
-        positionNode.put(LAT, 0);
-        positionNode.put(LNG, 0);
+        positionNode.put(LNG, 0.0);
+        positionNode.put(LAT, 0.0);
         return positionNode;
     }
 }

@@ -3,7 +3,7 @@ package pl.bartlomiej.marineunitmonitoring.geocode;
 import java.io.Serializable;
 
 public record Position(
-        Double lat,
-        Double lng
+        Double x,
+        Double y
 ) implements Serializable {
 }
