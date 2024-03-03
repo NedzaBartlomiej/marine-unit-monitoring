@@ -21,16 +21,18 @@ import static org.springframework.data.redis.cache.RedisCacheConfiguration.defau
 @Slf4j
 public class RedisCacheConfig {
 
+    public static final String AIS_AUTH_TOKEN_CACHE_NAME = "AisAuthToken";
+    public static final String ADDRESS_COORDS_CACHE_NAME = "AddressCoords";
     private final AisApiAccessTokenService accessTokenService;
 
     @Bean
     public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
         return builder -> builder
                 .withCacheConfiguration(
-                        "AisAuthToken",
+                        AIS_AUTH_TOKEN_CACHE_NAME,
                         defaultCacheConfig().entryTtl(ofHours(1)))
                 .withCacheConfiguration(
-                        "AddressCoords",
+                        ADDRESS_COORDS_CACHE_NAME,
                         defaultCacheConfig()
                 );
     }

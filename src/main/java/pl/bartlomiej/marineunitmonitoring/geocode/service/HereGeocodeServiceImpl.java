@@ -13,6 +13,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.geocode.Position;
 import reactor.core.publisher.Flux;
 
+import static pl.bartlomiej.marineunitmonitoring.common.RedisCacheConfig.ADDRESS_COORDS_CACHE_NAME;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -25,7 +27,7 @@ public class HereGeocodeServiceImpl implements GeocodeService {
     @Value("${secrets.geocode-api.api-key}")
     private String GEOCODE_API_KEY;
 
-    @Cacheable(cacheNames = "AddressCoords")
+    @Cacheable(cacheNames = ADDRESS_COORDS_CACHE_NAME)
     public Flux<Position> getAddressCoords(String address) {
         return this.getGeocodeFromApi(address)
                 .map(response -> this.getPositionFromResponse(response, address))
