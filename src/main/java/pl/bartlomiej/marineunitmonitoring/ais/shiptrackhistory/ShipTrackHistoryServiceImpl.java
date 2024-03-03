@@ -45,11 +45,13 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         this.getShipTracks()
                 .flatMapIterable(shipTracks -> shipTracks)
                 .flatMap(shipTrackHistoryRepository::save)
-                .subscribe(); // todo co daje subscribe
+                .subscribe();
         log.info("Saving ship track history.");
     }
 
-    // todo clear ship track history for ship by mmsi
+    private Mono<Void> deleteShipTrackHistory(Long mmsi) {
+        return shipTrackHistoryRepository.deleteShipTracksByMmsi(mmsi);
+    }
 
     @Override
     public Mono<Void> saveTrackedShip(TrackedShip trackedShip) {
@@ -59,13 +61,12 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     @Override
     public Mono<Void> deleteTrackedShip(Long mmsi) {
-        // todo when deleting, then delete ship track history ^method
         return trackedShipRepository.findByMmsi(mmsi)
                 .flatMap(trackedShip -> {
                     log.info("Successfully deleted ship: {}, from tracking list.", trackedShip.getMmsi());
                     return trackedShipRepository.delete(trackedShip);
-                });
-
+                })
+                .then(this.deleteShipTrackHistory(mmsi));
     }
 
 
