@@ -37,17 +37,19 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         return shipTrackHistoryRepository.findAll().collectList();
     }
 
+
+    // TRACKED SHIPS - operations
+
     @Scheduled(initialDelay = 0, fixedDelay = 1000 * 60 * 5)
     public void saveTracksForTrackedShips() {
         this.getShipTracks()
                 .flatMapIterable(shipTracks -> shipTracks)
                 .flatMap(shipTrackHistoryRepository::save)
-                .subscribe();
-        log.info("Successfully saved ship track history.");
+                .subscribe(); // todo co daje subscribe
+        log.info("Saving ship track history.");
     }
 
-
-    // TRACKED SHIPS - operations
+    // todo clear ship track history for ship by mmsi
 
     @Override
     public Mono<Void> saveTrackedShip(TrackedShip trackedShip) {
@@ -57,6 +59,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     @Override
     public Mono<Void> deleteTrackedShip(Long mmsi) {
+        // todo when deleting, then delete ship track history ^method
         return trackedShipRepository.findByMmsi(mmsi)
                 .flatMap(trackedShip -> {
                     log.info("Successfully deleted ship: {}, from tracking list.", trackedShip.getMmsi());
@@ -65,27 +68,27 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     }
 
-    private Flux<TrackedShip> getTrackedShips() {
-        return trackedShipRepository.findAll();
-    }
-
 
     // GET SHIP TRACKS TO SAVE - operations
 
-    private Mono<Ship[]> getShipFromApi(Long mmsi) {
+    private Mono<List<TrackedShip>> getTrackedShips() {
+        return trackedShipRepository.findAll().collectList();
+    }
+
+    private Mono<Ship[]> getShipsFromApi(List<Long> mmsis) {
         return accessTokenService.getAisAuthToken()
                 .flatMap(token -> webClient
                         .post()
                         .uri(AIS_API_URL)
                         .header(AUTHORIZATION, "Bearer " + token)
-                        .bodyValue(of("mmsi", List.of(mmsi)))
+                        .bodyValue(of("mmsi", mmsis))
                         .retrieve()
                         .bodyToMono(Ship[].class)
                 );
     }
 
-    private Mono<ShipTrack> mapToShipTrack(TrackedShip trackedShip) {
-        return this.getShipFromApi(trackedShip.getMmsi())
+    private Mono<List<ShipTrack>> mapToShipTracks(List<TrackedShip> trackedShips) {
+        return this.getShipsFromApi(mapToMmsis(trackedShips))
                 .flatMapMany(Flux::fromArray)
                 .map(ship ->
                         new ShipTrack(
@@ -93,13 +96,18 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                                 ship.longitude(),
                                 ship.latitude()
                         ))
-                .next();
+                .collectList();
+    }
+
+    private List<Long> mapToMmsis(List<TrackedShip> trackedShips) {
+        return trackedShips
+                .stream()
+                .map(TrackedShip::getMmsi).toList();
     }
 
     private Mono<List<ShipTrack>> getShipTracks() {
         return this.getTrackedShips()
-                .flatMap(this::mapToShipTrack)
-                .collectList();
+                .flatMap(this::mapToShipTracks);
     }
 
 }
