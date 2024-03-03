@@ -51,6 +51,11 @@ public class AisApiAccessTokenService {
                 .cache();
     }
 
+    public Mono<String> getAisAuthTokenWithoutCache() {
+        return this.getAuthResponseFromApi()
+                .map(this::getTokenFromApi);
+    }
+
     private Mono<JsonNode> getAuthResponseFromApi() {
         return webClient
                 .post()
