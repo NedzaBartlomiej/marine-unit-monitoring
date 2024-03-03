@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.common.cache;
+package pl.bartlomiej.marineunitmonitoring.common;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,23 +21,22 @@ import static org.springframework.data.redis.cache.RedisCacheConfiguration.defau
 @Slf4j
 public class RedisCacheConfig {
 
-    private final CacheNameProvider cacheNameProvider;
     private final AisApiAccessTokenService accessTokenService;
 
     @Bean
     public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
         return builder -> builder
                 .withCacheConfiguration(
-                        cacheNameProvider.getAisAuthTokenName(),
+                        "AisAuthToken",
                         defaultCacheConfig().entryTtl(ofHours(1)))
                 .withCacheConfiguration(
-                        cacheNameProvider.getAddressCoordsName(),
+                        "AddressCoords",
                         defaultCacheConfig()
                 );
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    @CachePut(cacheNames = "#{cacheNameProvider.getAisAuthTokenName()}", key = "#result")
+    @CachePut(cacheNames = "AisAuthToken", key = "#result")
     public Mono<String> refreshToken() {
         log.info("Refreshing ais api auth token in cache.");
         return accessTokenService.getAisAuthTokenWithoutCache().cache();

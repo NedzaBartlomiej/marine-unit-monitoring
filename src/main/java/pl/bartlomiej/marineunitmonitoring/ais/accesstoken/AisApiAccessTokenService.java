@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
-import pl.bartlomiej.marineunitmonitoring.common.cache.CacheNameProvider;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -22,7 +21,6 @@ import static org.springframework.web.reactive.function.BodyInserters.fromFormDa
 public class AisApiAccessTokenService {
 
     private final WebClient webClient;
-    private final CacheNameProvider cacheNameProvider;
     @Value("${secrets.ais-api.auth.client-id}")
     private String CLIENT_ID;
     @Value("${secrets.ais-api.auth.scope}")
@@ -43,7 +41,7 @@ public class AisApiAccessTokenService {
         return body;
     }
 
-    @Cacheable(cacheNames = "#{cacheNameProvider.getAisAuthTokenName()}")
+    @Cacheable(cacheNames = "AisAuthToken")
     public Mono<String> getAisAuthToken() {
         log.info("Access token has refreshed now.");
         return this.getAuthResponseFromApi()
