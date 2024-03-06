@@ -1,5 +1,6 @@
 package pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ import static java.time.LocalDateTime.now;
 @Document(collection = "ship_track_history")
 public class ShipTrack {
 
+    @JsonIgnore
     private ObjectId id;
     private Long mmsi;
     private Double x;

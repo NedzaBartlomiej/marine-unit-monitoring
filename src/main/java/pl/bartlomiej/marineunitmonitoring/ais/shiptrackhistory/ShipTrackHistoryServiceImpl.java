@@ -9,6 +9,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
 import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.TrackedShip;
 import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.TrackedShipRepository;
+import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -16,6 +17,7 @@ import java.util.List;
 
 import static java.util.Map.of;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static reactor.core.publisher.Mono.error;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +36,9 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     @Override
     public Mono<List<ShipTrack>> getShipTrackHistory() {
-        return shipTrackHistoryRepository.findAll().collectList();
+        return shipTrackHistoryRepository.findAll()
+                .switchIfEmpty(error(new NoContentException()))
+                .collectList();
     }
 
 
@@ -45,8 +49,11 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         this.getShipTracks()
                 .flatMapIterable(shipTracks -> shipTracks)
                 .flatMap(shipTrackHistoryRepository::save)
-                .subscribe();
-        log.info("Saving ship track history.");
+                .subscribe(
+                        response -> log.info("Successfully saved tracking ship info."),
+                        error -> log.error(
+                                "Something go wrong when saving tracking ship info: {}",
+                                error.getMessage()));
     }
 
     private Mono<Void> deleteShipTrackHistory(Long mmsi) {
@@ -73,7 +80,9 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     // GET SHIP TRACKS TO SAVE - operations
 
     private Mono<List<TrackedShip>> getTrackedShips() {
-        return trackedShipRepository.findAll().collectList();
+        return trackedShipRepository.findAll()
+                .switchIfEmpty(error(new NoContentException()))
+                .collectList();
     }
 
     private Mono<Ship[]> getShipsFromApi(List<Long> mmsis) {
@@ -103,7 +112,8 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     private List<Long> mapToMmsis(List<TrackedShip> trackedShips) {
         return trackedShips
                 .stream()
-                .map(TrackedShip::getMmsi).toList();
+                .map(TrackedShip::getMmsi)
+                .toList();
     }
 
     private Mono<List<ShipTrack>> getShipTracks() {
