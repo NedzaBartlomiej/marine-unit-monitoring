@@ -9,7 +9,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
 import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.TrackedShip;
 import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.TrackedShipRepository;
+import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
+import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -61,14 +63,24 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     }
 
     @Override
-    public Mono<Void> saveTrackedShip(TrackedShip trackedShip) {
-        log.info("Successfully saved ship: {}, to tracking list.", trackedShip.getMmsi());
-        return trackedShipRepository.save(trackedShip).then();
+    public Mono<TrackedShip> saveTrackedShip(TrackedShip trackedShip) {
+        return trackedShipRepository.findByMmsi(trackedShip.getMmsi())
+                .hasElement()
+                .flatMap(hasElement -> {
+                    if (hasElement)
+                        return error(new MmsiConflictException("The ship is already being tracked."));
+                    if (!ActivePointsListHolder.isMmsiActive(trackedShip.getMmsi()))
+                        return error(new MmsiConflictException("Invalid ship."));
+                    log.info("Successfully saved ship: {}, to tracking list.", trackedShip.getMmsi());
+                    return trackedShipRepository.save(trackedShip);
+                });
     }
 
     @Override
     public Mono<Void> deleteTrackedShip(Long mmsi) {
         return trackedShipRepository.findByMmsi(mmsi)
+                .switchIfEmpty(
+                        error(new MmsiConflictException("This ship is not tracked.")))
                 .flatMap(trackedShip -> {
                     log.info("Successfully deleted ship: {}, from tracking list.", trackedShip.getMmsi());
                     return trackedShipRepository.delete(trackedShip);

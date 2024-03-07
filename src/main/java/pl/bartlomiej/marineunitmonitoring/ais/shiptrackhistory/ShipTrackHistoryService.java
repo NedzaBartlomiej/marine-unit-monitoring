@@ -8,7 +8,7 @@ import java.util.List;
 public interface ShipTrackHistoryService {
     Mono<List<ShipTrack>> getShipTrackHistory();
 
-    Mono<Void> saveTrackedShip(TrackedShip trackedShip);
+    Mono<TrackedShip> saveTrackedShip(TrackedShip trackedShip);
 
     Mono<Void> deleteTrackedShip(Long mmsi);
 }

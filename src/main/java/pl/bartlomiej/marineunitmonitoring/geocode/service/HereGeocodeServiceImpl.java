@@ -13,7 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.geocode.Position;
 import reactor.core.publisher.Flux;
 
-import static pl.bartlomiej.marineunitmonitoring.common.RedisCacheConfig.ADDRESS_COORDS_CACHE_NAME;
+import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.ADDRESS_COORDS_CACHE_NAME;
 
 @Service
 @Slf4j

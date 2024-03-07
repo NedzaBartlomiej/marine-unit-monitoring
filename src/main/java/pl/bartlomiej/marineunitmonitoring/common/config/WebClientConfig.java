@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.common;
+package pl.bartlomiej.marineunitmonitoring.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

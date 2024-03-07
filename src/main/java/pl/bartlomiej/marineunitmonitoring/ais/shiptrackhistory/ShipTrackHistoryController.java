@@ -5,10 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.TrackedShip;
+import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
@@ -19,21 +21,49 @@ public class ShipTrackHistoryController {
     private final ShipTrackHistoryService shipTrackHistoryService;
 
     @GetMapping
-    public Mono<ResponseEntity<List<ShipTrack>>> getShipTrackHistory() {
+    public Mono<ResponseEntity<ResponseModel<List<ShipTrack>>>> getShipTrackHistory() {
         return shipTrackHistoryService.getShipTrackHistory()
                 .map(response ->
                         ResponseEntity
                                 .status(OK)
-                                .body(response));
+                                .body(
+                                        ResponseModel.<List<ShipTrack>>builder()
+                                                .httpStatus(OK)
+                                                .httpStatusCode(OK.value())
+                                                .body(response)
+                                                .build()
+                                )
+                );
     }
 
     @PostMapping(value = "/tracked-ships")
-    public Mono<Void> saveTrackedShip(@RequestBody @Valid TrackedShip trackedShip) {
-        return shipTrackHistoryService.saveTrackedShip(trackedShip);
+    public Mono<ResponseEntity<ResponseModel<TrackedShip>>> saveTrackedShip(@RequestBody @Valid TrackedShip trackedShip) {
+        return shipTrackHistoryService.saveTrackedShip(trackedShip)
+                .map(response ->
+                        ResponseEntity
+                                .status(CREATED)
+                                .body(
+                                        ResponseModel.<TrackedShip>builder()
+                                                .httpStatus(CREATED)
+                                                .httpStatusCode(CREATED.value())
+                                                .body(response)
+                                                .build()
+                                )
+                );
     }
 
     @DeleteMapping(value = "/tracked-ships/{mmsi}")
-    public Mono<Void> deleteTrackedShip(@PathVariable Long mmsi) {
-        return shipTrackHistoryService.deleteTrackedShip(mmsi);
+    public Mono<ResponseEntity<ResponseModel<Void>>> deleteTrackedShip(@PathVariable Long mmsi) {
+        return shipTrackHistoryService.deleteTrackedShip(mmsi)
+                .then(Mono.just(
+                        ResponseEntity.ok()
+                                .body(
+                                        ResponseModel.<Void>builder()
+                                                .httpStatus(OK)
+                                                .httpStatusCode(OK.value())
+                                                .message("Ship has been deleted from tracking list.")
+                                                .build()
+                                ))
+                );
     }
 }

@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
 import static org.springframework.web.reactive.function.BodyInserters.fromFormData;
-import static pl.bartlomiej.marineunitmonitoring.common.RedisCacheConfig.AIS_AUTH_TOKEN_CACHE_NAME;
+import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.AIS_AUTH_TOKEN_CACHE_NAME;
 
 @Service
 @Slf4j

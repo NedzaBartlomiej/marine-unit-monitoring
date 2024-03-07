@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.common;
+package pl.bartlomiej.marineunitmonitoring.common.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

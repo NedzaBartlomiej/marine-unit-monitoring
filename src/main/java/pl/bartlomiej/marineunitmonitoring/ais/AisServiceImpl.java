@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
 import pl.bartlomiej.marineunitmonitoring.geocode.service.GeocodeService;
+import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
 import pl.bartlomiej.marineunitmonitoring.point.Point;
 import reactor.core.publisher.Flux;
 
@@ -34,15 +35,18 @@ public class AisServiceImpl implements AisService {
 
     private Flux<Point> mapAisToPoint(Ais ais) {
         return geocodeService.getAddressCoords(ais.properties().destination())
-                .map(position -> new Point(
-                        ais.properties().mmsi(),
-                        ais.properties().name() == null ? "UNKNOWN (not reported)" : ais.properties().name(),
-                        ais.geometry().coordinates().get(X_CORDS_INDEX),
-                        ais.geometry().coordinates().get(Y_CORDS_INDEX),
-                        ais.properties().destination() == null ? "UNKNOWN (not reported)" : ais.properties().destination(),
-                        position.x(),
-                        position.y()
-                ));
+                .map(position -> {
+                    ActivePointsListHolder.addActivePointMmsi(ais.properties().mmsi());
+                    return new Point(
+                            ais.properties().mmsi(),
+                            ais.properties().name() == null ? "UNKNOWN (not reported)" : ais.properties().name(),
+                            ais.geometry().coordinates().get(X_CORDS_INDEX),
+                            ais.geometry().coordinates().get(Y_CORDS_INDEX),
+                            ais.properties().destination() == null ? "UNKNOWN (not reported)" : ais.properties().destination(),
+                            position.x(),
+                            position.y()
+                    );
+                });
     }
 
     private Flux<Ais> getAisesFromApi() {
