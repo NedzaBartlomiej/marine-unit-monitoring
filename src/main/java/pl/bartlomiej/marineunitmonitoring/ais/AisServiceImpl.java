@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
+import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.geocode.service.GeocodeService;
 import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
 import pl.bartlomiej.marineunitmonitoring.point.Point;
@@ -29,6 +30,7 @@ public class AisServiceImpl implements AisService {
     @Override
     public Flux<Point> getLatestAisPoints() {
         return this.getAisesFromApi()
+                .switchIfEmpty(Flux.error(new NoContentException()))
                 .take(RESULT_LIMIT)
                 .flatMap(this::mapAisToPoint);
     }

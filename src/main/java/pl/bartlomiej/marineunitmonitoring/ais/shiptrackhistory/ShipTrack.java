@@ -24,12 +24,12 @@ public class ShipTrack {
     private Long mmsi;
     private Double x;
     private Double y;
-    private LocalDateTime reading_time;
+    private LocalDateTime readingTime;
 
     ShipTrack(Long mmsi, Double x, Double y) {
         this.mmsi = mmsi;
         this.x = x;
         this.y = y;
-        this.reading_time = now();
+        this.readingTime = now();
     }
 }

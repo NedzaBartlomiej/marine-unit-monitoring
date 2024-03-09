@@ -10,6 +10,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+import static java.util.Map.of;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 
@@ -24,15 +25,13 @@ public class ShipTrackHistoryController {
     public Mono<ResponseEntity<ResponseModel<List<ShipTrack>>>> getShipTrackHistory() {
         return shipTrackHistoryService.getShipTrackHistory()
                 .map(response ->
-                        ResponseEntity
-                                .status(OK)
-                                .body(
-                                        ResponseModel.<List<ShipTrack>>builder()
-                                                .httpStatus(OK)
-                                                .httpStatusCode(OK.value())
-                                                .body(response)
-                                                .build()
-                                )
+                        ResponseEntity.ok(
+                                ResponseModel.<List<ShipTrack>>builder()
+                                        .httpStatus(OK)
+                                        .httpStatusCode(OK.value())
+                                        .body(of("ShipTracks", response))
+                                        .build()
+                        )
                 );
     }
 
@@ -46,7 +45,7 @@ public class ShipTrackHistoryController {
                                         ResponseModel.<TrackedShip>builder()
                                                 .httpStatus(CREATED)
                                                 .httpStatusCode(CREATED.value())
-                                                .body(response)
+                                                .body(of("TrackedShip", response))
                                                 .build()
                                 )
                 );
@@ -56,14 +55,13 @@ public class ShipTrackHistoryController {
     public Mono<ResponseEntity<ResponseModel<Void>>> deleteTrackedShip(@PathVariable Long mmsi) {
         return shipTrackHistoryService.deleteTrackedShip(mmsi)
                 .then(Mono.just(
-                        ResponseEntity.ok()
-                                .body(
-                                        ResponseModel.<Void>builder()
-                                                .httpStatus(OK)
-                                                .httpStatusCode(OK.value())
-                                                .message("Ship has been deleted from tracking list.")
-                                                .build()
-                                ))
+                        ResponseEntity.ok(
+                                ResponseModel.<Void>builder()
+                                        .httpStatus(OK)
+                                        .httpStatusCode(OK.value())
+                                        .message("Ship has been deleted from tracking list.")
+                                        .build()
+                        ))
                 );
     }
 }

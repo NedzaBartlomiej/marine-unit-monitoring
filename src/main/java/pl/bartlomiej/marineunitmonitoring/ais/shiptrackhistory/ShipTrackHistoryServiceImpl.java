@@ -51,10 +51,12 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         this.getShipTracks()
                 .flatMapIterable(shipTracks -> shipTracks)
                 .flatMap(shipTrackHistoryRepository::save)
+                .doOnComplete(() -> log.info("Successfully saved tracked ships coords."))
                 .subscribe(
-                        response -> log.info("Successfully saved tracking ship info."),
+                        ignoredResult -> {
+                        },
                         error -> log.error(
-                                "Something go wrong when saving tracking ship info: {}",
+                                "Something go wrong when saving tracked ships coords: {}",
                                 error.getMessage()));
     }
 

@@ -6,6 +6,7 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Getter
 @Builder
@@ -17,5 +18,5 @@ public class ResponseModel<T> {
     private final String message;
     @Builder.Default
     private final LocalDateTime timestamp = LocalDateTime.now();
-    private final T body;
+    private final Map<String, T> body;
 }
