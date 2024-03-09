@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
 import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.TrackedShip;
@@ -31,7 +33,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     private final WebClient webClient;
     private final AisApiAccessTokenService accessTokenService;
     @Value("${secrets.ais-api.latest-ais-bymmsi-url}")
-    private String AIS_API_URL;
+    private String aisApiUrl;
 
 
     // TRACK HISTORY - operations
@@ -48,15 +50,15 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     @Scheduled(initialDelay = 0, fixedDelay = 1000 * 60 * 5)
     public void saveTracksForTrackedShips() {
-        this.getShipTracks()
+        this.fetchShipTracks()
                 .flatMapIterable(shipTracks -> shipTracks)
                 .flatMap(shipTrackHistoryRepository::save)
-                .doOnComplete(() -> log.info("Successfully saved tracked ships coords."))
+                .doOnComplete(() -> log.info("Successfully saved tracked ships coordinates."))
                 .subscribe(
                         ignoredResult -> {
                         },
                         error -> log.error(
-                                "Something go wrong when saving tracked ships coords: {}",
+                                "Something go wrong when saving tracked ships coordinates: {}",
                                 error.getMessage()));
     }
 
@@ -78,6 +80,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 });
     }
 
+    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public Mono<Void> deleteTrackedShip(Long mmsi) {
         return trackedShipRepository.findByMmsi(mmsi)
@@ -93,17 +96,17 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     // GET SHIP TRACKS TO SAVE - operations
 
-    private Mono<List<TrackedShip>> getTrackedShips() {
+    private Mono<List<TrackedShip>> fetchTrackedShips() {
         return trackedShipRepository.findAll()
                 .switchIfEmpty(error(new NoContentException()))
                 .collectList();
     }
 
-    private Mono<Ship[]> getShipsFromApi(List<Long> mmsis) {
+    private Mono<Ship[]> fetchShipsFromApi(List<Long> mmsis) {
         return accessTokenService.getAisAuthToken()
                 .flatMap(token -> webClient
                         .post()
-                        .uri(AIS_API_URL)
+                        .uri(aisApiUrl)
                         .header(AUTHORIZATION, "Bearer " + token)
                         .bodyValue(of("mmsi", mmsis))
                         .retrieve()
@@ -112,7 +115,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     }
 
     private Mono<List<ShipTrack>> mapToShipTracks(List<TrackedShip> trackedShips) {
-        return this.getShipsFromApi(mapToMmsis(trackedShips))
+        return this.fetchShipsFromApi(mapToMmsis(trackedShips))
                 .flatMapMany(Flux::fromArray)
                 .map(ship ->
                         new ShipTrack(
@@ -130,8 +133,8 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 .toList();
     }
 
-    private Mono<List<ShipTrack>> getShipTracks() {
-        return this.getTrackedShips()
+    private Mono<List<ShipTrack>> fetchShipTracks() {
+        return this.fetchTrackedShips()
                 .flatMap(this::mapToShipTracks);
     }
 

@@ -25,29 +25,29 @@ public class HereGeocodeServiceImpl implements GeocodeService {
     public static final int FIRST_GEOCODE_SUGGESTION = 0;
     private final WebClient webClient;
     @Value("${secrets.geocode-api.api-key}")
-    private String GEOCODE_API_KEY;
+    private String geocodeApiKey;
 
     @Cacheable(cacheNames = ADDRESS_COORDS_CACHE_NAME)
-    public Flux<Position> getAddressCoords(String address) {
-        return this.getGeocodeFromApi(address)
-                .map(response -> this.getPositionFromResponse(response, address))
+    public Flux<Position> getAddressCoordinates(String address) {
+        return this.retrieveGeocodeFromApi(address)
+                .map(response -> this.extractPositionFromResponse(response, address))
                 .cache();
     }
 
     @NonNull
-    private Flux<JsonNode> getGeocodeFromApi(String address) {
+    private Flux<JsonNode> retrieveGeocodeFromApi(String address) {
         if (address == null || address.trim().isEmpty()) {
             log.error("Null address, skipping request sending.");
             return Flux.just(this.createDefaultPositionNode());
         }
         return webClient
                 .get()
-                .uri(this.getGeocodeApiUrl(address))
+                .uri(this.buildGeocodeApiUrl(address))
                 .retrieve()
                 .bodyToFlux(JsonNode.class);
     }
 
-    private Position getPositionFromResponse(JsonNode response, String address) {
+    private Position extractPositionFromResponse(JsonNode response, String address) {
         try {
             JsonNode position = response.get("items").get(FIRST_GEOCODE_SUGGESTION).get("position");
             return new Position(position.get(LNG).asDouble(), position.get(LAT).asDouble());
@@ -57,10 +57,10 @@ public class HereGeocodeServiceImpl implements GeocodeService {
         }
     }
 
-    private String getGeocodeApiUrl(String address) {
+    private String buildGeocodeApiUrl(String address) {
         return "https://geocode.search.hereapi.com/v1/geocode?q=" +
                 address +
-                "&apiKey=" + GEOCODE_API_KEY;
+                "&apiKey=" + geocodeApiKey;
     }
 
     private JsonNode createDefaultPositionNode() {

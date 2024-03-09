@@ -25,18 +25,18 @@ public class AisServiceImpl implements AisService {
     private final AisApiAccessTokenService accessTokenService;
     private final WebClient webClient;
     @Value("${secrets.ais-api.latest-ais-url}")
-    private String AIS_API_URL;
+    private String aisApiUrl;
 
     @Override
     public Flux<Point> getLatestAisPoints() {
-        return this.getAisesFromApi()
+        return this.fetchAisFromApi()
                 .switchIfEmpty(Flux.error(new NoContentException()))
                 .take(RESULT_LIMIT)
                 .flatMap(this::mapAisToPoint);
     }
 
     private Flux<Point> mapAisToPoint(Ais ais) {
-        return geocodeService.getAddressCoords(ais.properties().destination())
+        return geocodeService.getAddressCoordinates(ais.properties().destination())
                 .map(position -> {
                     ActivePointsListHolder.addActivePointMmsi(ais.properties().mmsi());
                     return new Point(
@@ -51,11 +51,11 @@ public class AisServiceImpl implements AisService {
                 });
     }
 
-    private Flux<Ais> getAisesFromApi() {
+    private Flux<Ais> fetchAisFromApi() {
         return accessTokenService.getAisAuthToken()
                 .flatMapMany(token -> webClient
                         .get()
-                        .uri(AIS_API_URL)
+                        .uri(aisApiUrl)
                         .header(AUTHORIZATION, "Bearer " + token)
                         .retrieve()
                         .bodyToFlux(Ais.class)
