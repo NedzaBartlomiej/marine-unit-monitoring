@@ -12,7 +12,7 @@ logging:
     org.springframework.cache: debug
     org.springframework.data.redis.cache: debug
     org.springframework.data.redis: debug
-secrets:
+secrets: # todo better naming structure
   ais-api:
     auth:
       url: https://id.barentswatch.no/connect/token
@@ -24,3 +24,4 @@ secrets:
     latest-ais-bymmsi-url: https://live.ais.barentswatch.no/v1/latest/combined
   geocode-api:
     api-key: TQeBKTVelWEdjylTOY9K6XAXapgtQ3CxZa830ZToHh8
+    result-limit: 5

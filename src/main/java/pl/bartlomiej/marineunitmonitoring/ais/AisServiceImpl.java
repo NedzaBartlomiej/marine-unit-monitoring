@@ -20,10 +20,11 @@ import static pl.bartlomiej.marineunitmonitoring.ais.Geometry.Y_CORDS_INDEX;
 @RequiredArgsConstructor
 @Slf4j
 public class AisServiceImpl implements AisService {
-    public static final long RESULT_LIMIT = 3L;
     private final GeocodeService geocodeService;
     private final AisApiAccessTokenService accessTokenService;
     private final WebClient webClient;
+    @Value("${secrets.geocode-api.result-limit}")
+    private long resultLimit;
     @Value("${secrets.ais-api.latest-ais-url}")
     private String aisApiUrl;
 
@@ -31,7 +32,7 @@ public class AisServiceImpl implements AisService {
     public Flux<Point> getLatestAisPoints() {
         return this.fetchAisFromApi()
                 .switchIfEmpty(Flux.error(new NoContentException()))
-                .take(RESULT_LIMIT)
+                .take(resultLimit)
                 .flatMap(this::mapAisToPoint);
     }
 
