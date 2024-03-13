@@ -9,7 +9,7 @@ RUN mkdir /usr/src/marine-unit-monitoring
 WORKDIR /usr/src/marine-unit-monitoring
 
 # Copy the JAR file of the Spring Boot application into the container
-COPY ./target/marine-unit-monitoring.jar /usr/src/marine-unit-monitoring
+COPY ../target/marine-unit-monitoring.jar /usr/src/marine-unit-monitoring
 
 # Expose the port the application runs on
 EXPOSE 8080
