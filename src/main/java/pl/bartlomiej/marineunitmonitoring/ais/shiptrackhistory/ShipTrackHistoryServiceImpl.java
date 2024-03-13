@@ -3,6 +3,7 @@ package pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -31,6 +32,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     private final ShipTrackHistoryRepository shipTrackHistoryRepository;
     private final TrackedShipRepository trackedShipRepository;
     private final WebClient webClient;
+    private final ReactiveMongoTemplate reactiveMongoTemplate;
     private final AisApiAccessTokenService accessTokenService;
     @Value("${secrets.ais-api.latest-ais-bymmsi-url}")
     private String aisApiUrl;
@@ -39,16 +41,21 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     // TRACK HISTORY - operations
 
     @Override
-    public Mono<List<ShipTrack>> getShipTrackHistory() {
+    public Flux<ShipTrack> getShipTrackHistory() {
+//        return reactiveMongoTemplate.changeStream(ShipTrack.class)
+//                .filter(where("operationType").is(INSERT))
+//                .listen()
+//                .mapNotNull(ChangeStreamEvent::getBody)
+//                .doOnError(error -> log.error("Something go wrong: {}", error.toString()))
+//                .doOnNext(result -> log.info("New insert into collection: {}", result));
         return shipTrackHistoryRepository.findAll()
-                .switchIfEmpty(error(new NoContentException()))
-                .collectList();
+                .switchIfEmpty(error(new NoContentException()));
     }
 
 
     // TRACKED SHIPS - operations
 
-    @Scheduled(initialDelay = 0, fixedDelay = 1000 * 60 * 5)
+    @Scheduled(initialDelay = 0, fixedDelay = 1000 * 60)
     public void saveTracksForTrackedShips() {
         this.fetchShipTracks()
                 .flatMapIterable(shipTracks -> shipTracks)

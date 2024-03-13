@@ -6,9 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.TrackedShip;
 import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 import static java.util.Map.of;
 import static org.springframework.http.HttpStatus.CREATED;
@@ -22,17 +21,16 @@ public class ShipTrackHistoryController {
     private final ShipTrackHistoryService shipTrackHistoryService;
 
     @GetMapping
-    public Mono<ResponseEntity<ResponseModel<List<ShipTrack>>>> getShipTrackHistory() {
-        return shipTrackHistoryService.getShipTrackHistory()
+    public ResponseEntity<Flux<ResponseModel<ShipTrack>>> getShipTrackHistory() {
+        return ResponseEntity.ok(shipTrackHistoryService.getShipTrackHistory()
                 .map(response ->
-                        ResponseEntity.ok(
-                                ResponseModel.<List<ShipTrack>>builder()
-                                        .httpStatus(OK)
-                                        .httpStatusCode(OK.value())
-                                        .body(of("ShipTracks", response))
-                                        .build()
-                        )
-                );
+                        ResponseModel.<ShipTrack>builder()
+                                .httpStatus(OK)
+                                .httpStatusCode(OK.value())
+                                .body(of("ShipTracks", response))
+                                .build()
+                )
+        );
     }
 
     @PostMapping(value = "/tracked-ships")

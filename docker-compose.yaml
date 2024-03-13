@@ -1,0 +1,24 @@
+services:
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - cache:/usr/cache
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - db:/usr/db
+  marine-unit-monitoring:
+    container_name: marine-unit-monitoring
+    image: marine-unit-monitoring:1.0
+    build: .
+    ports:
+      - "8080:8080"
+    links:
+      - redis
+      - mongodb

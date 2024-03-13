@@ -1,9 +1,13 @@
 spring:
   data:
     mongodb:
-      host: localhost
+      host: 172.17.0.2
       port: 27017
       database: marine_unit_monitoring
+      uri: mongodb://${spring.data.mongodb.host}:${spring.data.mongodb.port}/${spring.data.mongodb.database}
+    redis:
+      host: 172.17.0.4
+      port: 6379
   cache:
     type: redis
 logging:

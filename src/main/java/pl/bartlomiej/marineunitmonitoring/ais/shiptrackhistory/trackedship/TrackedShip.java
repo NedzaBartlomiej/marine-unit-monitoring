@@ -21,4 +21,6 @@ public class TrackedShip {
 
     @NotNull(message = "Ship mmsi required.")
     private Long mmsi;
+
+    // todo List<ObjectId> -> users ids
 }
