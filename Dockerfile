@@ -1,4 +1,4 @@
-# Use a base image with Java 21
+ # Use a base image with Java 21
 FROM openjdk:21
 
 # Set maintainer label
