@@ -18,8 +18,10 @@ import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import static java.util.Map.of;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -30,6 +32,7 @@ import static reactor.core.publisher.Mono.error;
 @Slf4j
 public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
+    public static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60 * 5;
     private final ShipTrackHistoryRepository shipTrackHistoryRepository;
     private final TrackedShipRepository trackedShipRepository;
     private final WebClient webClient;
@@ -53,7 +56,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 .switchIfEmpty(error(new NoContentException()));
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 1000 * 60)
+    @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
     public void saveTracksForTrackedShips() {
         this.fetchShipTracks()
                 .flatMapIterable(shipTracks -> shipTracks)
@@ -123,15 +126,19 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 );
     }
 
+    // todo refaktoryzacja | walidacja
     private Mono<List<Ship>> filterInvalidShips(Ship[] ships, List<Long> mmsis) {
         List<Ship> validShips = Arrays.stream(ships)
-                .filter(ship -> mmsis.contains(ship.mmsi()))
+                .filter(Objects::nonNull)
                 .toList();
-
         List<Long> validMmsis = validShips.stream().map(Ship::mmsi).toList();
-        mmsis.removeAll(validMmsis); // so making an invalid mmsi list
-        mmsis.forEach(this::deleteTrackedShip);
-        log.error("One or more ships from the tracking list are not currently in the registry, they are removed from the tracking list.");
+        List<Long> providedMmsis = new ArrayList<>(mmsis);
+
+        providedMmsis.removeAll(validMmsis);
+        providedMmsis.forEach(this::deleteTrackedShip);
+        if (!providedMmsis.isEmpty())
+            log.error("One or more ships from the tracking list are not currently in the registry, they are removed from the tracking list.");
+
         return Mono.just(validShips);
     }
 
