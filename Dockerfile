@@ -12,7 +12,7 @@ WORKDIR /usr/src/marine-unit-monitoring
 COPY ./target/marine-unit-monitoring.jar /usr/src/marine-unit-monitoring
 
 # Expose the port the application runs on
-EXPOSE 9090
+EXPOSE 8080
 
 # Command to run the Spring Boot application
 ENTRYPOINT ["java", "-jar", "/usr/src/marine-unit-monitoring/marine-unit-monitoring.jar"]

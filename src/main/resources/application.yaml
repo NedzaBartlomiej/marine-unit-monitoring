@@ -1,3 +1,11 @@
 spring:
   profiles:
     active: docker
+  cache:
+    type: redis
+
+logging:
+  level:
+    web: debug
+    org.springframework.data.mongodb: debug
+    org.springframework.data.redis: debug
