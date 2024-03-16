@@ -1,8 +1,10 @@
 spring:
   profiles:
-    active: docker
+    active: local
   cache:
     type: redis
+  config:
+    import: file:./src/main/resources/secrets.yaml
 
 logging:
   level:
