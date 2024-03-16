@@ -1,31 +1,3 @@
 spring:
-  data:
-    mongodb:
-      host: mongodb
-      port: 27017
-      database: marine_unit_monitoring
-      uri: mongodb://${spring.data.mongodb.host}:${spring.data.mongodb.port}/${spring.data.mongodb.database}
-    redis:
-      host: redis
-      port: 6379
-  cache:
-    type: redis
-logging:
-  level:
-    web: debug
-    org.springframework.cache: debug
-    org.springframework.data.redis.cache: debug
-    org.springframework.data.redis: debug
-secrets: # todo better naming structure
-  ais-api:
-    auth:
-      url: https://id.barentswatch.no/connect/token
-      client-id: bartek21122006@gmail.com:bartek21122006@gmail.com
-      scope: ais
-      client-secret: Bartek2006bartek
-      grant-type: client_credentials
-    latest-ais-url: https://live.ais.barentswatch.no/v1/latest/combined?modelType=Full&modelFormat=Geojson
-    latest-ais-bymmsi-url: https://live.ais.barentswatch.no/v1/latest/combined
-  geocode-api:
-    api-key: TQeBKTVelWEdjylTOY9K6XAXapgtQ3CxZa830ZToHh8
-    result-limit: 5
+  profiles:
+    active: docker

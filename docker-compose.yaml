@@ -2,31 +2,31 @@ version: '3'
 services:
   redis:
     container_name: redis
-    build: ..
+    hostname: redis
+    image: redis:latest
     ports:
-      - "6379:6379"
+      - "6479:6479"
     volumes:
       - data-volume:/usr/cache
   mongodb:
     container_name: mongodb
-    build: ..
+    hostname: mongodb
+    image: mongo:latest
     ports:
-      - "27017:27017"
+      - "28017:28017"
     volumes:
       - data-volume:/usr/db
-      - ../docker-entrypoint-initdb.d/mongo-init.js:/usr/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./docker-entrypoint-initdb.d/mongo-init.js:/usr/docker-entrypoint-initdb.d/mongo-init.js:ro
   marine-unit-monitoring:
     container_name: marine-unit-monitoring
-    build: ..
+    build: .
     ports:
       - "8080:8080"
     links:
-      - redis
       - mongodb
+      - redis
     depends_on:
       - redis
       - mongodb
 volumes:
   data-volume:
-
-  #need to init db -> this may resolve the problem of "Opening socket exception" - mongodb
