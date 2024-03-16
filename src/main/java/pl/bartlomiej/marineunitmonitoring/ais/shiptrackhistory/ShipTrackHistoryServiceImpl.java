@@ -131,6 +131,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         List<Long> validMmsis = validShips.stream().map(Ship::mmsi).toList();
         mmsis.removeAll(validMmsis); // so making an invalid mmsi list
         mmsis.forEach(this::deleteTrackedShip);
+        log.error("One or more ships from the tracking list are not currently in the registry, they are removed from the tracking list.");
         return Mono.just(validShips);
     }
 
