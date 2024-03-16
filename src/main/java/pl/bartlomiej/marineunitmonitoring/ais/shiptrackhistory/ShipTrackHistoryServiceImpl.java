@@ -18,6 +18,7 @@ import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Map.of;
@@ -52,9 +53,6 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 .switchIfEmpty(error(new NoContentException()));
     }
 
-
-    // TRACKED SHIPS - operations
-
     @Scheduled(initialDelay = 0, fixedDelay = 1000 * 60)
     public void saveTracksForTrackedShips() {
         this.fetchShipTracks()
@@ -73,6 +71,9 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         return shipTrackHistoryRepository.deleteShipTracksByMmsi(mmsi);
     }
 
+
+    // TRACKED SHIPS - operations
+
     @Override
     public Mono<TrackedShip> saveTrackedShip(TrackedShip trackedShip) {
         return trackedShipRepository.findByMmsi(trackedShip.getMmsi())
@@ -87,6 +88,9 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 });
     }
 
+
+    // GET SHIP TRACKS TO SAVE - operations
+
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public Mono<Void> deleteTrackedShip(Long mmsi) {
@@ -100,16 +104,13 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 .then(this.deleteShipTrackHistory(mmsi));
     }
 
-
-    // GET SHIP TRACKS TO SAVE - operations
-
     private Mono<List<TrackedShip>> fetchTrackedShips() {
         return trackedShipRepository.findAll()
                 .switchIfEmpty(error(new NoContentException()))
                 .collectList();
     }
 
-    private Mono<Ship[]> fetchShipsFromApi(List<Long> mmsis) {
+    private Mono<List<Ship>> fetchShipsFromApi(List<Long> mmsis) {
         return accessTokenService.getAisAuthToken()
                 .flatMap(token -> webClient
                         .post()
@@ -118,12 +119,24 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                         .bodyValue(of("mmsi", mmsis))
                         .retrieve()
                         .bodyToMono(Ship[].class)
+                        .flatMap(ships -> this.filterInvalidShips(ships, mmsis))
                 );
+    }
+
+    private Mono<List<Ship>> filterInvalidShips(Ship[] ships, List<Long> mmsis) {
+        List<Ship> validShips = Arrays.stream(ships)
+                .filter(ship -> mmsis.contains(ship.mmsi()))
+                .toList();
+
+        List<Long> validMmsis = validShips.stream().map(Ship::mmsi).toList();
+        mmsis.removeAll(validMmsis); // so making an invalid mmsi list
+        mmsis.forEach(this::deleteTrackedShip);
+        return Mono.just(validShips);
     }
 
     private Mono<List<ShipTrack>> mapToShipTracks(List<TrackedShip> trackedShips) {
         return this.fetchShipsFromApi(mapToMmsis(trackedShips))
-                .flatMapMany(Flux::fromArray)
+                .flatMapMany(Flux::fromIterable)
                 .map(ship ->
                         new ShipTrack(
                                 ship.mmsi(),
