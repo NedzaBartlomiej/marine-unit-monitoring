@@ -14,9 +14,11 @@ services:
     container_name: mongodb1
     hostname: mongodb1
     image: mongo:latest
-    command: "--replSet marine-unit-monitoring-db-rs --bind_ip_all"
+    command: [ "--replSet", "marine-unit-monitoring-db-rs", "--bind_ip_all", "--port", "27017" ]
+    healthcheck:
+      test: echo 'rs.status()'
     ports:
-      - "28017:28017"
+      - "27017:27017"
     volumes:
       - db-volume1:/usr/db
       - mongo-init:/usr/docker-entrypoint-initdb.d/mongo-init.js:ro
@@ -26,9 +28,11 @@ services:
     container_name: mongodb2
     hostname: mongodb2
     image: mongo:latest
-    command: "--replSet marine-unit-monitoring-db-rs --bind_ip_all"
+    command: [ "--replSet", "marine-unit-monitoring-db-rs", "--bind_ip_all", "--port", "27018" ]
+    healthcheck:
+      test: echo 'rs.status()'
     ports:
-      - "28018:28018"
+      - "27018:27018"
     volumes:
       - db-volume2:/usr/db
       - mongo-init:/usr/docker-entrypoint-initdb.d/mongo-init.js:ro
@@ -38,9 +42,11 @@ services:
     container_name: mongodb3
     hostname: mongodb3
     image: mongo:latest
-    command: "--replSet marine-unit-monitoring-db-rs --bind_ip_all"
+    command: [ "--replSet", "marine-unit-monitoring-db-rs", "--bind_ip_all", "--port", "27019" ]
+    healthcheck:
+      test: echo 'rs.status()'
     ports:
-      - "28019:28019"
+      - "27019:27019"
     volumes:
       - db-volume3:/usr/db
       - mongo-init:/usr/docker-entrypoint-initdb.d/mongo-init.js:ro
