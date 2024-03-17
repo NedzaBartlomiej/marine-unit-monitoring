@@ -1,10 +1,10 @@
 spring:
   profiles:
-    active: local
+    active: docker # todo mvn profiles
   cache:
     type: redis
   config:
-    import: file:./src/main/resources/secrets.yaml
+    import: classpath:secrets.yaml
 
 logging:
   level:

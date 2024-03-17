@@ -7,26 +7,67 @@ services:
     ports:
       - "6479:6479"
     volumes:
-      - data-volume:/usr/cache
-  mongodb:
-    container_name: mongodb
-    hostname: mongodb
+      - cache-volume:/usr/cache
+    networks:
+      - marine-unit-monitoring-network
+  mongodb1:
+    container_name: mongodb1
+    hostname: mongodb1
     image: mongo:latest
+    command: "--replSet marine-unit-monitoring-db-rs --bind_ip_all"
     ports:
       - "28017:28017"
     volumes:
-      - data-volume:/usr/db
-      - ./docker-entrypoint-initdb.d/mongo-init.js:/usr/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - db-volume1:/usr/db
+      - mongo-init:/usr/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - marine-unit-monitoring-network
+  mongodb2:
+    container_name: mongodb2
+    hostname: mongodb2
+    image: mongo:latest
+    command: "--replSet marine-unit-monitoring-db-rs --bind_ip_all"
+    ports:
+      - "28018:28018"
+    volumes:
+      - db-volume2:/usr/db
+      - mongo-init:/usr/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - marine-unit-monitoring-network
+  mongodb3:
+    container_name: mongodb3
+    hostname: mongodb3
+    image: mongo:latest
+    command: "--replSet marine-unit-monitoring-db-rs --bind_ip_all"
+    ports:
+      - "28019:28019"
+    volumes:
+      - db-volume3:/usr/db
+      - mongo-init:/usr/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - marine-unit-monitoring-network
   marine-unit-monitoring:
     container_name: marine-unit-monitoring
     build: .
     ports:
       - "8080:8080"
-    links:
-      - mongodb
-      - redis
     depends_on:
       - redis
-      - mongodb
+      - mongodb1
+      - mongodb2
+      - mongodb3
+    networks:
+      - marine-unit-monitoring-network
 volumes:
-  data-volume:
+  cache-volume:
+  db-volume1:
+  db-volume2:
+  db-volume3:
+  mongo-init:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./docker-entrypoint-initdb.d/
+networks:
+  marine-unit-monitoring-network:
