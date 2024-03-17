@@ -19,10 +19,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import static java.util.Arrays.stream;
 import static java.util.Map.of;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static reactor.core.publisher.Mono.error;
@@ -126,18 +126,20 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 );
     }
 
-    // todo refaktoryzacja | walidacja
     private Mono<List<Ship>> filterInvalidShips(Ship[] ships, List<Long> mmsis) {
-        List<Ship> validShips = Arrays.stream(ships)
+        List<Ship> validShips = stream(ships)
                 .filter(Objects::nonNull)
                 .toList();
-        List<Long> validMmsis = validShips.stream().map(Ship::mmsi).toList();
-        List<Long> providedMmsis = new ArrayList<>(mmsis);
+        List<Long> validMmsis = validShips.stream()
+                .map(Ship::mmsi)
+                .toList();
+        List<Long> invalidMmsis = new ArrayList<>(mmsis);
 
-        providedMmsis.removeAll(validMmsis);
-        providedMmsis.forEach(this::deleteTrackedShip);
-        if (!providedMmsis.isEmpty())
-            log.error("One or more ships from the tracking list are not currently in the registry, they are removed from the tracking list.");
+        invalidMmsis.removeAll(validMmsis);
+        invalidMmsis.forEach(this::deleteTrackedShip);
+
+        if (!invalidMmsis.isEmpty())
+            log.error("Some ships were removed from the tracking list because they are not currently registered: {}", invalidMmsis);
 
         return Mono.just(validShips);
     }
