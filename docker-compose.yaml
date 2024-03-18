@@ -14,28 +14,33 @@ services:
     container_name: mongodb1
     hostname: mongodb1
     image: mongo:latest
-    command: [ "--replSet", "marine-unit-monitoring-db-rs", "--bind_ip_all", "--port", "27017" ]
-    healthcheck:
-      test: echo 'rs.status()'
+    command: --replSet marine-unit-monitoring-db-rs --bind_ip_all --port 27017
     ports:
       - "27017:27017"
     volumes:
       - db-volume1:/usr/db
-      - mongo-init:/usr/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - mongo-init:/usr/docker-entrypoint-init.d/mongo-init.js
+      - mongo-rs-init:/usr/docker-entrypoint-init.d/mongo-rs-init.sh
     networks:
       - marine-unit-monitoring-network
+    # todo permission denied for mongo-rs-init.sh - mongo-rs-init.sh is a directory in container file sys
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo "Granting permissions for mongo-rs-init.sh"
+        chmod +x /usr/docker-entrypoint-init.d/mongo-rs-init.sh
+        /usr/docker-entrypoint-init.d/mongo-rs-init.sh
   mongodb2:
     container_name: mongodb2
     hostname: mongodb2
     image: mongo:latest
     command: [ "--replSet", "marine-unit-monitoring-db-rs", "--bind_ip_all", "--port", "27018" ]
-    healthcheck:
-      test: echo 'rs.status()'
     ports:
-      - "27018:27018"
+      - "27027:27017"
     volumes:
       - db-volume2:/usr/db
-      - mongo-init:/usr/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - mongo-init:/usr/docker-entrypoint-init.d/mongo-init.js
     networks:
       - marine-unit-monitoring-network
   mongodb3:
@@ -43,13 +48,11 @@ services:
     hostname: mongodb3
     image: mongo:latest
     command: [ "--replSet", "marine-unit-monitoring-db-rs", "--bind_ip_all", "--port", "27019" ]
-    healthcheck:
-      test: echo 'rs.status()'
     ports:
-      - "27019:27019"
+      - "27037:27017"
     volumes:
       - db-volume3:/usr/db
-      - mongo-init:/usr/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - mongo-init:/usr/docker-entrypoint-init.d/mongo-init.js
     networks:
       - marine-unit-monitoring-network
   marine-unit-monitoring:
@@ -74,6 +77,12 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ./docker-entrypoint-initdb.d/
+      device: ./docker-entrypoint-init.d/
+  mongo-rs-init:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./docker-entrypoint-init.d/
 networks:
   marine-unit-monitoring-network:

@@ -2,7 +2,7 @@ spring:
   data:
     mongodb:
       database: marine_unit_monitoring
-      uri: mongodb://mongodb1:27017,mongodb2:27018,mongodb3:27019/${spring.data.mongodb.database}?replicaSet=marine-unit-monitoring-db-rs
+      uri: mongodb://mongodb1,mongodb2,mongodb3/${spring.data.mongodb.database}?replicaSet=marine-unit-monitoring-db-rs
     redis:
       host: redis
       port: 6379
