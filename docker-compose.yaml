@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.8'
 services:
   redis:
     container_name: redis
@@ -10,59 +10,55 @@ services:
       - cache-volume:/usr/cache
     networks:
       - marine-unit-monitoring-network
-  mongodb1:
-    container_name: mongodb1
-    hostname: mongodb1
+  mongodb-primary:
+    container_name: mongodb-primary
+    hostname: mongodb-primary
     image: mongo:latest
-    command: --replSet marine-unit-monitoring-db-rs --bind_ip_all --port 27017
+    command: [ "--replSet", "marine-unit-monitoring-db-rs", "--bind_ip_all" ]
     ports:
       - "27017:27017"
     volumes:
       - db-volume1:/usr/db
-      - mongo-init:/usr/docker-entrypoint-init.d/mongo-init.js
-      - mongo-rs-init:/usr/docker-entrypoint-init.d/mongo-rs-init.sh
+      - mongo-init:/usr/docker-entrypoint-init.d/
     networks:
       - marine-unit-monitoring-network
-    # todo permission denied for mongo-rs-init.sh - mongo-rs-init.sh is a directory in container file sys
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        echo "Granting permissions for mongo-rs-init.sh"
-        chmod +x /usr/docker-entrypoint-init.d/mongo-rs-init.sh
-        /usr/docker-entrypoint-init.d/mongo-rs-init.sh
+    depends_on:
+      - mongodb2
+      - mongodb3
   mongodb2:
     container_name: mongodb2
     hostname: mongodb2
     image: mongo:latest
-    command: [ "--replSet", "marine-unit-monitoring-db-rs", "--bind_ip_all", "--port", "27018" ]
+    command: [ "--replSet", "marine-unit-monitoring-db-rs", "--bind_ip_all" ]
     ports:
       - "27027:27017"
     volumes:
       - db-volume2:/usr/db
-      - mongo-init:/usr/docker-entrypoint-init.d/mongo-init.js
+      - mongo-init:/usr/docker-entrypoint-init.d/
     networks:
       - marine-unit-monitoring-network
   mongodb3:
     container_name: mongodb3
     hostname: mongodb3
     image: mongo:latest
-    command: [ "--replSet", "marine-unit-monitoring-db-rs", "--bind_ip_all", "--port", "27019" ]
+    command: [ "--replSet", "marine-unit-monitoring-db-rs", "--bind_ip_all" ]
     ports:
       - "27037:27017"
     volumes:
       - db-volume3:/usr/db
-      - mongo-init:/usr/docker-entrypoint-init.d/mongo-init.js
+      - mongo-init:/usr/docker-entrypoint-init.d/
     networks:
       - marine-unit-monitoring-network
   marine-unit-monitoring:
     container_name: marine-unit-monitoring
-    build: .
+    build:
+      context: .
+      target: marine-unit-monitoring
     ports:
       - "8080:8080"
     depends_on:
       - redis
-      - mongodb1
+      - mongodb-primary
       - mongodb2
       - mongodb3
     networks:
@@ -73,12 +69,6 @@ volumes:
   db-volume2:
   db-volume3:
   mongo-init:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./docker-entrypoint-init.d/
-  mongo-rs-init:
     driver: local
     driver_opts:
       type: none
