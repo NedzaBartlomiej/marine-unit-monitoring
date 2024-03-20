@@ -1,7 +1,11 @@
 #!/bin/bash
+echo "---- 'start.sh' ----"
 
+echo "#### BUILDING DOCKER ####"
 docker-compose up -d
 
-sleep 5
+echo "#### WAITING FOR ALL CONTAINERS START ####"
+sleep 10
 
+echo "#### EXECUTING INIT FILES ####"
 docker exec mongodb-primary usr/docker-entrypoint-init.d/rs-init.sh
