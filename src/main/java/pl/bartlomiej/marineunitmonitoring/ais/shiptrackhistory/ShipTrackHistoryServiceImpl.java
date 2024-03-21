@@ -46,6 +46,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     @Override
     public Flux<ShipTrack> getShipTrackHistory() {
+        // todo: changeStream with SSE
 //        return reactiveMongoTemplate.changeStream(ShipTrack.class)
 //                .filter(where("operationType").is(INSERT))
 //                .listen()

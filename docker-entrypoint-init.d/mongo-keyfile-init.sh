@@ -2,6 +2,7 @@
 
 mng_rs_key_path="/usr/mongo-rs-auth/mongo-rs.key"
 mng_rs_dir_path="/usr/mongo-rs-auth/"
+
 errmsg_inst_exist="Instance already exist."
 errmsg_not_found="Instance not found."
 
@@ -29,8 +30,8 @@ if [ -s "$mng_rs_key_path" ]; then
 fi
 openssl rand -base64 756 > "$mng_rs_key_path"
 
-
-echo "#### GRANTING CHMOD 400 PERMISSIONS FOR 'mongo-rs - keyFile' ####"
+# ev. delete if statement (to ensure greater consistency) -> unnecessary due to the native command err_msg
+echo "#### CHANGING PERMISSIONS TO CHMOD 400 FOR 'mongo-rs - keyFile' ####" #changed log msg
 if [ -f "$mng_rs_key_path" ]; then
   chmod 400 "$mng_rs_key_path"
 else

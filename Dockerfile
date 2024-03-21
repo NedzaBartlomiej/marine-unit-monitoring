@@ -1,4 +1,4 @@
-FROM openjdk:21 as marine-unit-monitoring
+FROM openjdk:21
 
 LABEL author="Bartlomiej Nedza"
 

@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: docker # todo mvn profiles
+    active: docker
   cache:
     type: redis
   config:
