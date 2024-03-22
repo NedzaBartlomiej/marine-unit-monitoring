@@ -15,14 +15,20 @@ docker image prune
 echo "#### STOPPING APP CONTAINER ####"
 docker stop $app_container_name
 
-# todo run mvn package
 
-# todo error handler - validation - bo przy starcie pierwszym zeby nie wyswietlalo natywnych bledow tylko moje opisy
+echo "#### MVN PACKAGE ####"
+mvn package
+
+
 echo "#### UPDATING APP IMAGE -> '$app_img_name' ####"
 echo "-- BUILDING UPDATED IMAGE --"
-docker build -t $app_img_name:latest .. # ^^ tylko w momencie gdy jest img:latest || img:1.0
+if docker images | grep "marine-unit-monitoring"; then
+  docker build -t $app_img_name:latest .
+else
+  echo "Not found app image to update - docker compose needs to build it."
+fi
 echo "-- COMMITTING NEW VERSION OF IMAGE --"
-docker commit $app_img_name $app_img_name:latest # ^^ tylko w momencie gdy
+docker commit $app_img_name $app_img_name:latest
 
 
 echo "#### DOCKER COMPOSE ####"

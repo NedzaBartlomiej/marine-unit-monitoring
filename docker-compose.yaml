@@ -67,6 +67,7 @@ services:
   marine-unit-monitoring:
     container_name: marine-unit-monitoring
     build:
+      context: .
       dockerfile: ./Dockerfile
     image: marine-unit-monitoring:1.0
     ports:

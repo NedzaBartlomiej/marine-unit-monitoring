@@ -10,7 +10,7 @@
     </parent>
     <groupId>pl.bartlomiej</groupId>
     <artifactId>marine-unit-monitoring</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0</version>
     <name>marine-unit-monitoring</name>
     <description>marine-unit-monitoring</description>
     <properties>
