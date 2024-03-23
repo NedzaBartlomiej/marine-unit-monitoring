@@ -18,7 +18,7 @@ import static org.springframework.http.HttpStatus.OK;
 public class PointController {
 
     private final AisService aisService;
-    
+
     @GetMapping
     public ResponseEntity<Flux<ResponseModel<Point>>> getPoints() {
         return ResponseEntity.ok(

@@ -69,7 +69,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: marine-unit-monitoring:1.0
+    image: marine-unit-monitoring:latest
     ports:
       - "8080:8080"
     depends_on:

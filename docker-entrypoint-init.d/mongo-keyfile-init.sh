@@ -30,8 +30,8 @@ if [ -s "$mng_rs_key_path" ]; then
 fi
 openssl rand -base64 756 > "$mng_rs_key_path"
 
-# ev. delete if statement (to ensure greater consistency) -> unnecessary due to the native command err_msg
-echo "#### CHANGING PERMISSIONS TO CHMOD 400 FOR 'mongo-rs - keyFile' ####" #changed log msg
+
+echo "#### CHANGING PERMISSIONS TO CHMOD 400 FOR 'mongo-rs - keyFile' ####"
 if [ -f "$mng_rs_key_path" ]; then
   chmod 400 "$mng_rs_key_path"
 else
