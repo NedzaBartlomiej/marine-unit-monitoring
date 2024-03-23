@@ -16,8 +16,15 @@ echo "#### STOPPING APP CONTAINER ####"
 docker stop $app_container_name
 
 
-echo "#### MVN PACKAGE ####"
-mvn package
+echo "#### MVN CLEAN & PACKAGE ####"
+if ! mvn clean; then
+  echo "Something go wrong on mvn clean, exiting."
+  exit 1;
+fi
+if ! mvn package; then
+    echo "Something go wrong on mvn package, exiting."
+    exit 1
+fi
 
 
 echo "#### UPDATING APP IMAGE -> '$app_img_name' ####"
@@ -28,7 +35,7 @@ else
   echo "Not found app image to update - docker compose needs to build it."
 fi
 echo "-- COMMITTING NEW VERSION OF IMAGE --"
-docker commit $app_img_name $app_img_name:latest
+docker commit $app_container_name $app_img_name:latest
 
 
 echo "#### DOCKER COMPOSE ####"
