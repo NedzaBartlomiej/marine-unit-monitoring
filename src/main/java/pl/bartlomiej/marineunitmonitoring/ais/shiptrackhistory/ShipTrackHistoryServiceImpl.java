@@ -3,6 +3,7 @@ package pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.ChangeStreamEvent;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,8 @@ import java.util.Objects;
 
 import static java.util.Arrays.stream;
 import static java.util.Map.of;
+import static org.springframework.data.mongodb.core.MongoActionOperation.INSERT;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static reactor.core.publisher.Mono.error;
 
@@ -32,7 +35,7 @@ import static reactor.core.publisher.Mono.error;
 @Slf4j
 public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
-    public static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60 * 5;
+    public static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60;
     private final ShipTrackHistoryRepository shipTrackHistoryRepository;
     private final TrackedShipRepository trackedShipRepository;
     private final WebClient webClient;
@@ -46,15 +49,15 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     @Override
     public Flux<ShipTrack> getShipTrackHistory() {
-        // todo: changeStream with SSE
-//        return reactiveMongoTemplate.changeStream(ShipTrack.class)
-//                .filter(where("operationType").is(INSERT))
-//                .listen()
-//                .mapNotNull(ChangeStreamEvent::getBody)
-//                .doOnError(error -> log.error("Something go wrong: {}", error.toString()))
-//                .doOnNext(result -> log.info("New insert into collection: {}", result));
-        return shipTrackHistoryRepository.findAll()
-                .switchIfEmpty(error(new NoContentException()));
+        // todo: changeStream with SSE - actually not working, ogolnie zeby dzialalo, jak to dziala - dokumentacja, zeby zwracalo findall i w momencie insertu
+        return reactiveMongoTemplate.changeStream(ShipTrack.class)
+                .filter(where("operationType").is(INSERT))
+                .listen()
+                .mapNotNull(ChangeStreamEvent::getBody)
+                .doOnError(error -> log.error("Something go wrong: {}", error.toString()))
+                .doOnNext(result -> log.info("New insert into collection: {}", result));
+//        return shipTrackHistoryRepository.findAll()
+//                .switchIfEmpty(error(new NoContentException()));
     }
 
     @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)

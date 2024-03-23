@@ -38,7 +38,7 @@ echo "#### DOCKER COMPOSE ####"
 docker-compose up -d
 
 
-echo "#### WAITING FOR ALL CONTAINERS START ####" #todo: maybe somehow automate it
+echo "#### WAITING FOR ALL CONTAINERS START ####" #todo: maybe somehow automate it - sprawdzic czy mongodb-primary uruchomiony i tyle
 sleep 10
 
 

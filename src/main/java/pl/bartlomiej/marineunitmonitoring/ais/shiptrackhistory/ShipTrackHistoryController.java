@@ -3,6 +3,7 @@ package pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.TrackedShip;
 import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
@@ -21,17 +22,26 @@ public class ShipTrackHistoryController {
     private final ShipTrackHistoryService shipTrackHistoryService;
 
     @GetMapping
-    public ResponseEntity<Flux<ResponseModel<ShipTrack>>> getShipTrackHistory() {
+    public ResponseEntity<Flux<ServerSentEvent<ResponseModel<ShipTrack>>>> getShipTrackHistory() {
         return ResponseEntity.ok(shipTrackHistoryService.getShipTrackHistory()
                 .map(response ->
-                        ResponseModel.<ShipTrack>builder()
-                                .httpStatus(OK)
-                                .httpStatusCode(OK.value())
-                                .body(of("ShipTracks", response))
+                        ServerSentEvent.<ResponseModel<ShipTrack>>builder()
+                                .id(response.getId().toString())
+                                .event("NEW_SHIP_TRACK_EVENT")
+                                .data(
+                                        ResponseModel.<ShipTrack>builder()
+                                                .httpStatus(OK)
+                                                .httpStatusCode(OK.value())
+                                                .body(of("ShipTracks", response))
+                                                .build()
+                                )
                                 .build()
                 )
         );
     }
+
+
+    // todo getTrackedShips()
 
     @PostMapping(value = "/tracked-ships")
     public Mono<ResponseEntity<ResponseModel<TrackedShip>>> saveTrackedShip(@RequestBody @Valid TrackedShip trackedShip) {
