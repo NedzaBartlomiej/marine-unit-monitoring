@@ -13,6 +13,7 @@ import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenServi
 import reactor.core.publisher.Mono;
 
 import static java.time.Duration.ofHours;
+import static java.time.Duration.ofMinutes;
 import static org.springframework.data.redis.cache.RedisCacheConfiguration.defaultCacheConfig;
 
 @Configuration
@@ -23,6 +24,7 @@ public class RedisCacheConfig {
 
     public static final String AIS_AUTH_TOKEN_CACHE_NAME = "AisAuthToken";
     public static final String ADDRESS_COORDS_CACHE_NAME = "AddressCoords";
+    public static final String POINTS_CACHE_NAME = "Points";
     private final AisApiAccessTokenService accessTokenService;
 
     @Bean
@@ -34,6 +36,10 @@ public class RedisCacheConfig {
                 .withCacheConfiguration(
                         ADDRESS_COORDS_CACHE_NAME,
                         defaultCacheConfig()
+                )
+                .withCacheConfiguration(
+                        POINTS_CACHE_NAME,
+                        defaultCacheConfig().entryTtl(ofMinutes(1))
                 );
     }
 

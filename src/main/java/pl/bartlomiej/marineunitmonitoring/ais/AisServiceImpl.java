@@ -3,6 +3,7 @@ package pl.bartlomiej.marineunitmonitoring.ais;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Flux;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static pl.bartlomiej.marineunitmonitoring.ais.Geometry.X_CORDS_INDEX;
 import static pl.bartlomiej.marineunitmonitoring.ais.Geometry.Y_CORDS_INDEX;
+import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.POINTS_CACHE_NAME;
 
 @Service
 @RequiredArgsConstructor
@@ -28,12 +30,14 @@ public class AisServiceImpl implements AisService {
     @Value("${secrets.ais-api.latest-ais-url}")
     private String aisApiUrl;
 
+    @Cacheable(cacheNames = POINTS_CACHE_NAME)
     @Override
     public Flux<Point> getLatestAisPoints() {
         return this.fetchAisFromApi()
                 .switchIfEmpty(Flux.error(new NoContentException()))
                 .take(resultLimit)
-                .flatMap(this::mapAisToPoint);
+                .flatMap(this::mapAisToPoint)
+                .cache();
     }
 
     private Flux<Point> mapAisToPoint(Ais ais) {
