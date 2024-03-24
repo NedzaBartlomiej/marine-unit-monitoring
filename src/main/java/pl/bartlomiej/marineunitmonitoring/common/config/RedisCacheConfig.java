@@ -39,7 +39,7 @@ public class RedisCacheConfig {
                 )
                 .withCacheConfiguration(
                         POINTS_CACHE_NAME,
-                        defaultCacheConfig().entryTtl(ofMinutes(1))
+                        defaultCacheConfig().entryTtl(ofMinutes(30))
                 );
     }
 

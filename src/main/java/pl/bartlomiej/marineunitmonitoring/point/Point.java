@@ -1,5 +1,7 @@
 package pl.bartlomiej.marineunitmonitoring.point;
 
+import java.io.Serializable;
+
 public record Point(
 
         Long mmsi,
@@ -8,5 +10,5 @@ public record Point(
         Double pointY,
         String destinationName,
         Double destinationX,
-        Double destinationY) {
+        Double destinationY) implements Serializable {
 }
