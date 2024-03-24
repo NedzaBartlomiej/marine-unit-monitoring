@@ -12,10 +12,6 @@ echo "-- REMOVING NOT USED IMAGES --"
 docker image prune
 
 
-echo "#### STOPPING APP CONTAINER ####"
-docker stop $app_container_name
-
-
 echo "#### MVN CLEAN & PACKAGE ####"
 if ! mvn clean; then
   echo "Something go wrong on mvn clean, exiting."
@@ -25,6 +21,20 @@ if ! mvn package; then
     echo "Something go wrong on mvn package, exiting."
     exit 1
 fi
+
+
+echo "#### STOPPING APP CONTAINERS ####"
+echo "-- $app_container_name --"
+docker stop $app_container_name
+echo "-- mongodb-primary --"
+docker stop mongodb-primary
+echo "-- mongodb2 --"
+docker stop mongodb2
+echo "-- mongodb3 --"
+docker stop mongodb3
+echo "-- redis --"
+docker stop redis
+
 
 
 echo "#### UPDATING APP IMAGE -> '$app_img_name' ####"
