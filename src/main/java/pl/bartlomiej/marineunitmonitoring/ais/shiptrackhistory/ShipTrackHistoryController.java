@@ -10,6 +10,8 @@ import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 import static java.util.Map.of;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
@@ -22,26 +24,38 @@ public class ShipTrackHistoryController {
     private final ShipTrackHistoryService shipTrackHistoryService;
 
     @GetMapping
-    public ResponseEntity<Flux<ServerSentEvent<ResponseModel<ShipTrack>>>> getShipTrackHistory() {
-        return ResponseEntity.ok(shipTrackHistoryService.getShipTrackHistory()
+    public Flux<ResponseEntity<ServerSentEvent<ResponseModel<ShipTrack>>>> getShipTrackHistory() {
+        return shipTrackHistoryService.getShipTrackHistory()
                 .map(response ->
-                        ServerSentEvent.<ResponseModel<ShipTrack>>builder()
-                                .id(response.getId().toString())
-                                .event("NEW_SHIP_TRACK_EVENT")
-                                .data(
-                                        ResponseModel.<ShipTrack>builder()
-                                                .httpStatus(OK)
-                                                .httpStatusCode(OK.value())
-                                                .body(of("ShipTracks", response))
-                                                .build()
-                                )
-                                .build()
-                )
-        );
+                        ResponseEntity.ok(
+                                ServerSentEvent.<ResponseModel<ShipTrack>>builder()
+                                        .id(response.getId().toString())
+                                        .event("NEW_SHIP_TRACK_EVENT")
+                                        .data(
+                                                ResponseModel.<ShipTrack>builder()
+                                                        .httpStatus(OK)
+                                                        .httpStatusCode(OK.value())
+                                                        .body(of("ShipTracks", response))
+                                                        .build()
+                                        )
+                                        .build()
+                        )
+                );
     }
 
-
-    // todo getTrackedShips()
+    @GetMapping("/tracked-ships")
+    public Mono<ResponseEntity<ResponseModel<List<TrackedShip>>>> getTrackedShips() {
+        return shipTrackHistoryService.getTrackedShips()
+                .map(response ->
+                        ResponseEntity.ok(
+                                ResponseModel.<List<TrackedShip>>builder()
+                                        .httpStatus(OK)
+                                        .httpStatusCode(OK.value())
+                                        .body(of("TrackedShips", response))
+                                        .build()
+                        )
+                );
+    }
 
     @PostMapping(value = "/tracked-ships")
     public Mono<ResponseEntity<ResponseModel<TrackedShip>>> saveTrackedShip(@RequestBody @Valid TrackedShip trackedShip) {

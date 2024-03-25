@@ -55,7 +55,6 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     @Override
     public Flux<ShipTrack> getShipTrackHistory() {
-        // todo: zeby zwracalo findAll() i otwieralo stream -> zrobione niby tak to ma dzialac, do przetestowania
         Flux<ShipTrack> shipTrackFlux = shipTrackHistoryRepository.findAll();
         Aggregation pipeline = newAggregation(match(Criteria.where(OPERATION_TYPE).is(INSERT)));
         return shipTrackFlux.concatWith(
@@ -92,6 +91,12 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     // TRACKED SHIPS - operations
 
+    public Mono<List<TrackedShip>> getTrackedShips() {
+        return trackedShipRepository.findAll()
+                .collectList()
+                .switchIfEmpty(error(new NoContentException()));
+    }
+
     @Override
     public Mono<TrackedShip> saveTrackedShip(TrackedShip trackedShip) {
         return trackedShipRepository.findByMmsi(trackedShip.getMmsi())
@@ -106,9 +111,6 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 });
     }
 
-
-    // GET SHIP TRACKS TO SAVE - operations
-
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public Mono<Void> deleteTrackedShip(Long mmsi) {
@@ -121,6 +123,9 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 })
                 .then(this.deleteShipTrackHistory(mmsi));
     }
+
+
+    // GET SHIP TRACKS TO SAVE - operations
 
     private Mono<List<TrackedShip>> fetchTrackedShips() {
         return trackedShipRepository.findAll()
