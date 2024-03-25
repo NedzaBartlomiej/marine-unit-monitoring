@@ -55,17 +55,20 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     @Override
     public Flux<ShipTrack> getShipTrackHistory() {
-        // todo: zeby zwracalo findAll() i otwieralo stream
+        // todo: zeby zwracalo findAll() i otwieralo stream -> zrobione niby tak to ma dzialac, do przetestowania
+        Flux<ShipTrack> shipTrackFlux = shipTrackHistoryRepository.findAll();
         Aggregation pipeline = newAggregation(match(Criteria.where(OPERATION_TYPE).is(INSERT)));
-        return reactiveMongoTemplate.changeStream(
-                        SHIP_TRACK_HISTORY,
-                        ChangeStreamOptions.builder()
-                                .filter(pipeline)
-                                .build(),
-                        ShipTrack.class
-                ).mapNotNull(ChangeStreamEvent::getBody)
-                .switchIfEmpty(error(new NoContentException()))
-                .doOnNext(shipTrack -> log.info("New ShipTrack returning... mmsi: {}", shipTrack.getMmsi()));
+        return shipTrackFlux.concatWith(
+                reactiveMongoTemplate.changeStream(
+                                SHIP_TRACK_HISTORY,
+                                ChangeStreamOptions.builder()
+                                        .filter(pipeline)
+                                        .build(),
+                                ShipTrack.class
+                        ).mapNotNull(ChangeStreamEvent::getBody)
+                        .switchIfEmpty(error(new NoContentException()))
+                        .doOnNext(shipTrack -> log.info("New ShipTrack returning... mmsi: {}", shipTrack.getMmsi()))
+        );
     }
 
     @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
