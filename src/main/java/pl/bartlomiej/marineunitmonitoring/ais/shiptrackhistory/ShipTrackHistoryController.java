@@ -29,23 +29,22 @@ public class ShipTrackHistoryController {
     private final TrackedShipDtoMapper trackedShipDtoMapper;
 
     @GetMapping
-    public Flux<ResponseEntity<ServerSentEvent<ResponseModel<ShipTrack>>>> getShipTrackHistory() {
-        return shipTrackHistoryService.getShipTrackHistory()
+    public ResponseEntity<Flux<ServerSentEvent<ResponseModel<ShipTrack>>>> getShipTrackHistory() {
+        return ResponseEntity.ok(shipTrackHistoryService.getShipTrackHistory()
                 .map(response ->
-                        ResponseEntity.ok(
-                                ServerSentEvent.<ResponseModel<ShipTrack>>builder()
-                                        .id(response.getId().toString())
-                                        .event("NEW_SHIP_TRACK_EVENT")
-                                        .data(
-                                                ResponseModel.<ShipTrack>builder()
-                                                        .httpStatus(OK)
-                                                        .httpStatusCode(OK.value())
-                                                        .body(of("ShipTracks", response))
-                                                        .build()
-                                        )
-                                        .build()
-                        )
-                );
+                        ServerSentEvent.<ResponseModel<ShipTrack>>builder()
+                                .id(response.getId().toString())
+                                .event("NEW_SHIP_TRACK_EVENT")
+                                .data(
+                                        ResponseModel.<ShipTrack>builder()
+                                                .httpStatus(OK)
+                                                .httpStatusCode(OK.value())
+                                                .body(of("ShipTracks", response))
+                                                .build()
+                                )
+                                .build()
+                )
+        );
     }
 
     @GetMapping("/tracked-ships")
