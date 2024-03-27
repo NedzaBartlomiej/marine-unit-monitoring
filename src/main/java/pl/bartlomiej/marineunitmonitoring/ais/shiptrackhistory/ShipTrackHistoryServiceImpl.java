@@ -18,6 +18,7 @@ import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.Track
 import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.TrackedShipRepository;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
+import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -116,7 +117,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     public Mono<Void> deleteTrackedShip(Long mmsi) {
         return trackedShipRepository.findByMmsi(mmsi)
                 .switchIfEmpty(
-                        error(new MmsiConflictException("This ship is not tracked.")))
+                        error(new NotFoundException()))
                 .flatMap(trackedShip -> {
                     log.info("Successfully deleted ship: {}, from tracking list.", trackedShip.getMmsi());
                     return trackedShipRepository.delete(trackedShip);
