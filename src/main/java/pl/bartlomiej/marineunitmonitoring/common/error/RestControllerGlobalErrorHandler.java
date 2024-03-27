@@ -18,6 +18,11 @@ public class RestControllerGlobalErrorHandler {
         return ResponseEntity.noContent().build();
     }
 
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Void> handleNotFoundException(NotFoundException e) {
+        return ResponseEntity.notFound().build();
+    }
+
     @ExceptionHandler(WebExchangeBindException.class)
     public ResponseEntity<ResponseModel<Void>> handleValidationException(BindingResult bindingResult) {
         return ResponseEntity.badRequest().body(
