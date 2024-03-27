@@ -1,7 +1,5 @@
 package pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,11 +14,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 public class TrackedShip {
 
-    @JsonIgnore
     private ObjectId id;
 
-    @NotNull(message = "Ship mmsi required.")
     private Long mmsi;
+
+    private String name;
 
     // todo List<ObjectId> -> users ids
 }
