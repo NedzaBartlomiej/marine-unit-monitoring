@@ -13,6 +13,7 @@ import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
 import pl.bartlomiej.marineunitmonitoring.point.Point;
 import reactor.core.publisher.Flux;
 
+import static java.util.Map.of;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static pl.bartlomiej.marineunitmonitoring.ais.Geometry.X_CORDS_INDEX;
 import static pl.bartlomiej.marineunitmonitoring.ais.Geometry.Y_CORDS_INDEX;
@@ -41,15 +42,20 @@ public class AisServiceImpl implements AisService {
     }
 
     private Flux<Point> mapAisToPoint(Ais ais) {
+        String mayNullName = ais.properties().name() == null ? "UNKNOWN (not reported)" : ais.properties().name();
+        String mayNullDestination = ais.properties().destination() == null ? "UNKNOWN (not reported)" : ais.properties().destination();
         return geocodeService.getAddressCoordinates(ais.properties().destination())
                 .map(position -> {
-                    ActivePointsListHolder.addActivePointMmsi(ais.properties().mmsi());
+                    ActivePointsListHolder.addActivePointMmsi(of(
+                            ais.properties().mmsi(),
+                            mayNullName
+                    ));
                     return new Point(
                             ais.properties().mmsi(),
-                            ais.properties().name() == null ? "UNKNOWN (not reported)" : ais.properties().name(),
+                            mayNullName,
                             ais.geometry().coordinates().get(X_CORDS_INDEX),
                             ais.geometry().coordinates().get(Y_CORDS_INDEX),
-                            ais.properties().destination() == null ? "UNKNOWN (not reported)" : ais.properties().destination(),
+                            mayNullDestination,
                             position.x(),
                             position.y()
                     );
