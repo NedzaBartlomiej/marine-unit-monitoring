@@ -36,7 +36,6 @@ echo "-- redis --"
 docker stop redis
 
 
-
 echo "#### UPDATING APP IMAGE -> '$app_img_name' ####"
 echo "-- DELETING APP CONTAINER --"
 docker rm $app_container_name

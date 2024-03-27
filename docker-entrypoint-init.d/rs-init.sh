@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "---- es-init.sh ----"
 
-echo "#### RS.INITIATE() ####" # todo: needs to set mongodb-primary to primary always!
+echo "#### RS.INITIATE() ####"
 mongosh <<BLOCK
 rs.initiate({
     _id: 'marine-unit-monitoring-db-rs',
