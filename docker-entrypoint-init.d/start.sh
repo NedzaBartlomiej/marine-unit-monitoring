@@ -2,6 +2,7 @@
 
 app_img_name="marine-unit-monitoring"
 app_container_name="marine-unit-monitoring"
+primary_rs_instance="mongodb-primary"
 
 echo "---- 'start.sh' ----"
 
@@ -47,9 +48,14 @@ echo "#### DOCKER COMPOSE ####"
 docker-compose up -d
 
 
-echo "#### WAITING FOR ALL CONTAINERS START ####" #todo: maybe somehow automate it - sprawdzic czy mongodb-primary uruchomiony i tyle
-sleep 10
+echo "#### WAITING FOR CONTAINERS START ####"
+inst_status=$(docker container inspect $primary_rs_instance | jq -r '.[].State.Status')
+until [ $inst_status == "running" ]; do
+  echo $inst_status
+  echo "Waiting for '$primary_rs_instance'"
+  sleep 2
+done
 
 
 echo "#### EXECUTING INIT FILES ####"
-docker exec mongodb-primary usr/docker-entrypoint-init.d/rs-init.sh
+docker exec $primary_rs_instance usr/docker-entrypoint-init.d/rs-init.sh
