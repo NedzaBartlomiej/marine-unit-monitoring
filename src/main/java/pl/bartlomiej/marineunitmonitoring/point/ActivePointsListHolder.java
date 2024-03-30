@@ -19,17 +19,12 @@ public class ActivePointsListHolder {
     }
 
     public static String getName(Long mmsi) {
-        try {
-            return activePoints.stream()
-                    .map(pointShipBasicInfo ->
-                            pointShipBasicInfo.get(mmsi)
-                    )
-                    .findFirst()
-                    .orElseThrow(NotFoundException::new);
-        } catch (NotFoundException e) {
-            log.error("Not found ship name by mmsi in 'activePoints'.");
-            throw new NotFoundException();
-        }
+        return activePoints.stream()
+                .map(pointShipBasicInfo ->
+                        pointShipBasicInfo.get(mmsi)
+                )
+                .findFirst()
+                .orElse(null);
     }
 
     public static void addActivePointMmsi(Map<Long, String> pointShipBasicInfo) {

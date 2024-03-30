@@ -26,8 +26,6 @@ public class ShipTrack {
     private Double y;
     private LocalDateTime readingTime;
 
-    // todo List<ObjectId> -> users ids
-
     ShipTrack(Long mmsi, Double x, Double y) {
         this.mmsi = mmsi;
         this.x = x;

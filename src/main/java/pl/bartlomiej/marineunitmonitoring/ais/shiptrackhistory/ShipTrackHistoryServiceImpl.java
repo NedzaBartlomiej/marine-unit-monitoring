@@ -56,7 +56,8 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     @Override
     public Flux<ShipTrack> getShipTrackHistory() {
-        Flux<ShipTrack> shipTrackFlux = shipTrackHistoryRepository.findAll();
+        Flux<ShipTrack> shipTrackFlux = shipTrackHistoryRepository.findAll()
+                .switchIfEmpty(error(new NoContentException()));
         Aggregation pipeline = newAggregation(match(Criteria.where(OPERATION_TYPE).is(INSERT)));
         return shipTrackFlux.concatWith(
                 reactiveMongoTemplate.changeStream(
@@ -66,7 +67,6 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                                         .build(),
                                 ShipTrack.class
                         ).mapNotNull(ChangeStreamEvent::getBody)
-                        .switchIfEmpty(error(new NoContentException()))
                         .doOnNext(shipTrack -> log.info("New ShipTrack returning... mmsi: {}", shipTrack.getMmsi()))
         );
     }
@@ -94,8 +94,8 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     public Mono<List<TrackedShip>> getTrackedShips() {
         return trackedShipRepository.findAll()
-                .collectList()
-                .switchIfEmpty(error(new NoContentException()));
+                .switchIfEmpty(error(new NoContentException()))
+                .collectList();
     }
 
     @Override
@@ -103,10 +103,12 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         return trackedShipRepository.findByMmsi(trackedShip.getMmsi())
                 .hasElement()
                 .flatMap(hasElement -> {
-                    if (hasElement)
+                    if (hasElement) {
                         return error(new MmsiConflictException("The ship is already being tracked."));
-                    if (!ActivePointsListHolder.isMmsiActive(trackedShip.getMmsi()))
+                    }
+                    if (!ActivePointsListHolder.isMmsiActive(trackedShip.getMmsi())) {
                         return error(new MmsiConflictException("Invalid ship."));
+                    }
                     log.info("Successfully saved ship: {}, to tracking list.", trackedShip.getMmsi());
                     return trackedShipRepository.save(trackedShip);
                 });

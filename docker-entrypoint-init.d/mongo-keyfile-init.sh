@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 mng_rs_key_path="/usr/mongo-rs-auth/mongo-rs.key"
 mng_rs_dir_path="/usr/mongo-rs-auth/"

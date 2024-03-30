@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 echo "---- es-init.sh ----"
 
 echo "#### RS.INITIATE() ####"

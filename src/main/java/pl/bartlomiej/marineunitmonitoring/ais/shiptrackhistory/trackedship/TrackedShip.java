@@ -19,6 +19,4 @@ public class TrackedShip {
     private Long mmsi;
 
     private String name;
-
-    // todo List<ObjectId> -> users ids
 }

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 app_img_name="marine-unit-monitoring"
 app_container_name="marine-unit-monitoring"
@@ -48,9 +48,9 @@ echo "#### DOCKER COMPOSE ####"
 docker-compose up -d
 
 
-echo "#### WAITING FOR CONTAINERS START ####"
+echo "#### CHECKING ARE CONTAINERS STARTED ####"
 inst_status=$(docker container inspect $primary_rs_instance | jq -r '.[].State.Status')
-until [ $inst_status == "running" ]; do
+until [ $inst_status = "running" ]; do
   echo $inst_status
   echo "Waiting for '$primary_rs_instance'"
   sleep 2
