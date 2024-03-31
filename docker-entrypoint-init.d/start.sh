@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 app_img_name="marine-unit-monitoring"
 app_container_name="marine-unit-monitoring"
@@ -55,6 +55,7 @@ until [ $inst_status = "running" ]; do
   echo "Waiting for '$primary_rs_instance'"
   sleep 2
 done
+sleep 3
 
 
 echo "#### EXECUTING INIT FILES ####"
