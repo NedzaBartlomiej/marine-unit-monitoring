@@ -1,6 +1,5 @@
 package pl.bartlomiej.marineunitmonitoring.user;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +10,8 @@ import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.Track
 
 import java.util.List;
 
+import static java.util.Collections.emptyList;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -18,12 +19,13 @@ import java.util.List;
 @Document(collection = "users")
 public class User {
 
-    @JsonIgnore
     private ObjectId id;
 
     private String username;
 
+    private String email;
+
     private String password;
 
-    private List<TrackedShip> trackedShips;
+    private List<TrackedShip> trackedShips = emptyList();
 }
