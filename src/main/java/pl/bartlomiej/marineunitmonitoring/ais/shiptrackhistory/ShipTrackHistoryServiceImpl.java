@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
@@ -114,16 +113,14 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 });
     }
 
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional
     @Override
     public Mono<Void> deleteTrackedShip(Long mmsi) {
         return trackedShipRepository.findByMmsi(mmsi)
                 .switchIfEmpty(
-                        error(new NotFoundException()))
-                .flatMap(trackedShip -> {
-                    log.info("Successfully deleted ship: {}, from tracking list.", trackedShip.getMmsi());
-                    return trackedShipRepository.delete(trackedShip);
-                })
+                        error(new NotFoundException())
+                )
+                .flatMap(trackedShipRepository::delete)
                 .then(this.deleteShipTrackHistory(mmsi));
     }
 
