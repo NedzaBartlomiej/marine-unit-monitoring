@@ -1,5 +1,6 @@
 package pl.bartlomiej.marineunitmonitoring.common.error;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,6 +14,16 @@ import static org.springframework.http.HttpStatus.*;
 @RestControllerAdvice
 public class RestControllerGlobalErrorHandler {
 
+    private static ResponseEntity<ResponseModel<Void>> getErrorResponse(String message, HttpStatus httpStatus) {
+        return ResponseEntity.status(httpStatus).body(
+                ResponseModel.<Void>builder()
+                        .httpStatus(httpStatus)
+                        .httpStatusCode(httpStatus.value())
+                        .message(message)
+                        .build()
+        );
+    }
+
     @ExceptionHandler(NoContentException.class)
     public ResponseEntity<Void> handleNoContentException(NoContentException e) {
         return ResponseEntity.noContent().build();
@@ -23,37 +34,24 @@ public class RestControllerGlobalErrorHandler {
         return ResponseEntity.notFound().build();
     }
 
+    @ExceptionHandler(UniqueEmailException.class)
+    public ResponseEntity<ResponseModel<Void>> handleUniqueEmailException(UniqueEmailException e) {
+        return getErrorResponse(e.getMessage(), CONFLICT);
+    }
+
     @ExceptionHandler(WebExchangeBindException.class)
     public ResponseEntity<ResponseModel<Void>> handleValidationException(BindingResult bindingResult) {
-        return ResponseEntity.badRequest().body(
-                ResponseModel.<Void>builder()
-                        .httpStatus(BAD_REQUEST)
-                        .httpStatusCode(BAD_REQUEST.value())
-                        .message(requireNonNull(bindingResult.getFieldError()).getDefaultMessage())
-                        .build()
-        );
+        return getErrorResponse(requireNonNull(bindingResult.getFieldError()).getDefaultMessage(), BAD_REQUEST);
     }
 
     @ExceptionHandler(MmsiConflictException.class)
     public ResponseEntity<ResponseModel<Void>> handleMmsiConflictException(MmsiConflictException e) {
-        return ResponseEntity.status(CONFLICT).body(
-                ResponseModel.<Void>builder()
-                        .httpStatus(CONFLICT)
-                        .httpStatusCode(CONFLICT.value())
-                        .message(e.getMessage())
-                        .build()
-        );
+        return getErrorResponse(e.getMessage(), CONFLICT);
     }
 
     @ExceptionHandler(WebClientRequestRetryException.class)
     public ResponseEntity<ResponseModel<Void>> handleWebClientRequestRetryException(WebClientRequestRetryException e) {
-        return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(
-                ResponseModel.<Void>builder()
-                        .httpStatus(INTERNAL_SERVER_ERROR)
-                        .httpStatusCode(INTERNAL_SERVER_ERROR.value())
-                        .message(e.getMessage())
-                        .build()
-        );
+        return getErrorResponse(e.getMessage(), INTERNAL_SERVER_ERROR);
     }
 
 }
