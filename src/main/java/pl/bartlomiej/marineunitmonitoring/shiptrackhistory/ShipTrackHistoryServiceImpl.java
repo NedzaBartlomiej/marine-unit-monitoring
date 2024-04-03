@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory;
+package pl.bartlomiej.marineunitmonitoring.shiptrackhistory;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,15 +10,11 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
-import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.TrackedShip;
-import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.TrackedShipRepository;
-import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
-import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
+import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -43,7 +39,6 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     public static final String SHIP_TRACK_HISTORY = "ship_track_history";
     public static final String INSERT = "insert";
     private final ShipTrackHistoryRepository shipTrackHistoryRepository;
-    private final TrackedShipRepository trackedShipRepository;
     private final WebClient webClient;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
     private final AisApiAccessTokenService accessTokenService;
@@ -85,54 +80,29 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     }
 
     private Mono<Void> deleteShipTrackHistory(Long mmsi) {
-        return shipTrackHistoryRepository.deleteShipTracksByMmsi(mmsi);
-    }
-
-
-    // TRACKED SHIPS - operations
-
-    public Mono<List<TrackedShip>> getTrackedShips() {
-        return trackedShipRepository.findAll()
-                .switchIfEmpty(error(new NoContentException()))
-                .collectList();
-    }
-
-    @Override
-    public Mono<TrackedShip> saveTrackedShip(TrackedShip trackedShip) {
-        return trackedShipRepository.findByMmsi(trackedShip.getMmsi())
-                .hasElement()
-                .flatMap(hasElement -> {
-                    if (hasElement) {
-                        return error(new MmsiConflictException("The ship is already being tracked."));
-                    }
-                    if (!ActivePointsListHolder.isMmsiActive(trackedShip.getMmsi())) {
-                        return error(new MmsiConflictException("Invalid ship."));
-                    }
-                    log.info("Successfully saved ship: {}, to tracking list.", trackedShip.getMmsi());
-                    return trackedShipRepository.save(trackedShip);
-                });
-    }
-
-    @Transactional
-    @Override
-    public Mono<Void> deleteTrackedShip(Long mmsi) {
-        return trackedShipRepository.findByMmsi(mmsi)
-                .switchIfEmpty(
-                        error(new NotFoundException())
-                )
-                .flatMap(trackedShipRepository::delete)
-                .then(this.deleteShipTrackHistory(mmsi));
+        return shipTrackHistoryRepository.findByMmsi(mmsi)
+                .switchIfEmpty(error(new NotFoundException()))
+                .flatMap(shipTrack ->
+                        shipTrackHistoryRepository.deleteShipTracksByMmsi(mmsi)
+                );
     }
 
 
     // GET SHIP TRACKS TO SAVE - operations
 
+    // todo
     private Mono<List<TrackedShip>> fetchTrackedShips() {
         return trackedShipRepository.findAll()
                 .switchIfEmpty(error(new NoContentException()))
                 .collectList();
     }
 
+
+    // todo -> zrobic to jako metoda w ais service ->
+    //  ogolnie ujednolicic zapytania do ais api
+    //  i zrobic je jako metody w ais service (dla danego endpointu)
+    //  a nie tak surowo odwolywac sie do endpointow web clientem
+    //  jeszcze w innych miejscach w aplikacji
     private Mono<List<Ship>> fetchShipsFromApi(List<Long> mmsis) {
         return accessTokenService.getAisAuthToken()
                 .flatMap(token -> webClient
@@ -146,6 +116,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 );
     }
 
+    // todo
     private Mono<List<Ship>> filterInvalidShips(Ship[] ships, List<Long> mmsis) {
         List<Ship> validShips = stream(ships)
                 .filter(Objects::nonNull)

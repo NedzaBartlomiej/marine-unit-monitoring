@@ -5,10 +5,10 @@ import org.bson.types.ObjectId;
 public interface UserService {
 
 
-    User getUser(ObjectId objectId);
+    User getUser(String id);
 
 
     User createUser(User user);
 
-    void deleteUser(ObjectId objectId);
+    void deleteUser(String id);
 }

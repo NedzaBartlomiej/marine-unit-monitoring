@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.geocode.service;
+package pl.bartlomiej.marineunitmonitoring.geocode;
 
 import pl.bartlomiej.marineunitmonitoring.geocode.Position;
 import reactor.core.publisher.Flux;

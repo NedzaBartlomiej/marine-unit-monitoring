@@ -1,7 +1,6 @@
 package pl.bartlomiej.marineunitmonitoring.user;
 
 import lombok.RequiredArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
@@ -14,11 +13,12 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public User getUser(ObjectId objectId) {
-        return userRepository.findById(objectId)
+    public User getUser(String id) {
+        return userRepository.findById(id)
                 .orElseThrow(NotFoundException::new);
     }
 
+    @Transactional
     @Override
     public User createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail()))
@@ -29,9 +29,12 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void deleteUser(ObjectId objectId) {
-        User user = userRepository.findById(objectId)
+    public void deleteUser(String id) {
+        User user = userRepository.findById(id)
                 .orElseThrow(NotFoundException::new);
         userRepository.delete(user);
     }
+
+
+    //todo ->
 }

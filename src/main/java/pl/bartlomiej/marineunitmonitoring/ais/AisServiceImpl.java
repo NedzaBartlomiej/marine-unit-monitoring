@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
-import pl.bartlomiej.marineunitmonitoring.geocode.service.GeocodeService;
+import pl.bartlomiej.marineunitmonitoring.geocode.GeocodeService;
 import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
 import pl.bartlomiej.marineunitmonitoring.point.Point;
 import reactor.core.publisher.Flux;

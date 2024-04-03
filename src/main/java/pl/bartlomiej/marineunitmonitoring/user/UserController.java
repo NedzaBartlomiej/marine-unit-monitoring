@@ -2,7 +2,6 @@ package pl.bartlomiej.marineunitmonitoring.user;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
@@ -20,10 +19,9 @@ public class UserController {
     private final UserService userService;
     private final UserDtoMapper userDtoMapper;
 
-    //todo ogarnac jak odwolywac sie do userId w endpointach tego wymagajacych - dla mongodb czyli objectId
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<ResponseModel<User>> getUser(@PathVariable String userId) {
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseModel<User>> getUser(@PathVariable String id) {
         return ResponseEntity.ok(
                 ResponseModel.<User>builder()
                         .httpStatus(OK)
@@ -31,7 +29,7 @@ public class UserController {
                         .body(
                                 of(
                                         "User",
-                                        userService.getUser(new ObjectId(userId))
+                                        userService.getUser(id)
                                 )
                         )
                         .build()
@@ -56,9 +54,9 @@ public class UserController {
         );
     }
 
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<ResponseModel<Void>> deleteUser(@PathVariable String userId) {
-        userService.deleteUser(new ObjectId(userId));
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseModel<Void>> deleteUser(@PathVariable String id) {
+        userService.deleteUser(id);
         return ResponseEntity.ok(
                 ResponseModel.<Void>builder()
                         .httpStatus(OK)

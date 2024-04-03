@@ -4,9 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.Document;
-import pl.bartlomiej.marineunitmonitoring.ais.shiptrackhistory.trackedship.TrackedShip;
+import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
 
 import java.util.List;
 
@@ -19,7 +18,7 @@ import static java.util.Collections.emptyList;
 @Document(collection = "users")
 public class User {
 
-    private ObjectId id;
+    private String id;
 
     private String username;
 
