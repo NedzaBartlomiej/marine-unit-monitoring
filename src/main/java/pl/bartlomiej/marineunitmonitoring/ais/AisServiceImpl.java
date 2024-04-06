@@ -9,11 +9,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.geocode.GeocodeService;
-import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
 import pl.bartlomiej.marineunitmonitoring.point.Point;
 import reactor.core.publisher.Flux;
 
-import static java.util.Map.of;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static pl.bartlomiej.marineunitmonitoring.ais.Geometry.X_CORDS_INDEX;
 import static pl.bartlomiej.marineunitmonitoring.ais.Geometry.Y_CORDS_INDEX;
@@ -23,6 +21,7 @@ import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.
 @RequiredArgsConstructor
 @Slf4j
 public class AisServiceImpl implements AisService {
+    public static final String UNKNOWN_NOT_REPORTED = "UNKNOWN (not reported)";
     private final GeocodeService geocodeService;
     private final AisApiAccessTokenService accessTokenService;
     private final WebClient webClient;
@@ -42,24 +41,18 @@ public class AisServiceImpl implements AisService {
     }
 
     private Flux<Point> mapAisToPoint(Ais ais) {
-        String mayNullName = ais.properties().name() == null ? "UNKNOWN (not reported)" : ais.properties().name();
-        String mayNullDestination = ais.properties().destination() == null ? "UNKNOWN (not reported)" : ais.properties().destination();
+        String mayNullName = ais.properties().name() == null ? UNKNOWN_NOT_REPORTED : ais.properties().name();
+        String mayNullDestination = ais.properties().destination() == null ? UNKNOWN_NOT_REPORTED : ais.properties().destination();
         return geocodeService.getAddressCoordinates(ais.properties().destination())
-                .map(position -> {
-                    ActivePointsListHolder.addActivePointMmsi(of(
-                            ais.properties().mmsi(),
-                            mayNullName
-                    ));
-                    return new Point(
-                            ais.properties().mmsi(),
-                            mayNullName,
-                            ais.geometry().coordinates().get(X_CORDS_INDEX),
-                            ais.geometry().coordinates().get(Y_CORDS_INDEX),
-                            mayNullDestination,
-                            position.x(),
-                            position.y()
-                    );
-                });
+                .map(position -> new Point(
+                        ais.properties().mmsi(),
+                        mayNullName,
+                        ais.geometry().coordinates().get(X_CORDS_INDEX),
+                        ais.geometry().coordinates().get(Y_CORDS_INDEX),
+                        mayNullDestination,
+                        position.x(),
+                        position.y()
+                ));
     }
 
     private Flux<Ais> fetchAisFromApi() {

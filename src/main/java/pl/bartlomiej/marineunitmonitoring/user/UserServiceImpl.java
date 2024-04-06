@@ -3,14 +3,19 @@ package pl.bartlomiej.marineunitmonitoring.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.UniqueEmailException;
+import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
+import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
+import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final CustomUserRepository customUserRepository;
 
     @Override
     public User getUser(String id) {
@@ -36,5 +41,15 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    //todo ->
+    @Override
+    public TrackedShip addTrackedShip(String id, Long mmsi) {
+        if (!ActivePointsListHolder.isPointActive(mmsi)) {
+            throw new MmsiConflictException("Invalid ship.");
+        }
+        TrackedShip trackedShip = new TrackedShip(mmsi, ActivePointsListHolder.getName(mmsi));
+        return customUserRepository.pushTrackedShip(
+                id,
+                trackedShip
+        );
+    }
 }

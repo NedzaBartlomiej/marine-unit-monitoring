@@ -27,7 +27,6 @@ public class MongoConfig {
         return new ReactiveMongoTemplate(factory);
     }
 
-
     @Bean
     public MongoDatabaseFactory mongoDatabaseFactory() {
         return new SimpleMongoClientDatabaseFactory(new ConnectionString(mongoConnectionString));

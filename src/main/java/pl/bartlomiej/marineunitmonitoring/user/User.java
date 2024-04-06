@@ -9,8 +9,6 @@ import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
 
 import java.util.List;
 
-import static java.util.Collections.emptyList;
-
 @Getter
 @Setter
 @AllArgsConstructor
@@ -26,5 +24,5 @@ public class User {
 
     private String password;
 
-    private List<TrackedShip> trackedShips = emptyList();
+    private List<TrackedShip> trackedShips;
 }

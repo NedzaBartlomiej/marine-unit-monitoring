@@ -25,15 +25,10 @@ fi
 
 
 echo "#### STOPPING APP CONTAINERS ####"
-echo "-- $app_container_name --"
 docker stop $app_container_name
-echo "-- mongodb-primary --"
 docker stop mongodb-primary
-echo "-- mongodb2 --"
 docker stop mongodb2
-echo "-- mongodb3 --"
 docker stop mongodb3
-echo "-- redis --"
 docker stop redis
 
 
@@ -48,16 +43,13 @@ echo "#### DOCKER COMPOSE ####"
 docker-compose up -d
 
 
-echo "#### CHECKING ARE CONTAINERS STARTED ####"
+echo "#### CHECKING IS MONGODB INIT CONTAINER STARTED ####"
 inst_status=$(docker container inspect $primary_rs_instance | jq -r '.[].State.Status')
 until [ $inst_status = "running" ]; do
   echo $inst_status
   echo "Waiting for '$primary_rs_instance'"
   sleep 2
 done
-echo "-- Sleep 3 --"
 sleep 3
 
-
-echo "#### EXECUTING INIT FILES ####"
 docker exec $primary_rs_instance usr/docker-entrypoint-init.d/rs-init.sh

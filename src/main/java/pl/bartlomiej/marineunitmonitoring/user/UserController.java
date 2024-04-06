@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserDtoMapper;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserSaveDto;
+import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
+
+import java.util.List;
 
 import static java.util.Map.of;
 import static org.springframework.http.HttpStatus.OK;
@@ -62,6 +65,23 @@ public class UserController {
                         .httpStatus(OK)
                         .httpStatusCode(OK.value())
                         .message("User has been deleted successfully.")
+                        .build()
+        );
+    }
+
+
+    @PatchMapping("/{id}/tracked-ships/{mmsi}")
+    public ResponseEntity<ResponseModel<TrackedShip>> addTrackedShip(@PathVariable String id, @PathVariable Long mmsi) {
+        return ResponseEntity.ok(
+                ResponseModel.<TrackedShip>builder()
+                        .httpStatus(OK)
+                        .httpStatusCode(OK.value())
+                        .body(
+                                of(
+                                        "TrackedShip", userService.addTrackedShip(id, mmsi)
+                                )
+                        )
+                        .message("Successfully added ship into tracking list.")
                         .build()
         );
     }
