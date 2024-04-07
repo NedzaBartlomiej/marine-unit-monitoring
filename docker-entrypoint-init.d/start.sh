@@ -26,10 +26,6 @@ fi
 
 echo "#### STOPPING APP CONTAINERS ####"
 docker stop $app_container_name
-docker stop mongodb-primary
-docker stop mongodb2
-docker stop mongodb3
-docker stop redis
 
 
 echo "#### UPDATING APP IMAGE -> '$app_img_name' ####"

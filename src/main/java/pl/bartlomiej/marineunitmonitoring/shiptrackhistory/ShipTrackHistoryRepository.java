@@ -7,5 +7,5 @@ public interface ShipTrackHistoryRepository extends ReactiveMongoRepository<Ship
 
     Mono<ShipTrack> findByMmsi(Long mmsi);
 
-    Mono<Void> deleteShipTracksByMmsi(Long mmsi);
+    Mono<Void> deleteAllByMmsi(Long mmsi);
 }

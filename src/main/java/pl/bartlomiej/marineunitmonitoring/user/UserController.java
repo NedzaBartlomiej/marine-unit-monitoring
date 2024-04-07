@@ -2,6 +2,7 @@ package pl.bartlomiej.marineunitmonitoring.user;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
@@ -12,6 +13,7 @@ import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
 import java.util.List;
 
 import static java.util.Map.of;
+import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
@@ -22,68 +24,88 @@ public class UserController {
     private final UserService userService;
     private final UserDtoMapper userDtoMapper;
 
+    private static <T> ResponseEntity<ResponseModel<T>> buildResponse(
+            String message, HttpStatus httpStatus, T bodyValue, String bodyKey) {
+
+        ResponseModel.ResponseModelBuilder<T> builder =
+                ResponseModel.<T>builder()
+                        .httpStatus(httpStatus)
+                        .httpStatusCode(httpStatus.value());
+
+        if (message != null) {
+            builder.message(message);
+        }
+
+        if (bodyValue != null && bodyKey != null) {
+            builder.body(of(bodyKey, bodyValue));
+        }
+
+        return ResponseEntity
+                .status(httpStatus)
+                .body(builder.build());
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseModel<User>> getUser(@PathVariable String id) {
-        return ResponseEntity.ok(
-                ResponseModel.<User>builder()
-                        .httpStatus(OK)
-                        .httpStatusCode(OK.value())
-                        .body(
-                                of(
-                                        "User",
-                                        userService.getUser(id)
-                                )
-                        )
-                        .build()
+        return buildResponse(
+                null,
+                OK,
+                userService.getUser(id),
+                "User"
         );
     }
 
     @PostMapping
     public ResponseEntity<ResponseModel<User>> createUser(@RequestBody @Valid UserSaveDto userSaveDto) {
-        return ResponseEntity.ok(
-                ResponseModel.<User>builder()
-                        .httpStatus(OK)
-                        .httpStatusCode(OK.value())
-                        .body(
-                                of(
-                                        "User",
-                                        userService.createUser(
-                                                userDtoMapper.mapFrom(userSaveDto)
-                                        )
-                                )
-                        )
-                        .build()
+        return buildResponse(
+                null,
+                CREATED,
+                userService.createUser(
+                        userDtoMapper.mapFrom(userSaveDto)
+                ),
+                "User"
         );
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseModel<Void>> deleteUser(@PathVariable String id) {
         userService.deleteUser(id);
-        return ResponseEntity.ok(
-                ResponseModel.<Void>builder()
-                        .httpStatus(OK)
-                        .httpStatusCode(OK.value())
-                        .message("User has been deleted successfully.")
-                        .build()
+        return buildResponse(
+                "User has been deleted successfully.",
+                OK,
+                null,
+                null
         );
     }
 
+    @GetMapping("/{id}/tracked-ships")
+    public ResponseEntity<ResponseModel<List<TrackedShip>>> getTrackedShips(@PathVariable String id) {
+        return buildResponse(
+                null,
+                OK,
+                userService.getTrackedShips(id),
+                "TrackedShips"
+        );
+    }
 
-    @PatchMapping("/{id}/tracked-ships/{mmsi}")
+    @PostMapping("/{id}/tracked-ships/{mmsi}")
     public ResponseEntity<ResponseModel<TrackedShip>> addTrackedShip(@PathVariable String id, @PathVariable Long mmsi) {
-        return ResponseEntity.ok(
-                ResponseModel.<TrackedShip>builder()
-                        .httpStatus(OK)
-                        .httpStatusCode(OK.value())
-                        .body(
-                                of(
-                                        "TrackedShip", userService.addTrackedShip(id, mmsi)
-                                )
-                        )
-                        .message("Successfully added ship into tracking list.")
-                        .build()
+        return buildResponse(
+                "Successfully added ship into tracking list.",
+                CREATED,
+                userService.addTrackedShip(id, mmsi),
+                "TrackedShip"
         );
     }
 
+    @DeleteMapping("/{id}/tracked-ships/{mmsi}")
+    public ResponseEntity<ResponseModel<TrackedShip>> removeTrackedShip(@PathVariable String id, @PathVariable Long mmsi) {
+        userService.removeTrackedShip(id, mmsi);
+        return buildResponse(
+                "Successfully removed ship from tracking list.",
+                OK,
+                null,
+                null
+        );
+    }
 }

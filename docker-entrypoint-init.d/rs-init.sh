@@ -14,8 +14,10 @@ rs.initiate({
 })
 BLOCK
 
+#todo automate it
 # add it to readme in installation info
-#rs.conf().members[0].priority = 100
-#rs.conf().members[1].priority = 1
-#rs.conf().members[2].priority = 1
-#rs.reconfig(rs.conf())
+#cfg = rs.conf()
+#cfg.members[0].priority = 100
+#cfg.members[1].priority = 1
+#cfg.members[2].priority = 1
+#rs.reconfig(cfg)

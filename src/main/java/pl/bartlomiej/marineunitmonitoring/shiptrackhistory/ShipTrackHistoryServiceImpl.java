@@ -1,70 +1,58 @@
-//package pl.bartlomiej.marineunitmonitoring.shiptrackhistory;
-//
-//import lombok.RequiredArgsConstructor;
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.data.mongodb.core.ChangeStreamEvent;
-//import org.springframework.data.mongodb.core.ChangeStreamOptions;
-//import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-//import org.springframework.data.mongodb.core.aggregation.Aggregation;
-//import org.springframework.data.mongodb.core.query.Criteria;
-//import org.springframework.scheduling.annotation.Scheduled;
-//import org.springframework.stereotype.Service;
-//import org.springframework.web.reactive.function.client.WebClient;
-//import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
-//import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
-//import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
-//import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
-//import reactor.core.publisher.Flux;
-//import reactor.core.publisher.Mono;
-//
-//import java.util.ArrayList;
-//import java.util.List;
-//import java.util.Objects;
-//
-//import static java.util.Arrays.stream;
-//import static java.util.Map.of;
-//import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
-//import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
-//import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-//import static reactor.core.publisher.Mono.error;
-//
-//@Service
-//@RequiredArgsConstructor
-//@Slf4j
-//public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
-//
-//    public static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60 * 5;
-//    public static final String OPERATION_TYPE = "operationType";
-//    public static final String SHIP_TRACK_HISTORY = "ship_track_history";
-//    public static final String INSERT = "insert";
-//    private final ShipTrackHistoryRepository shipTrackHistoryRepository;
-//    private final WebClient webClient;
-//    private final ReactiveMongoTemplate reactiveMongoTemplate;
-//    private final AisApiAccessTokenService accessTokenService;
-//    @Value("${secrets.ais-api.latest-ais-bymmsi-url}")
-//    private String aisApiUrl;
-//
-//
-//    // TRACK HISTORY - operations
-//
-//    @Override
-//    public Flux<ShipTrack> getShipTrackHistory() {
-//        Flux<ShipTrack> shipTrackFlux = shipTrackHistoryRepository.findAll()
-//                .switchIfEmpty(error(new NoContentException()));
-//        Aggregation pipeline = newAggregation(match(Criteria.where(OPERATION_TYPE).is(INSERT)));
-//        return shipTrackFlux.concatWith(
-//                reactiveMongoTemplate.changeStream(
-//                                SHIP_TRACK_HISTORY,
-//                                ChangeStreamOptions.builder()
-//                                        .filter(pipeline)
-//                                        .build(),
-//                                ShipTrack.class
-//                        ).mapNotNull(ChangeStreamEvent::getBody)
-//                        .doOnNext(shipTrack -> log.info("New ShipTrack returning... mmsi: {}", shipTrack.getMmsi()))
-//        );
-//    }
-//
+package pl.bartlomiej.marineunitmonitoring.shiptrackhistory;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.ChangeStreamEvent;
+import org.springframework.data.mongodb.core.ChangeStreamOptions;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
+import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static reactor.core.publisher.Mono.error;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
+
+    public static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60 * 5;
+    public static final String OPERATION_TYPE = "operationType";
+    public static final String SHIP_TRACK_HISTORY = "ship_track_history";
+    public static final String INSERT = "insert";
+    private final ShipTrackHistoryRepository shipTrackHistoryRepository;
+    private final WebClient webClient;
+    private final ReactiveMongoTemplate reactiveMongoTemplate;
+    private final AisApiAccessTokenService accessTokenService;
+    @Value("${secrets.ais-api.latest-ais-bymmsi-url}")
+    private String aisApiUrl;
+
+
+    // TRACK HISTORY - operations
+
+    @Override
+    public Flux<ShipTrack> getShipTrackHistory() {
+        Aggregation pipeline = newAggregation(match(Criteria.where(OPERATION_TYPE).is(INSERT)));
+        return shipTrackHistoryRepository.findAll().concatWith(
+                reactiveMongoTemplate.changeStream(
+                                SHIP_TRACK_HISTORY,
+                                ChangeStreamOptions.builder()
+                                        .filter(pipeline)
+                                        .build(),
+                                ShipTrack.class
+                        ).mapNotNull(ChangeStreamEvent::getBody)
+                        .doOnNext(shipTrack -> log.info("New ShipTrack returning... mmsi: {}", shipTrack.getMmsi()))
+        );
+    }
+
 //    @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
 //    public void saveTracksForTrackedShips() {
 //        this.fetchShipTracks()
@@ -78,31 +66,31 @@
 //                                "Something go wrong when saving tracked ships coordinates: {}",
 //                                error.getMessage()));
 //    }
-//
-//    private Mono<Void> deleteShipTrackHistory(Long mmsi) {
-//        return shipTrackHistoryRepository.findByMmsi(mmsi)
-//                .switchIfEmpty(error(new NotFoundException()))
-//                .flatMap(shipTrack ->
-//                        shipTrackHistoryRepository.deleteShipTracksByMmsi(mmsi)
-//                );
-//    }
-//
-//
-//    // GET SHIP TRACKS TO SAVE - operations
-//
-//    // todo
+
+    public Mono<Void> clearShipHistory(Long mmsi) {
+        return shipTrackHistoryRepository.findByMmsi(mmsi)
+                .switchIfEmpty(error(new NotFoundException()))
+                .flatMap(shipTrack ->
+                        shipTrackHistoryRepository.deleteAllByMmsi(mmsi)
+                );
+    }
+
+
+    // GET SHIP TRACKS TO SAVE - operations
+
+    // todo
 //    private Mono<List<TrackedShip>> fetchTrackedShips() {
 //        return trackedShipRepository.findAll()
 //                .switchIfEmpty(error(new NoContentException()))
 //                .collectList();
 //    }
-//
-//
-//    // todo -> zrobic to jako metoda w ais service ->
-//    //  ogolnie ujednolicic zapytania do ais api
-//    //  i zrobic je jako metody w ais service (dla danego endpointu)
-//    //  a nie tak surowo odwolywac sie do endpointow web clientem
-//    //  jeszcze w innych miejscach w aplikacji
+
+
+    // todo -> zrobic to jako metoda w ais service ->
+    //  ogolnie ujednolicic zapytania do ais api
+    //  i zrobic je jako metody w ais service (dla danego endpointu)
+    //  a nie tak surowo odwolywac sie do endpointow web clientem
+    //  jeszcze w innych miejscach w aplikacji
 //    private Mono<List<Ship>> fetchShipsFromApi(List<Long> mmsis) {
 //        return accessTokenService.getAisAuthToken()
 //                .flatMap(token -> webClient
@@ -115,8 +103,8 @@
 //                        .flatMap(ships -> this.filterInvalidShips(ships, mmsis))
 //                );
 //    }
-//
-//    // todo
+
+    // todo
 //    private Mono<List<Ship>> filterInvalidShips(Ship[] ships, List<Long> mmsis) {
 //        List<Ship> validShips = stream(ships)
 //                .filter(Objects::nonNull)
@@ -134,7 +122,7 @@
 //
 //        return Mono.just(validShips);
 //    }
-//
+
 //    private Mono<List<ShipTrack>> mapToShipTracks(List<TrackedShip> trackedShips) {
 //        return this.fetchShipsFromApi(mapToMmsis(trackedShips))
 //                .flatMapMany(Flux::fromIterable)
@@ -158,5 +146,5 @@
 //        return this.fetchTrackedShips()
 //                .flatMap(this::mapToShipTracks);
 //    }
-//
-//}
+
+}
