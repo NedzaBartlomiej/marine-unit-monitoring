@@ -10,5 +10,9 @@ public interface CustomUserRepository {
 
     void pullTrackedShip(String id, Long mmsi);
 
+    void pullTrackedShip(Long mmsi);
+
     List<TrackedShip> getTrackedShips(String id);
+
+    List<TrackedShip> getTrackedShips();
 }

@@ -30,6 +30,7 @@ public class AisServiceImpl implements AisService {
     @Value("${secrets.ais-api.latest-ais-url}")
     private String aisApiUrl;
 
+    // todo - to zrobic do point service i uzywac metod ktore tez trzeba zrobic (metod ktore sa odpowiedzialne za fetching danych a ais api, na tym ma polegac aisservice a nie na innych operacja takich jak mapowanie na point itd. tak samo w innych serwissach tam gdzie jest webclient i jakis fetching a ais api)
     @Cacheable(cacheNames = POINTS_CACHE_NAME)
     @Override
     public Flux<Point> getLatestAisPoints() {

@@ -9,6 +9,7 @@ import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserDtoMapper;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserSaveDto;
 import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
+import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShipService;
 
 import java.util.List;
 
@@ -21,6 +22,7 @@ import static org.springframework.http.HttpStatus.OK;
 @RequiredArgsConstructor
 public class UserController {
 
+    private final TrackedShipService userTrackedShipService;
     private final UserService userService;
     private final UserDtoMapper userDtoMapper;
 
@@ -83,7 +85,7 @@ public class UserController {
         return buildResponse(
                 null,
                 OK,
-                userService.getTrackedShips(id),
+                userTrackedShipService.getTrackedShips(id),
                 "TrackedShips"
         );
     }
@@ -93,14 +95,14 @@ public class UserController {
         return buildResponse(
                 "Successfully added ship into tracking list.",
                 CREATED,
-                userService.addTrackedShip(id, mmsi),
+                userTrackedShipService.addTrackedShip(id, mmsi),
                 "TrackedShip"
         );
     }
 
     @DeleteMapping("/{id}/tracked-ships/{mmsi}")
     public ResponseEntity<ResponseModel<TrackedShip>> removeTrackedShip(@PathVariable String id, @PathVariable Long mmsi) {
-        userService.removeTrackedShip(id, mmsi);
+        userTrackedShipService.removeTrackedShip(id, mmsi);
         return buildResponse(
                 "Successfully removed ship from tracking list.",
                 OK,

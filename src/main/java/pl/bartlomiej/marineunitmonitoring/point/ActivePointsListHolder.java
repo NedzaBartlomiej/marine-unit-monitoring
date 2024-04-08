@@ -35,8 +35,9 @@ public class ActivePointsListHolder {
         }
     }
 
-    public static void removeActivePoint(ActivePointInfo activePointInfo) {
-        if (!activePoints.remove(activePointInfo)) {
+    public static void removeActivePoint(Long mmsi) {
+        if (!activePoints.removeIf(activePointInfo ->
+                activePointInfo.mmsi().equals(mmsi))) {
             throw new NotFoundException();
         }
     }

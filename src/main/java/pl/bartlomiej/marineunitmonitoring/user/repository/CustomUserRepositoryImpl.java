@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
 
+import java.util.Collection;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -48,11 +49,32 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     }
 
     @Override
+    public void pullTrackedShip(Long mmsi) {
+        mongoTemplate
+                .updateMulti(
+                        new Query(),
+                        new Update().pull(TRACKED_SHIPS, query(where("mmsi").is(mmsi))),
+                        User.class
+                );
+    }
+
+    @Override
     public List<TrackedShip> getTrackedShips(String id) {
         return requireNonNull(mongoTemplate.findById(
                 new ObjectId(id),
                 User.class
         )).getTrackedShips();
+    }
+
+    @Override
+    public List<TrackedShip> getTrackedShips() {
+        return requireNonNull(mongoTemplate.findAll(
+                User.class
+        ))
+                .stream()
+                .map(User::getTrackedShips)
+                .flatMap(Collection::stream)
+                .toList();
     }
 
 }
