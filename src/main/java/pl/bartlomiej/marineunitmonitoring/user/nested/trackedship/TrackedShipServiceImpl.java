@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.shiptracking.trackedship;
+package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,14 +24,6 @@ public class TrackedShipServiceImpl implements TrackedShipService {
 
     public List<TrackedShip> getTrackedShips(String id) {
         List<TrackedShip> trackedShips = customUserRepository.getTrackedShips(id);
-        if (trackedShips.isEmpty())
-            throw new NoContentException();
-
-        return trackedShips;
-    }
-
-    public List<TrackedShip> getTrackedShips() {
-        List<TrackedShip> trackedShips = customUserRepository.getTrackedShips();
         if (trackedShips.isEmpty())
             throw new NoContentException();
 

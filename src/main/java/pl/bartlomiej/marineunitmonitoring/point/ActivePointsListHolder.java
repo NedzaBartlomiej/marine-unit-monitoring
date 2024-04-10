@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static pl.bartlomiej.marineunitmonitoring.ais.AisServiceImpl.UNKNOWN_NOT_REPORTED;
@@ -11,6 +12,12 @@ import static pl.bartlomiej.marineunitmonitoring.ais.AisServiceImpl.UNKNOWN_NOT_
 @Slf4j
 public class ActivePointsListHolder {
     private static final Set<ActivePointInfo> activePoints = new HashSet<>();
+
+    public static List<Long> getMmsis() {
+        return activePoints.stream()
+                .map(ActivePointInfo::mmsi)
+                .toList();
+    }
 
     public static Boolean isPointActive(Long mmsi) {
         return !activePoints.stream()

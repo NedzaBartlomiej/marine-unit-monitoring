@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.shiptracking.shiptrackhistory;
+package pl.bartlomiej.marineunitmonitoring.shiptracking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
-import pl.bartlomiej.marineunitmonitoring.shiptracking.trackedship.TrackedShip;
-import pl.bartlomiej.marineunitmonitoring.shiptracking.trackedship.TrackedShipService;
+import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -98,8 +97,8 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     // GET SHIP TRACKS TO SAVE - operations
 
-    private Mono<List<TrackedShip>> fetchTrackedShips() {
-        return just(trackedShipService.getTrackedShips())
+    private Mono<List<Long>> getShipsToTrack() {
+        return just(ActivePointsListHolder.getMmsis())
                 .switchIfEmpty(error(NoContentException::new));
     }
 
@@ -146,8 +145,8 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         return Mono.just(validShips);
     }
 
-    private Mono<List<ShipTrack>> mapToShipTracks(List<TrackedShip> trackedShips) {
-        return this.fetchShipsFromApi(mapToMmsis(trackedShips))
+    private Mono<List<ShipTrack>> mapToShipTracks(List<Long> mmsis) {
+        return this.fetchShipsFromApi(mmsis)
                 .flatMapMany(Flux::fromIterable)
                 .map(ship ->
                         new ShipTrack(
@@ -158,15 +157,8 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 .collectList();
     }
 
-    private List<Long> mapToMmsis(List<TrackedShip> trackedShips) {
-        return trackedShips
-                .stream()
-                .map(TrackedShip::getMmsi)
-                .toList();
-    }
-
     private Mono<List<ShipTrack>> fetchShipTracks() {
-        return this.fetchTrackedShips()
+        return this.getShipsToTrack()
                 .flatMap(this::mapToShipTracks);
     }
 

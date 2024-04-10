@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.shiptracking.shiptrackhistory;
+package pl.bartlomiej.marineunitmonitoring.shiptracking;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

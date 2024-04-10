@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.shiptracking.trackedship;
+package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.shiptracking.shiptrackhistory;
+package pl.bartlomiej.marineunitmonitoring.shiptracking;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
