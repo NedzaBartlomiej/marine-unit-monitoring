@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.shiptrackhistory;
+package pl.bartlomiej.marineunitmonitoring.shiptracking.shiptrackhistory;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +21,7 @@ public class ShipTrackHistoryController {
 
     private final ShipTrackHistoryService shipTrackHistoryService;
 
+    // todo add from-to date optional params (?from=""&?to="")
     @GetMapping
     public ResponseEntity<Flux<ServerSentEvent<ResponseModel<ShipTrack>>>> getShipTrackHistory(List<Long> mmsis) {
         return ResponseEntity.ok(shipTrackHistoryService.getShipTrackHistory(mmsis)

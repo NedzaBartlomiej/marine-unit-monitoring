@@ -1,6 +1,6 @@
 package pl.bartlomiej.marineunitmonitoring.user.repository;
 
-import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.trackedship.TrackedShip;
 
 import java.util.List;
 

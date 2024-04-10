@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.shiptrackhistory;
+package pl.bartlomiej.marineunitmonitoring.shiptracking.shiptrackhistory;
 
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import reactor.core.publisher.Mono;

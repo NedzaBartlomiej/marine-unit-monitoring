@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 import pl.bartlomiej.marineunitmonitoring.user.User;
-import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.trackedship.TrackedShip;
 
 import java.util.Collection;
 import java.util.List;

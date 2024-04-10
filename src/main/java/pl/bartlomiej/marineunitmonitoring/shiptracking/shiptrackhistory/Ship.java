@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.shiptrackhistory;
+package pl.bartlomiej.marineunitmonitoring.shiptracking.shiptrackhistory;
 
 import java.util.Date;
 

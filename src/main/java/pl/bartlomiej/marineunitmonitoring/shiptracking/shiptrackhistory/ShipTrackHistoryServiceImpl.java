@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.shiptrackhistory;
+package pl.bartlomiej.marineunitmonitoring.shiptracking.shiptrackhistory;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,10 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
-import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
-import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
-import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShipService;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.trackedship.TrackedShip;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.trackedship.TrackedShipService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -85,12 +84,15 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                                 error.getMessage()));
     }
 
-    public Mono<Void> clearShipHistory(Long mmsi) {
+    private Mono<Void> clearShipHistory(Long mmsi) {
         return shipTrackHistoryRepository.findByMmsi(mmsi)
-                .switchIfEmpty(error(new NotFoundException()))
-                .flatMap(shipTrack ->
-                        shipTrackHistoryRepository.deleteAllByMmsi(mmsi)
-                );
+                .flatMap(shipTrack -> {
+                    if (shipTrack == null) {
+                        log.info("Not found any ship tracks for ship: {}", mmsi);
+                        return Mono.empty();
+                    }
+                    return shipTrackHistoryRepository.deleteAllByMmsi(mmsi);
+                });
     }
 
 
@@ -98,7 +100,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     private Mono<List<TrackedShip>> fetchTrackedShips() {
         return just(trackedShipService.getTrackedShips())
-                .switchIfEmpty(error(new NoContentException()));
+                .switchIfEmpty(error(NoContentException::new));
     }
 
 
@@ -120,6 +122,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 );
     }
 
+    // todo maybe some refactor
     private Mono<List<Ship>> filterInvalidShips(Ship[] ships, List<Long> mmsis) {
         List<Ship> validShips = stream(ships)
                 .filter(Objects::nonNull)
@@ -131,12 +134,14 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
         invalidMmsis.removeAll(validMmsis);
         invalidMmsis.forEach(mmsi -> {
+            this.clearShipHistory(mmsi).subscribe();
             trackedShipService.removeTrackedShip(mmsi);
             ActivePointsListHolder.removeActivePoint(mmsi);
         });
 
         if (!invalidMmsis.isEmpty())
-            log.error("Some ships were removed from the tracking list because they are not currently registered: {}", invalidMmsis);
+            log.error("Some ships were removed from the tracking list," +
+                    " because they are not currently registered: {}", invalidMmsis);
 
         return Mono.just(validShips);
     }

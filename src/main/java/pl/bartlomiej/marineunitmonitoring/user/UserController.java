@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserDtoMapper;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserSaveDto;
-import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
-import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShipService;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.trackedship.TrackedShip;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.trackedship.TrackedShipService;
 
 import java.util.List;
 

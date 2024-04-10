@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
-import pl.bartlomiej.marineunitmonitoring.user.nested.TrackedShip;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.trackedship.TrackedShip;
 
 import java.util.List;
 
