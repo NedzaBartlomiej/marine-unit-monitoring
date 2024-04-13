@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import pl.bartlomiej.marineunitmonitoring.ais.AisService;
 import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
 import reactor.core.publisher.Flux;
 
@@ -17,12 +16,12 @@ import static org.springframework.http.HttpStatus.OK;
 @RequestMapping("/points")
 public class PointController {
 
-    private final AisService aisService;
+    private final PointService pointService;
 
     @GetMapping
     public ResponseEntity<Flux<ResponseModel<Point>>> getPoints() {
         return ResponseEntity.ok(
-                aisService.getLatestAisPoints()
+                pointService.getPoints()
                         .doOnNext(point ->
                                 ActivePointsListHolder.addActivePoint(
                                         new ActivePointsListHolder.ActivePointInfo(

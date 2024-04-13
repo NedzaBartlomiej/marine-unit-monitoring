@@ -1,8 +1,13 @@
 package pl.bartlomiej.marineunitmonitoring.ais;
 
-import pl.bartlomiej.marineunitmonitoring.point.Point;
+import com.fasterxml.jackson.databind.JsonNode;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 public interface AisService {
-    Flux<Point> getLatestAisPoints();
+    Flux<AisShip> fetchLatestShips();
+
+    Mono<List<JsonNode>> fetchShipsByMmsis(List<Long> mmsis);
 }

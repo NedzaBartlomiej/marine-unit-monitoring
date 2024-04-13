@@ -15,6 +15,8 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
+import static pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack.ID;
+import static pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack.MMSI;
 
 @Repository
 @RequiredArgsConstructor
@@ -24,7 +26,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     private final MongoTemplate mongoTemplate;
 
     private Query getIdValidQuery(String id) {
-        return new Query(where("_id").is(new ObjectId(id)));
+        return new Query(where(ID).is(new ObjectId(id)));
     }
 
     @Override
@@ -43,7 +45,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         mongoTemplate
                 .updateFirst(
                         this.getIdValidQuery(id),
-                        new Update().pull(TRACKED_SHIPS, query(where("mmsi").is(mmsi))),
+                        new Update().pull(TRACKED_SHIPS, query(where(MMSI).is(mmsi))),
                         User.class
                 );
     }
@@ -53,7 +55,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         mongoTemplate
                 .updateMulti(
                         new Query(),
-                        new Update().pull(TRACKED_SHIPS, query(where("mmsi").is(mmsi))),
+                        new Update().pull(TRACKED_SHIPS, query(where(MMSI).is(mmsi))),
                         User.class
                 );
     }

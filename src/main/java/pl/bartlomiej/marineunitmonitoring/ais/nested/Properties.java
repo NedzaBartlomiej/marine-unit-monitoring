@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.ais;
+package pl.bartlomiej.marineunitmonitoring.ais.nested;
 
 import java.util.Date;
 

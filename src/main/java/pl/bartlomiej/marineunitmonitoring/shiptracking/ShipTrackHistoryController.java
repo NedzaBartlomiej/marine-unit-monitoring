@@ -3,12 +3,11 @@ package pl.bartlomiej.marineunitmonitoring.shiptracking;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
 import reactor.core.publisher.Flux;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static java.util.Map.of;
@@ -21,10 +20,13 @@ public class ShipTrackHistoryController {
 
     private final ShipTrackHistoryService shipTrackHistoryService;
 
-    // todo add from-to date optional params (?from=""&?to="")
     @GetMapping
-    public ResponseEntity<Flux<ServerSentEvent<ResponseModel<ShipTrack>>>> getShipTrackHistory(List<Long> mmsis) {
-        return ResponseEntity.ok(shipTrackHistoryService.getShipTrackHistory(mmsis)
+    public ResponseEntity<Flux<ServerSentEvent<ResponseModel<ShipTrack>>>> getShipTrackHistory(
+            @RequestBody List<Long> mmsis,
+            @RequestParam(required = false) LocalDateTime from,
+            @RequestParam(required = false) LocalDateTime to) {
+
+        return ResponseEntity.ok(shipTrackHistoryService.getShipTrackHistory(mmsis, from, to)
                 .map(response ->
                         ServerSentEvent.<ResponseModel<ShipTrack>>builder()
                                 .id(response.getId())

@@ -37,10 +37,10 @@ public class TrackedShipServiceImpl implements TrackedShipService {
             throw new NotFoundException();
 
         if (!ActivePointsListHolder.isPointActive(mmsi))
-            throw new MmsiConflictException(INVALID_SHIP.toString());
+            throw new MmsiConflictException(INVALID_SHIP.message);
 
         if (this.isShipTracked(id, mmsi))
-            throw new MmsiConflictException(SHIP_IS_ALREADY_TRACKED.toString());
+            throw new MmsiConflictException(SHIP_IS_ALREADY_TRACKED.message);
 
         TrackedShip trackedShip = new TrackedShip(mmsi, ActivePointsListHolder.getName(mmsi));
         return customUserRepository.pushTrackedShip(

@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static pl.bartlomiej.marineunitmonitoring.ais.AisServiceImpl.UNKNOWN_NOT_REPORTED;
+import static pl.bartlomiej.marineunitmonitoring.point.PointServiceImpl.UNKNOWN_NOT_REPORTED;
 
 @Slf4j
 public class ActivePointsListHolder {
