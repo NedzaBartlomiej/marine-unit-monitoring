@@ -22,14 +22,16 @@ public class PointController {
     public ResponseEntity<Flux<ResponseModel<Point>>> getPoints() {
         return ResponseEntity.ok(
                 pointService.getPoints()
-                        .doOnNext(point ->
-                                ActivePointsListHolder.addActivePoint(
-                                        new ActivePointsListHolder.ActivePointInfo(
+                        .doOnNext(point -> {
+                            if (!ActivePointsManager.isPointActive(point.mmsi())) {
+                                ActivePointsManager.addActivePoint(
+                                        new ActivePointsManager.ActivePoint(
                                                 point.mmsi(),
                                                 point.name()
                                         )
-                                )
-                        )
+                                );
+                            }
+                        })
                         .map(response ->
                                 ResponseModel.<Point>builder()
                                         .httpStatus(OK)

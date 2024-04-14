@@ -22,8 +22,6 @@ public class ShipTrack {
     public static final String ID = "_id";
     public static final String MMSI = "mmsi";
     public static final String READING_TIME = "readingTime";
-    public static final String X = "x";
-    public static final String Y = "y";
 
     @JsonIgnore
     private String id;

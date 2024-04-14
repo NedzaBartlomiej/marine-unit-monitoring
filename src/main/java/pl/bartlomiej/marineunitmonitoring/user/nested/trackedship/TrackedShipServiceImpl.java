@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
-import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
+import pl.bartlomiej.marineunitmonitoring.point.ActivePointsManager;
 import pl.bartlomiej.marineunitmonitoring.user.UserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
 
@@ -30,19 +30,27 @@ public class TrackedShipServiceImpl implements TrackedShipService {
         return trackedShips;
     }
 
+    public List<TrackedShip> getTrackedShips() {
+        List<TrackedShip> trackedShips = customUserRepository.getTrackedShips();
+        if (trackedShips.isEmpty())
+            throw new NoContentException();
+
+        return trackedShips;
+    }
+
     @Transactional
     @Override
     public TrackedShip addTrackedShip(String id, Long mmsi) {
         if (!userRepository.existsById(id))
             throw new NotFoundException();
 
-        if (!ActivePointsListHolder.isPointActive(mmsi))
+        if (!ActivePointsManager.isPointActive(mmsi))
             throw new MmsiConflictException(INVALID_SHIP.message);
 
         if (this.isShipTracked(id, mmsi))
             throw new MmsiConflictException(SHIP_IS_ALREADY_TRACKED.message);
 
-        TrackedShip trackedShip = new TrackedShip(mmsi, ActivePointsListHolder.getName(mmsi));
+        TrackedShip trackedShip = new TrackedShip(mmsi, ActivePointsManager.getName(mmsi));
         return customUserRepository.pushTrackedShip(
                 id,
                 trackedShip

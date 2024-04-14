@@ -23,7 +23,7 @@ import static pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack.MMSI;
 public class AisServiceImpl implements AisService {
 
     private static final String BEARER = "Bearer ";
-    private static final long resultLimit = 50;
+    private static final long resultLimit = 5;
     private final AisApiAccessTokenService accessTokenService;
     private final WebClient webClient;
     @Value("${secrets.ais-api.latest-ais-url}")

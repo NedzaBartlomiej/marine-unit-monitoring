@@ -13,13 +13,11 @@ import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.ais.AisService;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.util.DateRange;
-import pl.bartlomiej.marineunitmonitoring.point.ActivePointsListHolder;
-import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
+import pl.bartlomiej.marineunitmonitoring.point.ActivePointsManager;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,13 +32,12 @@ import static reactor.core.publisher.Mono.just;
 @Slf4j
 public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
-    public static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60;
-    public static final String OPERATION_TYPE = "operationType";
-    public static final String INSERT = "insert";
+    private static final String OPERATION_TYPE = "operationType";
+    private static final String INSERT = "insert";
+    private static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60 * 5;
     private final AisService aisService;
     private final ShipTrackHistoryRepository shipTrackHistoryRepository;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
-    private final TrackedShipService trackedShipService;
 
 
     // TRACK HISTORY - operations
@@ -51,16 +48,16 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         // PROCESS DATE RANGE
         DateRange dateRange = this.processDateRange(new DateRange(from, to));
 
-
         // DB RESULT STREAM
         Flux<ShipTrack> dbStream = shipTrackHistoryRepository
-                .findByReadingTimeBetween(dateRange.getFrom(), dateRange.getTo());
+                .findByReadingTimeBetweenAndMmsiIsIn( // todo - fix - zle zapytanie - in to nie jest zwracanie wszystkich pasujacych do tych z listy tylko wszystkich pasujacych do jakiegokolwiek z listy
+                        dateRange.getFrom(), dateRange.getTo(), mmsis);
 
         // CHANGE STREAM
         Aggregation pipeline = newAggregation(match(
                         Criteria.where(OPERATION_TYPE).is(INSERT)
-                                .and(MMSI).in(mmsis)
-                                .and(READING_TIME).gte(from).lte(to) // todo problem z konwersja bo tutaj mongo chce Date
+                                .and(MMSI).in(mmsis) // todo - fix - zle zapytanie - in to nie jest zwracanie wszystkich pasujacych do tych z listy tylko wszystkich pasujacych do jakiegokolwiek z listy
+                                .and(READING_TIME).gte(dateRange.getFrom()).lte(dateRange.getTo())
                 )
         );
 
@@ -82,13 +79,16 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     }
 
     private DateRange processDateRange(DateRange dateRange) {
+
+        final LocalDateTime ZERO_DATE = LocalDateTime.of(0, 1, 1, 0, 0);
+
         if (dateRange.getFrom() == null && dateRange.getTo() == null) {
-            dateRange.setFrom(LocalDateTime.MIN);
-            dateRange.setTo(LocalDateTime.MAX);
+            dateRange.setFrom(ZERO_DATE);
+            dateRange.setTo(LocalDateTime.now());
         } else if (dateRange.getFrom() == null) {
-            dateRange.setFrom(LocalDateTime.MIN);
+            dateRange.setFrom(ZERO_DATE);
         } else if (dateRange.getTo() == null) {
-            dateRange.setTo(LocalDateTime.MAX);
+            dateRange.setTo(LocalDateTime.now());
         }
         return dateRange;
     }
@@ -99,15 +99,12 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 .flatMapIterable(shipTracks -> shipTracks)
                 .flatMap(shipTrackHistoryRepository::save)
                 .doOnComplete(() -> log.info("Successfully saved tracked ships coordinates."))
-                .subscribe(
-                        ignoredResult -> {
-                        },
-                        error -> log.error(
-                                "Something go wrong when saving tracked ships coordinates: {}",
-                                error.getMessage()));
+                .doOnError(error -> log.error("Something go wrong on saving ship tracks - {}", error.getMessage()))
+                .subscribe();
     }
 
-    private Mono<Void> clearShipHistory(Long mmsi) {
+
+    public Mono<Void> clearShipHistory(Long mmsi) {
         return shipTrackHistoryRepository.findByMmsi(mmsi)
                 .flatMap(shipTrack -> {
                     if (shipTrack == null) {
@@ -121,59 +118,33 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     // GET SHIP TRACKS TO SAVE - operations
 
-    private List<Long> getActiveShipMmsis() {
-        return ActivePointsListHolder.getMmsis();
-    }
-
-    private Mono<List<JsonNode>> getShipsPositions(List<Long> mmsis) {
-        return aisService.fetchShipsByMmsis(mmsis)
-                .flatMap(ships ->
-                        this.filterInvalidShips(ships, mmsis)
-                );
-    }
-
     private Mono<List<ShipTrack>> getShipTracks() {
-        return this.getShipsPositions(
-                        this.getActiveShipMmsis())
+        return aisService.fetchShipsByMmsis(
+                        this.getShipMmsisToTrack()
+                )
                 .switchIfEmpty(
-                        error(NoContentException::new))
+                        error(NoContentException::new)
+                )
                 .flatMap(this::mapToShipTracks);
     }
 
-    // todo maybe some refactor
-    private Mono<List<JsonNode>> filterInvalidShips(List<JsonNode> ships, List<Long> mmsis) {
-        List<JsonNode> validShips = ships.stream()
-                .filter(Objects::nonNull)
-                .toList();
-        List<Long> validMmsis = validShips.stream()
-                .map(jsonNode ->
-                        jsonNode.get(MMSI).asLong()
-                )
-                .toList();
-        List<Long> invalidMmsis = new ArrayList<>(mmsis);
-
-        invalidMmsis.removeAll(validMmsis);
-        invalidMmsis.forEach(mmsi -> {
-            this.clearShipHistory(mmsi).subscribe();
-            trackedShipService.removeTrackedShip(mmsi);
-            ActivePointsListHolder.removeActivePoint(mmsi);
-        });
-
-        if (!invalidMmsis.isEmpty())
-            log.error("Some ships were removed from the tracking list," +
-                    " because they are not currently registered: {}", invalidMmsis);
-
-        return just(validShips);
+    private List<Long> getShipMmsisToTrack() {
+        return ActivePointsManager.getMmsis();
     }
 
     private Mono<List<ShipTrack>> mapToShipTracks(List<JsonNode> ships) {
+
+        final String LONGITUDE = "longitude";
+        final String LATITUDE = "latitude";
+
         return just(
                 ships.stream()
+                        .filter(Objects::nonNull)
                         .map(ship ->
                                 new ShipTrack(
                                         ship.get(MMSI).asLong(),
-                                        ship.get(X).asDouble(),
-                                        ship.get(Y).asDouble()
+                                        ship.get(LONGITUDE).asDouble(),
+                                        ship.get(LATITUDE).asDouble()
                                 )
                         )
                         .toList()

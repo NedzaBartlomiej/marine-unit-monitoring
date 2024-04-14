@@ -23,11 +23,13 @@ public class WebClientConfig {
 
     @Bean
     public WebClient webClient() {
+
         return WebClient
                 .builder()
                 .filter(this.buildRetryExchangeFilterFunction())
                 .build();
     }
+
 
     private ExchangeFilterFunction buildRetryExchangeFilterFunction() {
         return (request, next) -> next.exchange(request)
