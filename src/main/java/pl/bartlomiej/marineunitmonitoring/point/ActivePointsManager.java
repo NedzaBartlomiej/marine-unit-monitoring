@@ -66,6 +66,7 @@ public class ActivePointsManager {
         aisService.fetchLatestShips()
                 .map(aisShip -> aisShip.properties().mmsi())
                 .collectList()
+                .doOnError(error -> log.error("Something go wrong on clearing inactive ships: {}", error.getMessage()))
                 .subscribe(list -> {
 
                     // identify inactive mmsis

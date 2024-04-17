@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-public class DateRange {
+final public class DateRange {
     private LocalDateTime from;
     private LocalDateTime to;
 }

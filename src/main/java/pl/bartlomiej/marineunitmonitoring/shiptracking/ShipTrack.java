@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 
 import static java.time.LocalDateTime.now;
+import static java.time.ZoneId.systemDefault;
 
 @Getter
 @Setter
@@ -28,7 +29,7 @@ public class ShipTrack {
     private Long mmsi;
     private Double x;
     private Double y;
-    private LocalDateTime readingTime = now();
+    private LocalDateTime readingTime = now(systemDefault());
 
     ShipTrack(Long mmsi, Double x, Double y) {
         this.mmsi = mmsi;

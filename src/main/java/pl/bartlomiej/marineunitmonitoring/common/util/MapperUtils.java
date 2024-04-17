@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 
 @Slf4j
-public class MapperUtils {
+final public class MapperUtils {
 
     @SneakyThrows
     public static <T> T copyProperties(Object source, Class<T> targetClass) {

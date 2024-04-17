@@ -21,8 +21,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+import static java.time.LocalDateTime.now;
+import static java.time.ZoneId.systemDefault;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.INSERT;
+import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.OPERATION_TYPE;
 import static pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack.*;
 import static reactor.core.publisher.Mono.error;
 import static reactor.core.publisher.Mono.just;
@@ -32,8 +36,6 @@ import static reactor.core.publisher.Mono.just;
 @Slf4j
 public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
-    private static final String OPERATION_TYPE = "operationType";
-    private static final String INSERT = "insert";
     private static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60 * 5;
     private final AisService aisService;
     private final ShipTrackHistoryRepository shipTrackHistoryRepository;
@@ -42,7 +44,8 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     // TRACK HISTORY - operations
 
-    @Override //todo zwraca sie totalnie roznie i losowo jest jakis problem ze strumieniami chyba
+    //todo zwraca sie totalnie roznie i losowo jest jakis problem ze strumieniami chyba -- tutaj jest empty stream
+    @Override
     public Flux<ShipTrack> getShipTrackHistory(List<Long> mmsis, LocalDateTime from, LocalDateTime to) {
 
         // PROCESS DATE RANGE
@@ -51,7 +54,8 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         // DB RESULT STREAM
         Flux<ShipTrack> dbStream = shipTrackHistoryRepository
                 .findByReadingTimeBetweenAndMmsiIsIn(
-                        dateRange.getFrom(), dateRange.getTo(), mmsis);
+                        dateRange.getFrom(), dateRange.getTo(), mmsis)
+                .switchIfEmpty(error(NoContentException::new));
 
         // CHANGE STREAM
         Aggregation pipeline = newAggregation(match(
@@ -80,19 +84,20 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     private DateRange processDateRange(DateRange dateRange) {
 
-        final LocalDateTime ZERO_DATE = LocalDateTime.of(0, 1, 1, 0, 0);
+        final LocalDateTime ZERO_DATE = now(systemDefault());
 
         if (dateRange.getFrom() == null && dateRange.getTo() == null) {
             dateRange.setFrom(ZERO_DATE);
-            dateRange.setTo(LocalDateTime.now());
+            dateRange.setTo(now(systemDefault()));
         } else if (dateRange.getFrom() == null) {
             dateRange.setFrom(ZERO_DATE);
         } else if (dateRange.getTo() == null) {
-            dateRange.setTo(LocalDateTime.now());
+            dateRange.setTo(now(systemDefault()));
         }
         return dateRange;
     }
 
+    // todo tutaj wyrzucs limitedbufferexception
     @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
     public void saveTracksForTrackedShips() {
         this.getShipTracks()
@@ -108,7 +113,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         return shipTrackHistoryRepository.findByMmsi(mmsi)
                 .flatMap(shipTrack -> {
                     if (shipTrack == null) {
-                        log.info("Not found any ship tracks for ship: {}", mmsi);
+                        log.error("Not found any ship tracks for ship: {}", mmsi);
                         return Mono.empty();
                     }
                     return shipTrackHistoryRepository.deleteAllByMmsi(mmsi);
@@ -118,6 +123,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     // GET SHIP TRACKS TO SAVE - operations
 
+    // todo zrobic to jako flux - i oczywiscie pochodne
     private Mono<List<ShipTrack>> getShipTracks() {
         return aisService.fetchShipsByIdentifiers(
                         this.getShipMmsisToTrack()

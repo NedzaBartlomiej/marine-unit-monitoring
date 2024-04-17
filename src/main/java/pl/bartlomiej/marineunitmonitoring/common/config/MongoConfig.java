@@ -14,6 +14,9 @@ import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 @Configuration
 public class MongoConfig {
 
+    public static final String OPERATION_TYPE = "operationType";
+    public static final String INSERT = "insert";
+
     @Value("${spring.data.mongodb.uri}")
     private String mongoConnectionString;
 
