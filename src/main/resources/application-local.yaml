@@ -8,3 +8,7 @@ spring:
     redis:
       host: localhost
       port: 6379
+vars:
+  api:
+    ais:
+      result-limit: 5

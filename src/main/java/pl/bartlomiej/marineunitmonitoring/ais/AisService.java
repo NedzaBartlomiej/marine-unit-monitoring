@@ -9,5 +9,5 @@ import java.util.List;
 public interface AisService {
     Flux<AisShip> fetchLatestShips();
 
-    Mono<List<JsonNode>> fetchShipsByMmsis(List<Long> mmsis);
+    Mono<List<JsonNode>> fetchShipsByIdentifiers(List<Long> identifiers);
 }

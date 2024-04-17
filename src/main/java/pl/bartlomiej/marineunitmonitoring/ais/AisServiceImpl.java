@@ -23,9 +23,10 @@ import static pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack.MMSI;
 public class AisServiceImpl implements AisService {
 
     private static final String BEARER = "Bearer ";
-    private static final long resultLimit = 5;
     private final AisApiAccessTokenService accessTokenService;
     private final WebClient webClient;
+    @Value("${vars.api.ais.result-limit}")
+    private long resultLimit;
     @Value("${secrets.ais-api.latest-ais-url}")
     private String apiFetchLatestUri;
     @Value("${secrets.ais-api.latest-ais-bymmsi-url}")
@@ -45,13 +46,13 @@ public class AisServiceImpl implements AisService {
     }
 
     @Override
-    public Mono<List<JsonNode>> fetchShipsByMmsis(List<Long> mmsis) {
+    public Mono<List<JsonNode>> fetchShipsByIdentifiers(List<Long> identifiers) {
         return accessTokenService.getAisAuthToken()
                 .flatMap(token -> webClient
                         .post()
                         .uri(apiFetchByMmsiUri)
                         .header(AUTHORIZATION, BEARER + token)
-                        .bodyValue(of(MMSI, mmsis))
+                        .bodyValue(of(MMSI, identifiers))
                         .retrieve()
                         .bodyToMono(JsonNode[].class)
                         .map(jsonNodes -> stream(jsonNodes).toList())

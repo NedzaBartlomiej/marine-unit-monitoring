@@ -77,6 +77,7 @@ public class ActivePointsManager {
                         removeActivePoint(mmsi);
                         trackedShipService.removeTrackedShip(mmsi);
                         shipTrackHistoryService.clearShipHistory(mmsi).subscribe();
+                        log.info("Inactive ships has been removed - {}", mmsi);
                     });
                 });
     }

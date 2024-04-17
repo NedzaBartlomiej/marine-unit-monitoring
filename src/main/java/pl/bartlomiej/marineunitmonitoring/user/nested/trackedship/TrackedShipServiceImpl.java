@@ -7,7 +7,7 @@ import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.point.ActivePointsManager;
-import pl.bartlomiej.marineunitmonitoring.user.UserRepository;
+import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
 
 import java.util.List;
@@ -19,7 +19,7 @@ import static pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictExcept
 @RequiredArgsConstructor
 public class TrackedShipServiceImpl implements TrackedShipService {
 
-    private final UserRepository userRepository;
+    private final MongoUserRepository mongoUserRepository;
     private final CustomUserRepository customUserRepository;
 
     public List<TrackedShip> getTrackedShips(String id) {
@@ -30,18 +30,10 @@ public class TrackedShipServiceImpl implements TrackedShipService {
         return trackedShips;
     }
 
-    public List<TrackedShip> getTrackedShips() {
-        List<TrackedShip> trackedShips = customUserRepository.getTrackedShips();
-        if (trackedShips.isEmpty())
-            throw new NoContentException();
-
-        return trackedShips;
-    }
-
     @Transactional
     @Override
     public TrackedShip addTrackedShip(String id, Long mmsi) {
-        if (!userRepository.existsById(id))
+        if (!mongoUserRepository.existsById(id))
             throw new NotFoundException();
 
         if (!ActivePointsManager.isPointActive(mmsi))
@@ -60,7 +52,7 @@ public class TrackedShipServiceImpl implements TrackedShipService {
     @Transactional
     @Override
     public void removeTrackedShip(String id, Long mmsi) {
-        if (!userRepository.existsById(id))
+        if (!mongoUserRepository.existsById(id))
             throw new NotFoundException();
 
         if (!this.isShipTracked(id, mmsi))

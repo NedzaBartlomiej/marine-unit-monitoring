@@ -42,7 +42,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     // TRACK HISTORY - operations
 
-    @Override
+    @Override //todo zwraca sie totalnie roznie i losowo jest jakis problem ze strumieniami chyba
     public Flux<ShipTrack> getShipTrackHistory(List<Long> mmsis, LocalDateTime from, LocalDateTime to) {
 
         // PROCESS DATE RANGE
@@ -50,13 +50,13 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
         // DB RESULT STREAM
         Flux<ShipTrack> dbStream = shipTrackHistoryRepository
-                .findByReadingTimeBetweenAndMmsiIsIn( // todo - fix - zle zapytanie - in to nie jest zwracanie wszystkich pasujacych do tych z listy tylko wszystkich pasujacych do jakiegokolwiek z listy
+                .findByReadingTimeBetweenAndMmsiIsIn(
                         dateRange.getFrom(), dateRange.getTo(), mmsis);
 
         // CHANGE STREAM
         Aggregation pipeline = newAggregation(match(
                         Criteria.where(OPERATION_TYPE).is(INSERT)
-                                .and(MMSI).in(mmsis) // todo - fix - zle zapytanie - in to nie jest zwracanie wszystkich pasujacych do tych z listy tylko wszystkich pasujacych do jakiegokolwiek z listy
+                                .and(MMSI).in(mmsis)
                                 .and(READING_TIME).gte(dateRange.getFrom()).lte(dateRange.getTo())
                 )
         );
@@ -119,7 +119,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     // GET SHIP TRACKS TO SAVE - operations
 
     private Mono<List<ShipTrack>> getShipTracks() {
-        return aisService.fetchShipsByMmsis(
+        return aisService.fetchShipsByIdentifiers(
                         this.getShipMmsisToTrack()
                 )
                 .switchIfEmpty(
