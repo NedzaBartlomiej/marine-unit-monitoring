@@ -19,7 +19,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 import static java.time.LocalDateTime.now;
 import static java.time.ZoneId.systemDefault;
@@ -28,8 +27,8 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.INSERT;
 import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.OPERATION_TYPE;
 import static pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack.*;
+import static reactor.core.publisher.Flux.just;
 import static reactor.core.publisher.Mono.error;
-import static reactor.core.publisher.Mono.just;
 
 @Service
 @RequiredArgsConstructor
@@ -97,11 +96,9 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         return dateRange;
     }
 
-    // todo tutaj wyrzucs limitedbufferexception
     @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
     public void saveTracksForTrackedShips() {
         this.getShipTracks()
-                .flatMapIterable(shipTracks -> shipTracks)
                 .flatMap(shipTrackHistoryRepository::save)
                 .doOnComplete(() -> log.info("Successfully saved tracked ships coordinates."))
                 .doOnError(error -> log.error("Something go wrong on saving ship tracks - {}", error.getMessage()))
@@ -123,37 +120,31 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     // GET SHIP TRACKS TO SAVE - operations
 
-    // todo zrobic to jako flux - i oczywiscie pochodne
-    private Mono<List<ShipTrack>> getShipTracks() {
+    private Flux<ShipTrack> getShipTracks() {
         return aisService.fetchShipsByIdentifiers(
                         this.getShipMmsisToTrack()
                 )
                 .switchIfEmpty(
                         error(NoContentException::new)
                 )
-                .flatMap(this::mapToShipTracks);
+                .flatMap(this::mapToShipTrack);
     }
 
     private List<Long> getShipMmsisToTrack() {
         return ActivePointsManager.getMmsis();
     }
 
-    private Mono<List<ShipTrack>> mapToShipTracks(List<JsonNode> ships) {
+    private Flux<ShipTrack> mapToShipTrack(JsonNode ship) {
 
         final String LONGITUDE = "longitude";
         final String LATITUDE = "latitude";
 
         return just(
-                ships.stream()
-                        .filter(Objects::nonNull)
-                        .map(ship ->
-                                new ShipTrack(
-                                        ship.get(MMSI).asLong(),
-                                        ship.get(LONGITUDE).asDouble(),
-                                        ship.get(LATITUDE).asDouble()
-                                )
-                        )
-                        .toList()
+                new ShipTrack(
+                        ship.get(MMSI).asLong(),
+                        ship.get(LONGITUDE).asDouble(),
+                        ship.get(LATITUDE).asDouble()
+                )
         );
     }
 

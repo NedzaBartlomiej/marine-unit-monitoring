@@ -8,11 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-import static java.util.Arrays.stream;
 import static java.util.Map.of;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack.MMSI;
@@ -46,16 +44,15 @@ public class AisServiceImpl implements AisService {
     }
 
     @Override
-    public Mono<List<JsonNode>> fetchShipsByIdentifiers(List<Long> identifiers) {
+    public Flux<JsonNode> fetchShipsByIdentifiers(List<Long> identifiers) {
         return accessTokenService.getAisAuthToken()
-                .flatMap(token -> webClient
+                .flatMapMany(token -> webClient
                         .post()
                         .uri(apiFetchByMmsiUri)
                         .header(AUTHORIZATION, BEARER + token)
-                        .bodyValue(of(MMSI, identifiers))
+                        .bodyValue(of(MMSI, identifiers.toArray()))
                         .retrieve()
-                        .bodyToMono(JsonNode[].class)
-                        .map(jsonNodes -> stream(jsonNodes).toList())
+                        .bodyToFlux(JsonNode.class)
                 );
     }
 

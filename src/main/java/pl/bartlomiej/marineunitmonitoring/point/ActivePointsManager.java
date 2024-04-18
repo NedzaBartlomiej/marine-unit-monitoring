@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import pl.bartlomiej.marineunitmonitoring.ais.AisService;
+import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrackHistoryService;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
@@ -13,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.Optional.of;
 import static pl.bartlomiej.marineunitmonitoring.point.PointServiceImpl.UNKNOWN_NOT_REPORTED;
 
 @Slf4j
@@ -26,9 +28,11 @@ public class ActivePointsManager {
     private final AisService aisService;
 
     public static List<Long> getMmsis() {
-        return activePoints.stream()
+        return of(activePoints.stream()
                 .map(ActivePoint::mmsi)
-                .toList();
+                .toList())
+                .filter(mmsis -> !mmsis.isEmpty())
+                .orElseThrow(() -> new MmsiConflictException("No active points."));
     }
 
     public static String getName(Long mmsi) {
