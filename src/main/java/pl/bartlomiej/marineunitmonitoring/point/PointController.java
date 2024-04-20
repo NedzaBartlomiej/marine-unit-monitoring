@@ -17,21 +17,28 @@ import static org.springframework.http.HttpStatus.OK;
 public class PointController {
 
     private final PointService pointService;
+    private final ActivePointsManager activePointsManager;
 
     @GetMapping
     public ResponseEntity<Flux<ResponseModel<Point>>> getPoints() {
+
+        Flux<Point> pointFlux = pointService.getPoints().cache();
+
+        // ACTIVE LIST FILTRATION todo - fix - przez wykonanie tego wystepuje cast exception ArrayList -> Point
+        pointFlux.map(Point::mmsi).collectList()
+                .subscribe(activePointsManager::filterInactiveShips);
+
+        // RESPONSE
         return ResponseEntity.ok(
-                pointService.getPoints()
-                        .doOnNext(point -> {
-                            if (!ActivePointsManager.isPointActive(point.mmsi())) {
-                                ActivePointsManager.addActivePoint(
+                pointFlux
+                        .doOnNext(point ->
+                                activePointsManager.addActivePoint(
                                         new ActivePointsManager.ActivePoint(
                                                 point.mmsi(),
                                                 point.name()
                                         )
-                                );
-                            }
-                        })
+                                )
+                        )
                         .map(response ->
                                 ResponseModel.<Point>builder()
                                         .httpStatus(OK)

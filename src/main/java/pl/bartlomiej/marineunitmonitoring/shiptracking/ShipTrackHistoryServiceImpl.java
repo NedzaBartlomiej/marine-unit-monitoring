@@ -14,6 +14,8 @@ import pl.bartlomiej.marineunitmonitoring.ais.AisService;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.util.DateRange;
 import pl.bartlomiej.marineunitmonitoring.point.ActivePointsManager;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.CustomShipTrackHistoryRepository;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.MongoShipTrackHistoryRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -21,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static java.time.LocalDateTime.now;
+import static java.time.LocalDateTime.of;
 import static java.time.ZoneId.systemDefault;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -37,13 +40,13 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     private static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60 * 5;
     private final AisService aisService;
-    private final ShipTrackHistoryRepository shipTrackHistoryRepository;
+    private final MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository;
+    private final CustomShipTrackHistoryRepository customShipTrackHistoryRepository;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
 
 
     // TRACK HISTORY - operations
 
-    //todo zwraca sie totalnie roznie i losowo jest jakis problem ze strumieniami chyba -- tutaj jest empty stream
     @Override
     public Flux<ShipTrack> getShipTrackHistory(List<Long> mmsis, LocalDateTime from, LocalDateTime to) {
 
@@ -51,12 +54,11 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         DateRange dateRange = this.processDateRange(new DateRange(from, to));
 
         // DB RESULT STREAM
-        Flux<ShipTrack> dbStream = shipTrackHistoryRepository
-                .findByReadingTimeBetweenAndMmsiIsIn(
-                        dateRange.getFrom(), dateRange.getTo(), mmsis)
+        Flux<ShipTrack> dbStream = customShipTrackHistoryRepository
+                .findByMmsiInAndReadingTimeBetween(mmsis, dateRange.getFrom(), dateRange.getTo())
                 .switchIfEmpty(error(NoContentException::new));
 
-        // CHANGE STREAM
+        // CHANGE STREAM todo - test is it working and all be fine and done (todo messenger things)
         Aggregation pipeline = newAggregation(match(
                         Criteria.where(OPERATION_TYPE).is(INSERT)
                                 .and(MMSI).in(mmsis)
@@ -83,8 +85,9 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     private DateRange processDateRange(DateRange dateRange) {
 
-        final LocalDateTime ZERO_DATE = now(systemDefault());
+        final LocalDateTime ZERO_DATE = of(0, 1, 1, 0, 0, 0);
 
+        log.info("Processing dateRange: {} - {}", dateRange.getFrom(), dateRange.getTo());
         if (dateRange.getFrom() == null && dateRange.getTo() == null) {
             dateRange.setFrom(ZERO_DATE);
             dateRange.setTo(now(systemDefault()));
@@ -93,13 +96,14 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
         } else if (dateRange.getTo() == null) {
             dateRange.setTo(now(systemDefault()));
         }
+        log.info("Processed dateRange: {} - {}", dateRange.getFrom(), dateRange.getTo());
         return dateRange;
     }
 
     @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
     public void saveTracksForTrackedShips() {
         this.getShipTracks()
-                .flatMap(shipTrackHistoryRepository::save)
+                .flatMap(mongoShipTrackHistoryRepository::save)
                 .doOnComplete(() -> log.info("Successfully saved tracked ships coordinates."))
                 .doOnError(error -> log.error("Something go wrong on saving ship tracks - {}", error.getMessage()))
                 .subscribe();
@@ -107,13 +111,13 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
 
     public Mono<Void> clearShipHistory(Long mmsi) {
-        return shipTrackHistoryRepository.findByMmsi(mmsi)
+        return mongoShipTrackHistoryRepository.findByMmsi(mmsi)
                 .flatMap(shipTrack -> {
                     if (shipTrack == null) {
                         log.error("Not found any ship tracks for ship: {}", mmsi);
                         return Mono.empty();
                     }
-                    return shipTrackHistoryRepository.deleteAllByMmsi(mmsi);
+                    return mongoShipTrackHistoryRepository.deleteAllByMmsi(mmsi);
                 });
     }
 
