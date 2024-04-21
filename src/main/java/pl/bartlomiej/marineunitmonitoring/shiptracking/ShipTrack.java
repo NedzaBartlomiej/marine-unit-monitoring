@@ -19,11 +19,6 @@ import static java.time.ZoneId.systemDefault;
 @Document(collection = "ship_track_history")
 public class ShipTrack {
 
-    public static final String SHIP_TRACK_HISTORY = "ship_track_history";
-    public static final String ID = "_id";
-    public static final String MMSI = "mmsi";
-    public static final String READING_TIME = "readingTime";
-
     @JsonIgnore
     private String id;
     private Long mmsi;

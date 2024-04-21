@@ -13,7 +13,7 @@ import java.util.List;
 
 import static java.util.Map.of;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack.MMSI;
+import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.MMSI;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +50,7 @@ public class AisServiceImpl implements AisService {
                         .post()
                         .uri(apiFetchByMmsiUri)
                         .header(AUTHORIZATION, BEARER + token)
-                        .bodyValue(of(MMSI, identifiers.toArray()))
+                        .bodyValue(of(MMSI.fieldName, identifiers.toArray()))
                         .retrieve()
                         .bodyToFlux(JsonNode.class)
                 );

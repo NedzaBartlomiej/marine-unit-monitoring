@@ -11,8 +11,8 @@ import reactor.core.publisher.Flux;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack.MMSI;
-import static pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack.READING_TIME;
+import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.MMSI;
+import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.READING_TIME;
 
 @Repository
 @RequiredArgsConstructor
@@ -24,8 +24,8 @@ public class CustomShipTrackHistoryRepositoryImpl implements CustomShipTrackHist
     public Flux<ShipTrack> findByMmsiInAndReadingTimeBetween(List<Long> mmsis, LocalDateTime from, LocalDateTime to) {
         Query q = new Query().addCriteria(
                 Criteria
-                        .where(MMSI).in(mmsis)
-                        .and(READING_TIME).gte(from).lte(to)
+                        .where(MMSI.fieldName).in(mmsis)
+                        .and(READING_TIME.fieldName).gte(from).lte(to)
         );
         return reactiveMongoTemplate.find(q, ShipTrack.class);
     }

@@ -24,7 +24,7 @@ public class PointController {
 
         Flux<Point> pointFlux = pointService.getPoints().cache();
 
-        // ACTIVE LIST FILTRATION todo - fix - przez wykonanie tego wystepuje cast exception ArrayList -> Point
+        // ACTIVE LIST FILTRATION
         pointFlux.map(Point::mmsi).collectList()
                 .subscribe(activePointsManager::filterInactiveShips);
 

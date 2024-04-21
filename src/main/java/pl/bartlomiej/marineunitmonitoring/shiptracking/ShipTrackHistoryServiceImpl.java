@@ -29,7 +29,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.matc
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.INSERT;
 import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.OPERATION_TYPE;
-import static pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack.*;
+import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.*;
 import static reactor.core.publisher.Flux.just;
 import static reactor.core.publisher.Mono.error;
 
@@ -58,29 +58,33 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 .findByMmsiInAndReadingTimeBetween(mmsis, dateRange.getFrom(), dateRange.getTo())
                 .switchIfEmpty(error(NoContentException::new));
 
-        // CHANGE STREAM todo - test is it working and all be fine and done (todo messenger things)
-        Aggregation pipeline = newAggregation(match(
-                        Criteria.where(OPERATION_TYPE).is(INSERT)
-                                .and(MMSI).in(mmsis)
-                                .and(READING_TIME).gte(dateRange.getFrom()).lte(dateRange.getTo())
-                )
-        );
+        // CHANGE STREAM
+        if (dateRange.getTo().isAfter(now(systemDefault()))) {
+            Aggregation pipeline = newAggregation(match(
+                            Criteria.where(OPERATION_TYPE).is(INSERT)
+                                    .and(MMSI.fieldName).in(mmsis)
+                                    .and(READING_TIME.fieldName).lte(dateRange.getTo())
+                    )
+            );
 
-        Flux<ChangeStreamEvent<ShipTrack>> changeStream = reactiveMongoTemplate.changeStream(
-                SHIP_TRACK_HISTORY,
-                ChangeStreamOptions.builder()
-                        .filter(pipeline)
-                        .build(),
-                ShipTrack.class
-        );
+            Flux<ChangeStreamEvent<ShipTrack>> changeStream = reactiveMongoTemplate.changeStream(
+                    SHIP_TRACK_HISTORY.fieldName,
+                    ChangeStreamOptions.builder()
+                            .filter(pipeline)
+                            .build(),
+                    ShipTrack.class
+            );
 
-        Flux<ShipTrack> shipTrackStream = changeStream
-                .mapNotNull(ChangeStreamEvent::getBody)
-                .doOnNext(shipTrack ->
-                        log.info("New ShipTrack returning... mmsi: {}", shipTrack.getMmsi())
-                );
+            Flux<ShipTrack> shipTrackStream = changeStream
+                    .mapNotNull(ChangeStreamEvent::getBody)
+                    .doOnNext(shipTrack ->
+                            log.info("New ShipTrack returning... mmsi: {}", shipTrack.getMmsi())
+                    );
+            return dbStream.concatWith(shipTrackStream);
+        } else {
+            return dbStream;
+        }
 
-        return dbStream.concatWith(shipTrackStream);
     }
 
     private DateRange processDateRange(DateRange dateRange) {
@@ -145,7 +149,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
         return just(
                 new ShipTrack(
-                        ship.get(MMSI).asLong(),
+                        ship.get(MMSI.fieldName).asLong(),
                         ship.get(LONGITUDE).asDouble(),
                         ship.get(LATITUDE).asDouble()
                 )

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
-import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrackHistoryService;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
 
@@ -50,7 +49,7 @@ public class ActivePointsManager {
     public static void removeActivePoint(Long mmsi) {
         if (!activePoints.removeIf(activePoint ->
                 activePoint.mmsi().equals(mmsi))) {
-            throw new NotFoundException();
+            log.info("The point to be removed is not on the list.");
         }
     }
 
@@ -63,8 +62,8 @@ public class ActivePointsManager {
     }
 
     public void filterInactiveShips(List<Long> activeMmsis) {
-        List<Long> actualMmsis = new ArrayList<>(getMmsis());
-        if (!actualMmsis.isEmpty()) {
+        if (!getMmsis().isEmpty()) {
+            List<Long> actualMmsis = new ArrayList<>(getMmsis());
             List<Long> inactiveMmsis = activeMmsis.stream()
                     .filter(activeMmsi -> !actualMmsis.contains(activeMmsi))
                     .toList();
