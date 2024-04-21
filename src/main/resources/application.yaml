@@ -5,6 +5,10 @@ spring:
     type: redis
   config:
     import: classpath:secrets.yaml
+  data:
+    redis:
+      repositories:
+        enabled: false
 
 logging:
   level:
