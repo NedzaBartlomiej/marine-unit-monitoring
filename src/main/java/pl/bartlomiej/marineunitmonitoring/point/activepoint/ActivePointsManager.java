@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.point;
+package pl.bartlomiej.marineunitmonitoring.point.activepoint;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

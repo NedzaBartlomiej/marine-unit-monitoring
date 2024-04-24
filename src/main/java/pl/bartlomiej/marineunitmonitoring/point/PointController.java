@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePointsManager;
 import reactor.core.publisher.Flux;
 
 import static java.util.Map.of;
