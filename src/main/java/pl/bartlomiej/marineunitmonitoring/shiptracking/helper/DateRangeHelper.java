@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.common.util;
+package pl.bartlomiej.marineunitmonitoring.shiptracking.helper;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-final public class DateRange {
+final public class DateRangeHelper {
     private LocalDateTime from;
     private LocalDateTime to;
 }

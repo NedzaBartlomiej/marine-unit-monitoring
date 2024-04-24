@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.common;
+package pl.bartlomiej.marineunitmonitoring.common.helper;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;

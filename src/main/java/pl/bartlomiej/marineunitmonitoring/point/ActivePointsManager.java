@@ -12,23 +12,24 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static java.util.Optional.of;
 import static pl.bartlomiej.marineunitmonitoring.point.PointServiceImpl.UNKNOWN_NOT_REPORTED;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
 public class ActivePointsManager {
-    private static final Set<ActivePoint> activePoints = new HashSet<>();
+    private static final Set<ActivePoint> activePoints = new HashSet<>(); // todo store it in db
     private final TrackedShipService trackedShipService;
     private final ShipTrackHistoryService shipTrackHistoryService;
 
-    public static List<Long> getMmsis() {
-        return of(activePoints.stream()
+    public static List<Long> getMmsis(boolean shouldThrowIfEmpty) {
+        List<Long> mmsis = activePoints.stream()
                 .map(ActivePoint::mmsi)
-                .toList())
-                .filter(mmsis -> !mmsis.isEmpty())
-                .orElseThrow(() -> new MmsiConflictException("No active points."));
+                .toList();
+        if (mmsis.isEmpty() && shouldThrowIfEmpty) {
+            throw new MmsiConflictException("No active points.");
+        }
+        return mmsis;
     }
 
     public static String getName(Long mmsi) {
@@ -62,8 +63,8 @@ public class ActivePointsManager {
     }
 
     public void filterInactiveShips(List<Long> activeMmsis) {
-        if (!getMmsis().isEmpty()) {
-            List<Long> actualMmsis = new ArrayList<>(getMmsis());
+        if (!getMmsis(false).isEmpty() && !activeMmsis.isEmpty()) {
+            List<Long> actualMmsis = new ArrayList<>(getMmsis(false));
             List<Long> inactiveMmsis = activeMmsis.stream()
                     .filter(activeMmsi -> !actualMmsis.contains(activeMmsi))
                     .toList();

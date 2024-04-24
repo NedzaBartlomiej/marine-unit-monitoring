@@ -12,8 +12,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.ais.AisService;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
-import pl.bartlomiej.marineunitmonitoring.common.util.DateRange;
 import pl.bartlomiej.marineunitmonitoring.point.ActivePointsManager;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.helper.DateRangeHelper;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.CustomShipTrackHistoryRepository;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.MongoShipTrackHistoryRepository;
 import reactor.core.publisher.Flux;
@@ -51,19 +51,19 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     public Flux<ShipTrack> getShipTrackHistory(List<Long> mmsis, LocalDateTime from, LocalDateTime to) {
 
         // PROCESS DATE RANGE
-        DateRange dateRange = this.processDateRange(new DateRange(from, to));
+        DateRangeHelper dateRangeHelper = this.processDateRange(new DateRangeHelper(from, to));
 
         // DB RESULT STREAM
         Flux<ShipTrack> dbStream = customShipTrackHistoryRepository
-                .findByMmsiInAndReadingTimeBetween(mmsis, dateRange.getFrom(), dateRange.getTo())
+                .findByMmsiInAndReadingTimeBetween(mmsis, dateRangeHelper.getFrom(), dateRangeHelper.getTo())
                 .switchIfEmpty(error(NoContentException::new));
 
         // CHANGE STREAM
-        if (dateRange.getTo().isAfter(now(systemDefault()))) {
+        if (dateRangeHelper.getTo().isAfter(now(systemDefault())) || to == null) {
             Aggregation pipeline = newAggregation(match(
                             Criteria.where(OPERATION_TYPE).is(INSERT)
                                     .and(MMSI.fieldName).in(mmsis)
-                                    .and(READING_TIME.fieldName).lte(dateRange.getTo())
+                                    .and(READING_TIME.fieldName).lte(dateRangeHelper.getTo())
                     )
             );
 
@@ -87,21 +87,19 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     }
 
-    private DateRange processDateRange(DateRange dateRange) {
+    private DateRangeHelper processDateRange(DateRangeHelper dateRangeHelper) {
 
         final LocalDateTime ZERO_DATE = of(0, 1, 1, 0, 0, 0);
 
-        log.info("Processing dateRange: {} - {}", dateRange.getFrom(), dateRange.getTo());
-        if (dateRange.getFrom() == null && dateRange.getTo() == null) {
-            dateRange.setFrom(ZERO_DATE);
-            dateRange.setTo(now(systemDefault()));
-        } else if (dateRange.getFrom() == null) {
-            dateRange.setFrom(ZERO_DATE);
-        } else if (dateRange.getTo() == null) {
-            dateRange.setTo(now(systemDefault()));
+        log.info("Processing dateRange: {} - {}", dateRangeHelper.getFrom(), dateRangeHelper.getTo());
+        if (dateRangeHelper.getFrom() == null) {
+            dateRangeHelper.setFrom(ZERO_DATE);
         }
-        log.info("Processed dateRange: {} - {}", dateRange.getFrom(), dateRange.getTo());
-        return dateRange;
+        if (dateRangeHelper.getTo() == null) {
+            dateRangeHelper.setTo(now(systemDefault()));
+        }
+        log.info("Processed dateRange: {} - {}", dateRangeHelper.getFrom(), dateRangeHelper.getTo());
+        return dateRangeHelper;
     }
 
     @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
@@ -139,7 +137,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     }
 
     private List<Long> getShipMmsisToTrack() {
-        return ActivePointsManager.getMmsis();
+        return ActivePointsManager.getMmsis(true);
     }
 
     private Flux<ShipTrack> mapToShipTrack(JsonNode ship) {

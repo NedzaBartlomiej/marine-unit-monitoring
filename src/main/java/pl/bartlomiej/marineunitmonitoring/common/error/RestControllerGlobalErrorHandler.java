@@ -6,7 +6,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
-import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
+import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 
 import static java.util.Objects.requireNonNull;
 import static org.springframework.http.HttpStatus.*;

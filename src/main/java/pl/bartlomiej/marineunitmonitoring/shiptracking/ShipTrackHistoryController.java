@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
-import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
+import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;

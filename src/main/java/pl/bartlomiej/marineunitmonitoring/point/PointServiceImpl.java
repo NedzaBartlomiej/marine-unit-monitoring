@@ -28,7 +28,8 @@ public class PointServiceImpl implements PointService {
     public Flux<Point> getPoints() {
         return aisService.fetchLatestShips()
                 .switchIfEmpty(error(NoContentException::new))
-                .flatMap(this::mapToPoint);
+                .flatMap(this::mapToPoint)
+                .cache();
     }
 
     private Flux<Point> mapToPoint(AisShip aisShip) {

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pl.bartlomiej.marineunitmonitoring.common.ResponseModel;
+import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserDtoMapper;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserSaveDto;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShip;
