@@ -2,66 +2,59 @@ package pl.bartlomiej.marineunitmonitoring.point.activepoint;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
+import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
+import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrackHistoryService;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
-import static pl.bartlomiej.marineunitmonitoring.point.PointServiceImpl.UNKNOWN_NOT_REPORTED;
 
 @Slf4j
 @RequiredArgsConstructor
-@Component
+@Service
 public class ActivePointsManager {
-    private static final Set<ActivePoint> activePoints = new HashSet<>(); // todo store it in db
+
+    private final ActivePointRepository activePointRepository;
     private final TrackedShipService trackedShipService;
     private final ShipTrackHistoryService shipTrackHistoryService;
 
-    public static List<Long> getMmsis(boolean shouldThrowIfEmpty) {
-        List<Long> mmsis = activePoints.stream()
-                .map(ActivePoint::mmsi)
+    public List<Long> getMmsis(boolean shouldThrowIfEmpty) {
+        List<Long> mmsis = activePointRepository.findAll().stream()
+                .map(ActivePoint::getMmsi)
                 .toList();
         if (mmsis.isEmpty() && shouldThrowIfEmpty) {
-            throw new MmsiConflictException("No active points.");
+            log.warn("No active points found.");
+            throw new NoContentException();
         }
         return mmsis;
     }
 
-    public static String getName(Long mmsi) {
-        return activePoints.stream()
-                .filter(activePoint -> activePoint.mmsi.equals(mmsi))
-                .map(ActivePoint::name)
-                .findAny()
-                .orElse(UNKNOWN_NOT_REPORTED);
+    public String getName(Long mmsi) {
+        return activePointRepository.findByMmsi(mmsi)
+                .orElseThrow(NotFoundException::new)
+                .getName();
     }
 
-    public static Boolean isPointActive(Long mmsi) {
-        return !activePoints.stream()
-                .filter(activePoint -> activePoint.mmsi.equals(mmsi))
-                .toList()
-                .isEmpty();
+    public Boolean isPointActive(Long mmsi) {
+        return activePointRepository.existsByMmsi(mmsi);
     }
 
-    public static void removeActivePoint(Long mmsi) {
-        if (!activePoints.removeIf(activePoint ->
-                activePoint.mmsi().equals(mmsi))) {
-            log.info("The point to be removed is not on the list.");
-        }
+    public void removeActivePoint(Long mmsi) {
+        if (!activePointRepository.existsByMmsi(mmsi))
+            throw new NotFoundException();
+        activePointRepository.deleteByMmsi(mmsi);
     }
 
     public void addActivePoint(ActivePoint activePoint) {
-        if (!isPointActive(activePoint.mmsi)) {
-            activePoints.add(activePoint);
-        } else {
-            log.info("Point is already in list.");
-        }
+        if (activePointRepository.existsByMmsi(activePoint.getMmsi()))
+            throw new MmsiConflictException("Point is already on list.");
+        activePointRepository.save(activePoint);
     }
 
+    // todo refactor
     public void filterInactiveShips(List<Long> activeMmsis) {
         if (!getMmsis(false).isEmpty() && !activeMmsis.isEmpty()) {
             List<Long> actualMmsis = new ArrayList<>(getMmsis(false));
@@ -84,8 +77,4 @@ public class ActivePointsManager {
             log.info("No points to filter.");
         }
     }
-
-    public record ActivePoint(Long mmsi, String name) {
-    }
-
 }

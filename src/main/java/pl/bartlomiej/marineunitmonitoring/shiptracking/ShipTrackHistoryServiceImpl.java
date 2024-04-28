@@ -43,6 +43,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     private final MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository;
     private final CustomShipTrackHistoryRepository customShipTrackHistoryRepository;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
+    private final ActivePointsManager activePointsManager;
 
 
     // TRACK HISTORY - operations
@@ -137,7 +138,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     }
 
     private List<Long> getShipMmsisToTrack() {
-        return ActivePointsManager.getMmsis(true);
+        return activePointsManager.getMmsis(true);
     }
 
     private Flux<ShipTrack> mapToShipTrack(JsonNode ship) {

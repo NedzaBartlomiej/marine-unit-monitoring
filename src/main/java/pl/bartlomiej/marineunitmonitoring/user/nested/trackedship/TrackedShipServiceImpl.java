@@ -1,14 +1,15 @@
 package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePointsManager;
-import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
+import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
 
 import java.util.List;
 
@@ -17,10 +18,12 @@ import static pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictExcept
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TrackedShipServiceImpl implements TrackedShipService {
 
     private final MongoUserRepository mongoUserRepository;
     private final CustomUserRepository customUserRepository;
+    private final ActivePointsManager activePointsManager;
 
     public List<TrackedShip> getTrackedShips(String id) {
         List<TrackedShip> trackedShips = customUserRepository.getTrackedShips(id);
@@ -33,16 +36,18 @@ public class TrackedShipServiceImpl implements TrackedShipService {
     @Transactional
     @Override
     public TrackedShip addTrackedShip(String id, Long mmsi) {
-        if (!mongoUserRepository.existsById(id))
+        if (!mongoUserRepository.existsById(id)) {
+            log.error("User not found.");
             throw new NotFoundException();
+        }
 
-        if (!ActivePointsManager.isPointActive(mmsi))
+        if (!activePointsManager.isPointActive(mmsi))
             throw new MmsiConflictException(INVALID_SHIP.message);
 
         if (this.isShipTracked(id, mmsi))
             throw new MmsiConflictException(SHIP_IS_ALREADY_TRACKED.message);
 
-        TrackedShip trackedShip = new TrackedShip(mmsi, ActivePointsManager.getName(mmsi));
+        TrackedShip trackedShip = new TrackedShip(mmsi, activePointsManager.getName(mmsi));
         return customUserRepository.pushTrackedShip(
                 id,
                 trackedShip
