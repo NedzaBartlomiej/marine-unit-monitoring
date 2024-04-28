@@ -4,7 +4,7 @@ import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack;
 import reactor.core.publisher.Mono;
 
-public interface MongoShipTrackHistoryRepository extends ReactiveMongoRepository<ShipTrack, Long> {
+public interface MongoShipTrackHistoryRepository extends ReactiveMongoRepository<ShipTrack, String> {
 
     Mono<ShipTrack> findByMmsi(Long mmsi);
 

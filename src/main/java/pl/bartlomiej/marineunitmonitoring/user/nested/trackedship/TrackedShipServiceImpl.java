@@ -1,13 +1,13 @@
 package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
-import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePointsManager;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.manager.ActivePointManager;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
 
@@ -17,13 +17,21 @@ import static pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictExcept
 import static pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException.Message.SHIP_IS_ALREADY_TRACKED;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class TrackedShipServiceImpl implements TrackedShipService {
 
     private final MongoUserRepository mongoUserRepository;
     private final CustomUserRepository customUserRepository;
-    private final ActivePointsManager activePointsManager;
+    private final ActivePointManager activePointManager;
+
+    public TrackedShipServiceImpl(
+            MongoUserRepository mongoUserRepository,
+            CustomUserRepository customUserRepository,
+            @Qualifier("activePointsSyncManager") ActivePointManager activePointManager) {
+        this.mongoUserRepository = mongoUserRepository;
+        this.customUserRepository = customUserRepository;
+        this.activePointManager = activePointManager;
+    }
 
     public List<TrackedShip> getTrackedShips(String id) {
         List<TrackedShip> trackedShips = customUserRepository.getTrackedShips(id);
@@ -41,13 +49,13 @@ public class TrackedShipServiceImpl implements TrackedShipService {
             throw new NotFoundException();
         }
 
-        if (!activePointsManager.isPointActive(mmsi))
+        if (!activePointManager.isPointActive(mmsi))
             throw new MmsiConflictException(INVALID_SHIP.message);
 
         if (this.isShipTracked(id, mmsi))
             throw new MmsiConflictException(SHIP_IS_ALREADY_TRACKED.message);
 
-        TrackedShip trackedShip = new TrackedShip(mmsi, activePointsManager.getName(mmsi));
+        TrackedShip trackedShip = new TrackedShip(mmsi, activePointManager.getName(mmsi));
         return customUserRepository.pushTrackedShip(
                 id,
                 trackedShip

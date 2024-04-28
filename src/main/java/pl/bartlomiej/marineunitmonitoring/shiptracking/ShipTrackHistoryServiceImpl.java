@@ -1,8 +1,8 @@
 package pl.bartlomiej.marineunitmonitoring.shiptracking;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.ChangeStreamEvent;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.ais.AisService;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
-import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePointsManager;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.manager.ActivePointManager;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.helper.DateRangeHelper;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.CustomShipTrackHistoryRepository;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.MongoShipTrackHistoryRepository;
@@ -34,7 +34,6 @@ import static reactor.core.publisher.Flux.just;
 import static reactor.core.publisher.Mono.error;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
@@ -43,7 +42,20 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     private final MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository;
     private final CustomShipTrackHistoryRepository customShipTrackHistoryRepository;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
-    private final ActivePointsManager activePointsManager;
+    private final ActivePointManager activePointManager;
+
+    public ShipTrackHistoryServiceImpl(
+            AisService aisService,
+            MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository,
+            CustomShipTrackHistoryRepository customShipTrackHistoryRepository,
+            ReactiveMongoTemplate reactiveMongoTemplate,
+            @Qualifier("activePointAsyncManager") ActivePointManager activePointManager) {
+        this.aisService = aisService;
+        this.mongoShipTrackHistoryRepository = mongoShipTrackHistoryRepository;
+        this.customShipTrackHistoryRepository = customShipTrackHistoryRepository;
+        this.reactiveMongoTemplate = reactiveMongoTemplate;
+        this.activePointManager = activePointManager;
+    }
 
 
     // TRACK HISTORY - operations
@@ -138,7 +150,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     }
 
     private List<Long> getShipMmsisToTrack() {
-        return activePointsManager.getMmsis(true);
+        return activePointManager.getMmsis();
     }
 
     private Flux<ShipTrack> mapToShipTrack(JsonNode ship) {

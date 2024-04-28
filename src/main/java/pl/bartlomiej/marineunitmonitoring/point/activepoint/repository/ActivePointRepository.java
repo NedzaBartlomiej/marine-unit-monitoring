@@ -1,6 +1,7 @@
-package pl.bartlomiej.marineunitmonitoring.point.activepoint;
+package pl.bartlomiej.marineunitmonitoring.point.activepoint.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePoint;
 
 import java.util.Optional;
 
