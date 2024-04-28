@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePoint;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePointsManager;
 import reactor.core.publisher.Flux;
 
@@ -34,7 +35,7 @@ public class PointController {
                 pointService.getPoints()
                         .doOnNext(point ->
                                 activePointsManager.addActivePoint(
-                                        new ActivePointsManager.ActivePoint(
+                                        new ActivePoint(
                                                 point.mmsi(),
                                                 point.name()
                                         )
