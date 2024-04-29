@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePoint;
-import pl.bartlomiej.marineunitmonitoring.point.activepoint.manager.ActivePointManager;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.InactivePointFilter;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
 import reactor.core.publisher.Flux;
 
 import static java.util.Map.of;
@@ -18,13 +19,16 @@ import static org.springframework.http.HttpStatus.OK;
 public class PointController {
 
     private final PointService pointService;
-    private final ActivePointManager activePointManager;
+    private final ActivePointService activePointService;
+    private final InactivePointFilter inactivePointFilter;
 
     public PointController(
             PointService pointService,
-            @Qualifier("activePointAsyncManager") ActivePointManager activePointManager) {
+            @Qualifier("activePointAsyncService") ActivePointService activePointService,
+            InactivePointFilter inactivePointFilter) {
         this.pointService = pointService;
-        this.activePointManager = activePointManager;
+        this.activePointService = activePointService;
+        this.inactivePointFilter = inactivePointFilter;
     }
 
     @GetMapping
@@ -34,24 +38,26 @@ public class PointController {
         pointService.getPoints()
                 .map(Point::mmsi)
                 .collectList()
-                .subscribe(activePointManager::filterInactiveShips);
+                .subscribe(mmsis ->
+                        inactivePointFilter.filterInactiveShips(mmsis).subscribe()
+                );
 
         // RESPONSE
         return ResponseEntity.ok(
                 pointService.getPoints()
-                        .doOnNext(point ->
-                                activePointManager.addActivePoint(
+                        .flatMap(point ->
+                                activePointService.addActivePoint(
                                         new ActivePoint(
                                                 point.mmsi(),
                                                 point.name()
                                         )
-                                )
+                                ).thenReturn(point)
                         )
-                        .map(response ->
+                        .map(point ->
                                 ResponseModel.<Point>builder()
                                         .httpStatus(OK)
                                         .httpStatusCode(OK.value())
-                                        .body(of("Point", response))
+                                        .body(of("Point", point))
                                         .build()
                         )
         );

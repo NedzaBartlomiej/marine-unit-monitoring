@@ -1,11 +1,12 @@
-package pl.bartlomiej.marineunitmonitoring.point.activepoint.manager;
+package pl.bartlomiej.marineunitmonitoring.point.activepoint.service;
 
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePoint;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-public interface ActivePointManager {
+// todo - test all commited changes
+public interface ActivePointService {
 
     String ASYNC_SUPPORTED = "Operation is only supported in async implementation.";
     String SYNC_SUPPORTED = "Operation is only supported in sync implementation.";
@@ -27,10 +28,6 @@ public interface ActivePointManager {
     }
 
     default Mono<Void> addActivePoint(ActivePoint activePoint) {
-        throw new UnsupportedOperationException(ASYNC_SUPPORTED);
-    }
-
-    default Mono<Void> filterInactiveShips(List<Long> activeMmsis) {
         throw new UnsupportedOperationException(ASYNC_SUPPORTED);
     }
 }

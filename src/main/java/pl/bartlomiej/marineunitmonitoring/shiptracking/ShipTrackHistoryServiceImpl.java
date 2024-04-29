@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.ais.AisService;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
-import pl.bartlomiej.marineunitmonitoring.point.activepoint.manager.ActivePointManager;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.helper.DateRangeHelper;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.CustomShipTrackHistoryRepository;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.MongoShipTrackHistoryRepository;
@@ -42,19 +42,19 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     private final MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository;
     private final CustomShipTrackHistoryRepository customShipTrackHistoryRepository;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
-    private final ActivePointManager activePointManager;
+    private final ActivePointService activePointService;
 
     public ShipTrackHistoryServiceImpl(
             AisService aisService,
             MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository,
             CustomShipTrackHistoryRepository customShipTrackHistoryRepository,
             ReactiveMongoTemplate reactiveMongoTemplate,
-            @Qualifier("activePointAsyncManager") ActivePointManager activePointManager) {
+            @Qualifier("activePointAsyncService") ActivePointService activePointService) {
         this.aisService = aisService;
         this.mongoShipTrackHistoryRepository = mongoShipTrackHistoryRepository;
         this.customShipTrackHistoryRepository = customShipTrackHistoryRepository;
         this.reactiveMongoTemplate = reactiveMongoTemplate;
-        this.activePointManager = activePointManager;
+        this.activePointService = activePointService;
     }
 
 
@@ -140,17 +140,16 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     // GET SHIP TRACKS TO SAVE - operations
 
     private Flux<ShipTrack> getShipTracks() {
-        return aisService.fetchShipsByIdentifiers(
-                        this.getShipMmsisToTrack()
-                )
+        return this.getShipMmsisToTrack()
+                .flatMapMany(aisService::fetchShipsByIdentifiers) // todo - pusta lista mmsi dostaje sie do zapytania
                 .switchIfEmpty(
                         error(NoContentException::new)
                 )
                 .flatMap(this::mapToShipTrack);
     }
 
-    private List<Long> getShipMmsisToTrack() {
-        return activePointManager.getMmsis();
+    private Mono<List<Long>> getShipMmsisToTrack() {
+        return activePointService.getMmsis();
     }
 
     private Flux<ShipTrack> mapToShipTrack(JsonNode ship) {

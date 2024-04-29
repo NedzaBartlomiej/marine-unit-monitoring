@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.point.activepoint.manager;
+package pl.bartlomiej.marineunitmonitoring.point.activepoint.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +9,7 @@ import pl.bartlomiej.marineunitmonitoring.point.activepoint.repository.ActivePoi
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class ActivePointsSyncManager implements ActivePointManager {
+public class ActivePointsSyncService implements ActivePointService {
 
     private final ActivePointRepository activePointRepository;
 
