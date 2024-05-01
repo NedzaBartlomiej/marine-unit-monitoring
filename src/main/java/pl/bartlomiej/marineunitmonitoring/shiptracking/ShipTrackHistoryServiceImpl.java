@@ -37,6 +37,7 @@ import static reactor.core.publisher.Mono.error;
 public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     private static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60 * 5;
+    private static short trackCounter;
     private final AisService aisService;
     private final MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository;
     private final CustomShipTrackHistoryRepository customShipTrackHistoryRepository;
@@ -116,11 +117,24 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
     public void saveTracksForTrackedShips() {
+
+        // clearing not moving ship-track copies of one not moving ship-track
+        if (trackCounter < 3) {
+            trackCounter++;
+        } else if (trackCounter == 3) {
+            this.clearNotMovingTracks().subscribe();
+            trackCounter = 0;
+        }
+
         this.getShipTracks()
                 .flatMap(mongoShipTrackHistoryRepository::save)
                 .doOnComplete(() -> log.info("Successfully saved tracked ships coordinates."))
                 .doOnError(error -> log.error("Something go wrong on saving ship tracks - {}", error.getMessage()))
                 .subscribe();
+    }
+
+    private Mono<Void> clearNotMovingTracks() {
+
     }
 
 
