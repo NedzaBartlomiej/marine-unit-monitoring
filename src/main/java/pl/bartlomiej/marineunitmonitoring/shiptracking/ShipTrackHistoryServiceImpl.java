@@ -24,7 +24,6 @@ import java.util.List;
 
 import static java.time.LocalDateTime.now;
 import static java.time.LocalDateTime.of;
-import static java.time.ZoneId.systemDefault;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.INSERT;
@@ -72,7 +71,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 .switchIfEmpty(error(NoContentException::new));
 
         // CHANGE STREAM - used when the client wants to track the future
-        if (dateRangeHelper.getTo().isAfter(now(systemDefault())) || to == null) {
+        if (dateRangeHelper.getTo().isAfter(now()) || to == null) {
             Aggregation pipeline = newAggregation(match(
                             Criteria.where(OPERATION_TYPE).is(INSERT)
                                     .and(MMSI.fieldName).in(mmsis)
@@ -109,7 +108,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
             dateRangeHelper.setFrom(ZERO_DATE);
         }
         if (dateRangeHelper.getTo() == null) {
-            dateRangeHelper.setTo(now(systemDefault()));
+            dateRangeHelper.setTo(now());
         }
         log.info("Processed dateRange: {} - {}", dateRangeHelper.getFrom(), dateRangeHelper.getTo());
         return dateRangeHelper;

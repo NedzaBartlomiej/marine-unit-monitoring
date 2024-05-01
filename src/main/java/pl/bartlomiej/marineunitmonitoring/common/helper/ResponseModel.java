@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import static java.time.LocalDateTime.now;
-import static java.time.ZoneId.systemDefault;
 
 @Getter
 @Builder
@@ -20,6 +19,6 @@ public class ResponseModel<T> {
     private final Integer httpStatusCode;
     private final String message;
     @Builder.Default
-    private final LocalDateTime readingTime = now(systemDefault());
+    private final LocalDateTime readingTime = now();
     private final Map<String, T> body;
 }
