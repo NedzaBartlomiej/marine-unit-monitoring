@@ -5,7 +5,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-// todo - test all commited changes
 public interface ActivePointService {
 
     String ASYNC_SUPPORTED = "Operation is only supported in async implementation.";

@@ -71,7 +71,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 .findByMmsiInAndReadingTimeBetween(mmsis, dateRangeHelper.getFrom(), dateRangeHelper.getTo())
                 .switchIfEmpty(error(NoContentException::new));
 
-        // CHANGE STREAM
+        // CHANGE STREAM - used when the client wants to track the future
         if (dateRangeHelper.getTo().isAfter(now(systemDefault())) || to == null) {
             Aggregation pipeline = newAggregation(match(
                             Criteria.where(OPERATION_TYPE).is(INSERT)
@@ -141,7 +141,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     private Flux<ShipTrack> getShipTracks() {
         return this.getShipMmsisToTrack()
-                .flatMapMany(aisService::fetchShipsByIdentifiers) // todo - pusta lista mmsi dostaje sie do zapytania
+                .flatMapMany(aisService::fetchShipsByIdentifiers)
                 .switchIfEmpty(
                         error(NoContentException::new)
                 )
@@ -149,7 +149,10 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     }
 
     private Mono<List<Long>> getShipMmsisToTrack() {
-        return activePointService.getMmsis();
+        return activePointService.getMmsis()
+                .doOnError(error -> log.error("Something go wrong when getting mmsis to track - {}",
+                        error.getMessage())
+                );
     }
 
     private Flux<ShipTrack> mapToShipTrack(JsonNode ship) {

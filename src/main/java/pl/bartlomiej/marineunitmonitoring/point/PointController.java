@@ -39,7 +39,7 @@ public class PointController {
                 .map(Point::mmsi)
                 .collectList()
                 .subscribe(mmsis ->
-                        inactivePointFilter.filterInactiveShips(mmsis).subscribe()
+                        inactivePointFilter.filter(mmsis).subscribe()
                 );
 
         // RESPONSE

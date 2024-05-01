@@ -31,7 +31,7 @@ public class InactivePointFilter {
         this.trackedShipService = trackedShipService;
     }
 
-    public Mono<Void> filterInactiveShips(List<Long> activeMmsis) {
+    public Mono<Void> filter(List<Long> activeMmsis) {
         return activePointService.getMmsis()
                 .flatMap(actualMmsis -> {
 

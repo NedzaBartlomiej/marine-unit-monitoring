@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+import static reactor.core.publisher.Mono.empty;
 import static reactor.core.publisher.Mono.error;
 
 @Slf4j
@@ -25,9 +26,9 @@ public class ActivePointAsyncService implements ActivePointService {
     @Override
     public Mono<List<Long>> getMmsis() {
         return activePointReactiveRepository.findAll()
+                .switchIfEmpty(error(new MmsiConflictException("No active points found.")))
                 .map(ActivePoint::getMmsi)
-                .collectList()
-                .switchIfEmpty(error(new MmsiConflictException("No active points found.")));
+                .collectList();
     }
 
     @Override
@@ -46,9 +47,11 @@ public class ActivePointAsyncService implements ActivePointService {
         return activePointReactiveRepository.existsByMmsi(activePoint.getMmsi())
                 .flatMap(exists -> {
                     if (exists) {
-                        return error(new MmsiConflictException("Point already exists."));
+                        log.warn("Point already exists.");
+                        return empty();
+                    } else {
+                        return activePointReactiveRepository.save(activePoint).then();
                     }
-                    return activePointReactiveRepository.save(activePoint).then();
                 });
     }
 }
