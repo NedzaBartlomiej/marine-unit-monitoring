@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.ChangeStreamEvent;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -73,12 +74,21 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
         // CHANGE STREAM - used when the client wants to track the future
         if (dateRangeHelper.getTo().isAfter(now()) || to == null) {
-            Aggregation pipeline = newAggregation(match(
-                            Criteria.where(OPERATION_TYPE).is(INSERT)
-                                    .and(MMSI.fieldName).in(mmsis)
-                                    .and(READING_TIME.fieldName).lte(dateRangeHelper.getTo())
-                    )
-            );
+
+            AggregationOperation match;
+            if (to == null) {
+                match = match(
+                        Criteria.where(OPERATION_TYPE).is(INSERT)
+                                .and(MMSI.fieldName).in(mmsis)
+                );
+            } else {
+                match = match(
+                        Criteria.where(OPERATION_TYPE).is(INSERT)
+                                .and(MMSI.fieldName).in(mmsis)
+                                .and(READING_TIME.fieldName).lte(dateRangeHelper.getTo())
+                );
+            }
+            Aggregation pipeline = newAggregation(match);
 
             Flux<ChangeStreamEvent<ShipTrack>> changeStream = reactiveMongoTemplate.changeStream(
                     SHIP_TRACK_HISTORY.fieldName,
@@ -118,10 +128,12 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
     public void saveTracksForTrackedShips() {
 
+        final int CHECK_INTERVAL_LIMIT = 3;
+
         // clearing not moving ship-track copies of one not moving ship-track
-        if (trackCounter < 3) {
+        if (trackCounter < CHECK_INTERVAL_LIMIT) {
             trackCounter++;
-        } else if (trackCounter == 3) {
+        } else if (trackCounter == CHECK_INTERVAL_LIMIT) {
             this.clearNotMovingTracks().subscribe();
             trackCounter = 0;
         }
