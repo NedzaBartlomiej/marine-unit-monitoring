@@ -45,19 +45,6 @@ public class ActivePointAsyncService implements ActivePointService {
                 });
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    private Mono<Void> updateAfterAppStart() {
-        return from(aisService.fetchLatestShips()
-                .flatMap(aisShip -> this.addActivePoint(
-                                new ActivePoint(
-                                        aisShip.properties().mmsi(),
-                                        aisShip.properties().name()
-                                )
-                        )
-                )
-        );
-    }
-
     @Override
     public Mono<Void> addActivePoint(ActivePoint activePoint) {
         return activePointReactiveRepository.existsByMmsi(activePoint.getMmsi())
@@ -69,5 +56,19 @@ public class ActivePointAsyncService implements ActivePointService {
                         return activePointReactiveRepository.save(activePoint).then();
                     }
                 });
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    private Mono<Void> updateAfterAppStart() {
+        log.info("Updating active points after application start.");
+        return from(aisService.fetchLatestShips()
+                .flatMap(aisShip -> this.addActivePoint(
+                                new ActivePoint(
+                                        aisShip.properties().mmsi(),
+                                        aisShip.properties().name()
+                                )
+                        )
+                )
+        );
     }
 }
