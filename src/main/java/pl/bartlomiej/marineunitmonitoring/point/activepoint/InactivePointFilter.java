@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
+import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrackHistoryService;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
@@ -40,8 +41,8 @@ public class InactivePointFilter {
                     }
 
                     // exclude matching mmsis and detailing inactive mmsis
-                    List<Long> inactiveMmsis = activeMmsis.stream()
-                            .filter(activeMmsi -> !actualMmsis.contains(activeMmsi))
+                    List<Long> inactiveMmsis = actualMmsis.stream()
+                            .filter(actualMmsi -> !activeMmsis.contains(actualMmsi))
                             .toList();
 
                     if (inactiveMmsis.isEmpty()) {
@@ -50,9 +51,13 @@ public class InactivePointFilter {
                         inactiveMmsis
                                 .forEach(mmsi -> {
                                     log.info("Removing inactive point - {}", mmsi);
-                                    activePointService.removeActivePoint(mmsi).subscribe();
-                                    trackedShipService.removeTrackedShip(mmsi);
-                                    shipTrackHistoryService.clearShipHistory(mmsi).subscribe();
+                                    try {
+                                        activePointService.removeActivePoint(mmsi).subscribe();
+                                        trackedShipService.removeTrackedShip(mmsi);
+                                        shipTrackHistoryService.clearShipHistory(mmsi).subscribe();
+                                    } catch (NotFoundException e) {
+                                        log.warn("Could not remove inactive point from somewhere.");
+                                    }
                                 });
                     }
 
