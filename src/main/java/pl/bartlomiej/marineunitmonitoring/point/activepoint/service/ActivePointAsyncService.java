@@ -2,7 +2,10 @@ package pl.bartlomiej.marineunitmonitoring.point.activepoint.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import pl.bartlomiej.marineunitmonitoring.ais.AisService;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePoint;
@@ -11,8 +14,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-import static reactor.core.publisher.Mono.empty;
-import static reactor.core.publisher.Mono.error;
+import static reactor.core.publisher.Mono.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -20,6 +22,7 @@ import static reactor.core.publisher.Mono.error;
 public class ActivePointAsyncService implements ActivePointService {
 
     private final ActivePointReactiveRepository activePointReactiveRepository;
+    private final AisService aisService;
 
     // IMPLEMENTED/SUPPORTED ASYNC METHODS
 
@@ -40,6 +43,19 @@ public class ActivePointAsyncService implements ActivePointService {
                     }
                     return activePointReactiveRepository.deleteByMmsi(mmsi);
                 });
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    private Mono<Void> updateAfterAppStart() {
+        return from(aisService.fetchLatestShips()
+                .flatMap(aisShip -> this.addActivePoint(
+                                new ActivePoint(
+                                        aisShip.properties().mmsi(),
+                                        aisShip.properties().name()
+                                )
+                        )
+                )
+        );
     }
 
     @Override
