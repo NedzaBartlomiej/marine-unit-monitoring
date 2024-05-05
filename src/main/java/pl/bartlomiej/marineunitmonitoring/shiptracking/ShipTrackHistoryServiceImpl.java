@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.ais.AisService;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
+import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.helper.DateRangeHelper;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.CustomShipTrackHistoryRepository;
@@ -31,6 +32,7 @@ import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.INSER
 import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.OPERATION_TYPE;
 import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.*;
 import static reactor.core.publisher.Flux.just;
+import static reactor.core.publisher.Mono.empty;
 import static reactor.core.publisher.Mono.error;
 
 @Service
@@ -38,7 +40,6 @@ import static reactor.core.publisher.Mono.error;
 public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     private static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60 * 5;
-    private static short trackCounter;
     private final AisService aisService;
     private final MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository;
     private final CustomShipTrackHistoryRepository customShipTrackHistoryRepository;
@@ -127,40 +128,35 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
     public void saveTracksForTrackedShips() {
-
-        final int CHECK_INTERVAL_LIMIT = 3;
-
-        // clearing not moving ship-track copies of one not moving ship-track
-        if (trackCounter < CHECK_INTERVAL_LIMIT) {
-            trackCounter++;
-        } else if (trackCounter == CHECK_INTERVAL_LIMIT) {
-            this.clearNotMovingTracks().subscribe();
-            trackCounter = 0;
-        }
-
         this.getShipTracks()
-                .flatMap(mongoShipTrackHistoryRepository::save)
+                .flatMap(this::saveNoStationaryTrack)
                 .doOnComplete(() -> log.info("Successfully saved tracked ships coordinates."))
                 .doOnError(error -> log.error("Something go wrong on saving ship tracks - {}", error.getMessage()))
                 .subscribe();
     }
 
-    private Mono<Void> clearNotMovingTracks() {
-
+    private Mono<Void> saveNoStationaryTrack(ShipTrack shipTrack) {
+        return customShipTrackHistoryRepository.getLatest(shipTrack.getMmsi())
+                .flatMap(lst -> {
+                    if ((lst.getX().equals(shipTrack.getX()) && lst.getY().equals(shipTrack.getY()))) {
+                        log.warn("The ship did not change its position - saving canceled");
+                        return empty();
+                    } else {
+                        return mongoShipTrackHistoryRepository.save(shipTrack).then();
+                    }
+                })
+                .onErrorResume(t -> mongoShipTrackHistoryRepository.save(shipTrack).then());
     }
-
 
     public Mono<Void> clearShipHistory(Long mmsi) {
-        return mongoShipTrackHistoryRepository.findByMmsi(mmsi)
-                .flatMap(shipTrack -> {
-                    if (shipTrack == null) {
-                        log.error("Not found any ship tracks for ship: {}", mmsi);
-                        return Mono.empty();
+        return mongoShipTrackHistoryRepository.existsByMmsi(mmsi)
+                .flatMap(exists -> {
+                    if (!exists) {
+                        return error(new NotFoundException());
                     }
-                    return mongoShipTrackHistoryRepository.deleteAllByMmsi(mmsi);
+                    return mongoShipTrackHistoryRepository.deleteByMmsi(mmsi);
                 });
     }
-
 
     // GET SHIP TRACKS TO SAVE - operations
 
