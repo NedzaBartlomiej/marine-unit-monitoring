@@ -9,7 +9,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
-import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
+import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAuthTokenProvider;
 import reactor.core.publisher.Mono;
 
 import static java.time.Duration.ofHours;
@@ -25,7 +25,7 @@ public class RedisCacheConfig {
     public static final String AIS_AUTH_TOKEN_CACHE_NAME = "AisAuthToken";
     public static final String ADDRESS_COORDS_CACHE_NAME = "AddressCoords";
     public static final String POINTS_CACHE_NAME = "Points";
-    private final AisApiAccessTokenService accessTokenService;
+    private final AisApiAuthTokenProvider aisApiAuthTokenProvider;
 
     @Bean
     public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
@@ -47,6 +47,6 @@ public class RedisCacheConfig {
     @CachePut(cacheNames = "AisAuthToken", key = "#result")
     public Mono<String> refreshToken() {
         log.info("Refreshing ais api auth token in cache.");
-        return accessTokenService.getAisAuthTokenWithoutCache().cache();
+        return aisApiAuthTokenProvider.getAisAuthTokenWithoutCache().cache();
     }
 }

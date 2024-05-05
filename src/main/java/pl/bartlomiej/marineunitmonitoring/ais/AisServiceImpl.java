@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAccessTokenService;
+import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAuthTokenProvider;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -21,7 +21,7 @@ import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.MMSI
 public class AisServiceImpl implements AisService {
 
     private static final String BEARER = "Bearer ";
-    private final AisApiAccessTokenService accessTokenService;
+    private final AisApiAuthTokenProvider aisApiAuthTokenProvider;
     private final WebClient webClient;
     @Value("${vars.api.ais.result-limit}")
     private long resultLimit;
@@ -32,7 +32,7 @@ public class AisServiceImpl implements AisService {
 
     @Override
     public Flux<AisShip> fetchLatestShips() {
-        return accessTokenService.getAisAuthToken()
+        return aisApiAuthTokenProvider.getAisAuthToken()
                 .flatMapMany(token -> webClient
                         .get()
                         .uri(apiFetchLatestUri)
@@ -45,7 +45,7 @@ public class AisServiceImpl implements AisService {
 
     @Override
     public Flux<JsonNode> fetchShipsByIdentifiers(List<Long> identifiers) {
-        return accessTokenService.getAisAuthToken()
+        return aisApiAuthTokenProvider.getAisAuthToken()
                 .flatMapMany(token -> webClient
                         .post()
                         .uri(apiFetchByMmsiUri)

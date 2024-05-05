@@ -19,7 +19,7 @@ import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class AisApiAccessTokenService {
+public class BarentswatchAisApiTokenProvider implements AisApiAuthTokenProvider {
 
     private final WebClient webClient;
     @Value("${secrets.ais-api.auth.client-id}")
