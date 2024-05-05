@@ -51,13 +51,17 @@ public class InactivePointFilter {
                         inactiveMmsis
                                 .forEach(mmsi -> {
                                     log.info("Removing inactive point - {}", mmsi);
+                                    activePointService.removeActivePoint(mmsi)
+                                            .doOnError(e -> log.warn("Active points - {}", e.getMessage()))
+                                            .subscribe();
                                     try {
-                                        activePointService.removeActivePoint(mmsi).subscribe();
                                         trackedShipService.removeTrackedShip(mmsi);
-                                        shipTrackHistoryService.clearShipHistory(mmsi).subscribe();
                                     } catch (NotFoundException e) {
-                                        log.warn("Could not remove inactive point from somewhere.");
+                                        log.warn("Tracked ships - {}", e.getMessage());
                                     }
+                                    shipTrackHistoryService.clearShipHistory(mmsi)
+                                            .doOnError(e -> log.warn("Ship track history - {}", e.getMessage()))
+                                            .subscribe();
                                 });
                     }
 
