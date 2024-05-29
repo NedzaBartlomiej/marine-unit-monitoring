@@ -12,7 +12,6 @@ import org.springframework.context.event.EventListener;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAuthTokenProvider;
 import reactor.core.publisher.Mono;
 
-import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static org.springframework.data.redis.cache.RedisCacheConfiguration.defaultCacheConfig;
 
@@ -32,7 +31,7 @@ public class RedisCacheConfig {
         return builder -> builder
                 .withCacheConfiguration(
                         AIS_AUTH_TOKEN_CACHE_NAME,
-                        defaultCacheConfig().entryTtl(ofHours(1)))
+                        defaultCacheConfig().entryTtl(ofMinutes(58)))
                 .withCacheConfiguration(
                         ADDRESS_COORDS_CACHE_NAME,
                         defaultCacheConfig()
