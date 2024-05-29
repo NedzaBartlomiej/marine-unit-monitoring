@@ -1,15 +1,20 @@
 package pl.bartlomiej.marineunitmonitoring.shiptracking.helper;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 
-@AllArgsConstructor
+import static java.time.LocalDateTime.now;
+import static java.time.LocalDateTime.of;
+
 @Getter
-@Setter
-final public class DateRangeHelper {
-    private LocalDateTime from;
-    private LocalDateTime to;
+@Slf4j
+public record DateRangeHelper(LocalDateTime from, LocalDateTime to) {
+    public DateRangeHelper(LocalDateTime from, LocalDateTime to) {
+        log.info("Processing date range: [{}] - [{}]", from, to);
+        this.from = (from == null) ? of(0, 1, 1, 0, 0, 0) : from;
+        this.to = (to == null) ? now() : to;
+        log.info("Processed date range: [{}] - [{}]", from, to);
+    }
 }

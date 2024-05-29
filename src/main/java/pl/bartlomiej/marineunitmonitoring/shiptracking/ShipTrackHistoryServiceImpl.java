@@ -25,7 +25,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static java.time.LocalDateTime.now;
-import static java.time.LocalDateTime.of;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.INSERT;
@@ -66,15 +65,15 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     public Flux<ShipTrack> getShipTrackHistory(List<Long> mmsis, LocalDateTime from, LocalDateTime to) {
 
         // PROCESS DATE RANGE
-        DateRangeHelper dateRangeHelper = this.processDateRange(new DateRangeHelper(from, to));
+        DateRangeHelper dateRangeHelper = new DateRangeHelper(from, to);
 
         // DB RESULT STREAM
         Flux<ShipTrack> dbStream = customShipTrackHistoryRepository
-                .findByMmsiInAndReadingTimeBetween(mmsis, dateRangeHelper.getFrom(), dateRangeHelper.getTo())
+                .findByMmsiInAndReadingTimeBetween(mmsis, dateRangeHelper.from(), dateRangeHelper.to())
                 .switchIfEmpty(error(NoContentException::new));
 
         // CHANGE STREAM - used when the client wants to track the future
-        if (dateRangeHelper.getTo().isAfter(now()) || to == null) {
+        if (dateRangeHelper.to().isAfter(now()) || to == null) {
 
             AggregationOperation match;
             if (to == null) {
@@ -86,7 +85,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 match = match(
                         Criteria.where(OPERATION_TYPE).is(INSERT)
                                 .and(MMSI.fieldName).in(mmsis)
-                                .and(READING_TIME.fieldName).lte(dateRangeHelper.getTo())
+                                .and(READING_TIME.fieldName).lte(dateRangeHelper.to())
                 );
             }
             Aggregation pipeline = newAggregation(match);
@@ -109,21 +108,6 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
             return dbStream;
         }
 
-    }
-
-    private DateRangeHelper processDateRange(DateRangeHelper dateRangeHelper) {
-
-        final LocalDateTime ZERO_DATE = of(0, 1, 1, 0, 0, 0);
-
-        log.info("Processing dateRange: {} - {}", dateRangeHelper.getFrom(), dateRangeHelper.getTo());
-        if (dateRangeHelper.getFrom() == null) {
-            dateRangeHelper.setFrom(ZERO_DATE);
-        }
-        if (dateRangeHelper.getTo() == null) {
-            dateRangeHelper.setTo(now());
-        }
-        log.info("Processed dateRange: {} - {}", dateRangeHelper.getFrom(), dateRangeHelper.getTo());
-        return dateRangeHelper;
     }
 
     @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
