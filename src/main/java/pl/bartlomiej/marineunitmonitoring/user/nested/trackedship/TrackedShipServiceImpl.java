@@ -7,7 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
-import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointAsyncService;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointsSyncService;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
 
@@ -22,15 +23,15 @@ public class TrackedShipServiceImpl implements TrackedShipService {
 
     private final MongoUserRepository mongoUserRepository;
     private final CustomUserRepository customUserRepository;
-    private final ActivePointService activePointService;
+    private final ActivePointsSyncService activePointsSyncService;
 
     public TrackedShipServiceImpl(
             MongoUserRepository mongoUserRepository,
             CustomUserRepository customUserRepository,
-            @Qualifier("activePointsSyncService") ActivePointService activePointService) {
+            ActivePointsSyncService activePointsSyncService) {
         this.mongoUserRepository = mongoUserRepository;
         this.customUserRepository = customUserRepository;
-        this.activePointService = activePointService;
+        this.activePointsSyncService = activePointsSyncService;
     }
 
     public List<TrackedShip> getTrackedShips(String id) {
@@ -49,13 +50,13 @@ public class TrackedShipServiceImpl implements TrackedShipService {
             throw new NotFoundException();
         }
 
-        if (!activePointService.isPointActive(mmsi))
+        if (!activePointsSyncService.isPointActive(mmsi))
             throw new MmsiConflictException(INVALID_SHIP.message);
 
         if (this.isShipTracked(id, mmsi))
             throw new MmsiConflictException(SHIP_IS_ALREADY_TRACKED.message);
 
-        TrackedShip trackedShip = new TrackedShip(mmsi, activePointService.getName(mmsi));
+        TrackedShip trackedShip = new TrackedShip(mmsi, activePointsSyncService.getName(mmsi));
         return customUserRepository.pushTrackedShip(
                 id,
                 trackedShip
