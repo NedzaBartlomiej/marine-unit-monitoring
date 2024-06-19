@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePoint;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.InactivePointFilter;
-import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointAsyncService;
 import reactor.core.publisher.Flux;
 
 import static java.util.Map.of;
@@ -19,15 +19,15 @@ import static org.springframework.http.HttpStatus.OK;
 public class PointController {
 
     private final PointService pointService;
-    private final ActivePointService activePointService;
+    private final ActivePointAsyncService activePointAsyncService;
     private final InactivePointFilter inactivePointFilter;
 
     public PointController(
             PointService pointService,
-            @Qualifier("activePointAsyncService") ActivePointService activePointService,
+            @Qualifier("activePointAsyncServiceImpl") ActivePointAsyncService activePointAsyncService,
             InactivePointFilter inactivePointFilter) {
         this.pointService = pointService;
-        this.activePointService = activePointService;
+        this.activePointAsyncService = activePointAsyncService;
         this.inactivePointFilter = inactivePointFilter;
     }
 
@@ -46,7 +46,7 @@ public class PointController {
         return ResponseEntity.ok(
                 pointService.getPoints()
                         .flatMap(point ->
-                                activePointService.addActivePoint(
+                                activePointAsyncService.addActivePoint(
                                         new ActivePoint(
                                                 point.mmsi(),
                                                 point.name()
