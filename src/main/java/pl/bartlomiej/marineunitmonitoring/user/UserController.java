@@ -1,7 +1,7 @@
 package pl.bartlomiej.marineunitmonitoring.user;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +10,7 @@ import pl.bartlomiej.marineunitmonitoring.user.dto.UserDtoMapper;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserSaveDto;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShip;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
+import pl.bartlomiej.marineunitmonitoring.user.service.sync.UserService;
 
 import java.util.List;
 
@@ -19,12 +20,17 @@ import static org.springframework.http.HttpStatus.OK;
 
 @RestController
 @RequestMapping("/users")
-@RequiredArgsConstructor
 public class UserController {
 
     private final TrackedShipService userTrackedShipService;
     private final UserService userService;
     private final UserDtoMapper userDtoMapper;
+
+    public UserController(TrackedShipService userTrackedShipService, @Qualifier("userServiceImpl") UserService userService, UserDtoMapper userDtoMapper) {
+        this.userTrackedShipService = userTrackedShipService;
+        this.userService = userService;
+        this.userDtoMapper = userDtoMapper;
+    }
 
     private static <T> ResponseEntity<ResponseModel<T>> buildResponse(
             String message, HttpStatus httpStatus, T bodyValue, String bodyKey) {

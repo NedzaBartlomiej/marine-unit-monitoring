@@ -18,6 +18,12 @@ import java.util.List;
 @Document(collection = "users")
 public class User {
 
+    public User(String username, String email, List<Role> roles) {
+        this.username = username;
+        this.email = email;
+        this.roles = roles;
+    }
+
     private String id;
 
     private String username;

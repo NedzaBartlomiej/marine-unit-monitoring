@@ -1,25 +1,34 @@
-package pl.bartlomiej.marineunitmonitoring.user;
+package pl.bartlomiej.marineunitmonitoring.user.service.reactive;
 
 import com.mongodb.DuplicateKeyException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.UniqueEmailException;
+import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.repository.reactive.ReactiveMongoUserRepository;
 import reactor.core.publisher.Mono;
 
 import static reactor.core.publisher.Mono.error;
 
 @Service
-@RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
+public class ReactiveUserServiceImpl implements ReactiveUserService {
 
     private final ReactiveMongoUserRepository reactiveMongoUserRepository;
 
+    public ReactiveUserServiceImpl(ReactiveMongoUserRepository reactiveMongoUserRepository) {
+        this.reactiveMongoUserRepository = reactiveMongoUserRepository;
+    }
+
     @Override
-    public Mono<User> getUser(String id) {
+    public Mono<User> getUserById(String id) {
         return reactiveMongoUserRepository.findById(id)
+                .switchIfEmpty(error(new NotFoundException()));
+    }
+
+    @Override
+    public Mono<User> getUserByEmail(String email) {
+        return reactiveMongoUserRepository.findByEmail(email)
                 .switchIfEmpty(error(new NotFoundException()));
     }
 
