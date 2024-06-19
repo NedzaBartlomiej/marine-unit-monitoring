@@ -1,16 +1,14 @@
 package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
-import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointAsyncService;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointsSyncService;
-import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
-import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
+import pl.bartlomiej.marineunitmonitoring.user.repository.sync.CustomUserRepository;
+import pl.bartlomiej.marineunitmonitoring.user.repository.sync.MongoUserRepository;
 
 import java.util.List;
 

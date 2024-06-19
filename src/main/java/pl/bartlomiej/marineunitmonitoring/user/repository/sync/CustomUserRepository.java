@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.user.repository;
+package pl.bartlomiej.marineunitmonitoring.user.repository.sync;
 
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShip;
 

@@ -1,11 +1,13 @@
 package pl.bartlomiej.marineunitmonitoring.user;
 
+import reactor.core.publisher.Mono;
+
 public interface UserService {
 
 
-    User getUser(String id);
+    Mono<User> getUser(String id);
 
-    User createUser(User user);
+    Mono<User> createUser(User user);
 
-    void deleteUser(String id);
+    Mono<Void> deleteUser(String id);
 }
