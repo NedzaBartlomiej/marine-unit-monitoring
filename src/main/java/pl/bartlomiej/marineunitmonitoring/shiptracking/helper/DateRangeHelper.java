@@ -1,6 +1,5 @@
 package pl.bartlomiej.marineunitmonitoring.shiptracking.helper;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
@@ -8,7 +7,6 @@ import java.time.LocalDateTime;
 import static java.time.LocalDateTime.now;
 import static java.time.LocalDateTime.of;
 
-@Getter
 @Slf4j
 public record DateRangeHelper(LocalDateTime from, LocalDateTime to) {
     public DateRangeHelper(LocalDateTime from, LocalDateTime to) {

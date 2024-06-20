@@ -26,6 +26,8 @@ public class User {
 
     private String id;
 
+    // subject - integration with oauth2 "user"
+
     private String username;
 
     @Indexed(unique = true)
