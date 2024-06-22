@@ -6,15 +6,18 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity.CsrfSpec;
+import org.springframework.security.config.web.server.ServerHttpSecurity.FormLoginSpec;
 import org.springframework.security.config.web.server.ServerHttpSecurity.HttpBasicSpec;
-import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtGrantedAuthoritiesConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 import pl.bartlomiej.marineunitmonitoring.security.webfilters.OAuth2JwtWebFilter;
 
 import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.security.config.web.server.SecurityWebFiltersOrder.AUTHENTICATION;
+import static org.springframework.security.config.Customizer.withDefaults;
+import static org.springframework.security.config.web.server.SecurityWebFiltersOrder.AUTHORIZATION;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -33,6 +36,7 @@ public class SecurityConfig {
     SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
                 .httpBasic(HttpBasicSpec::disable)
+                .formLogin(FormLoginSpec::disable)
                 .csrf(CsrfSpec::disable)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange(auth ->
@@ -40,27 +44,19 @@ public class SecurityConfig {
                                 .pathMatchers(GET, "/points").permitAll()
                                 .anyExchange().authenticated()
                 )
-                .oauth2ResourceServer(oAuth2ResourceServerSpec ->
-                        oAuth2ResourceServerSpec.jwt(jwtSpec ->
-                                jwtSpec.jwtAuthenticationConverter(getJwtAuthenticationConverter())
-                        )
-                )
-                .addFilterBefore(oAuth2JwtWebFilter, AUTHENTICATION)
+                .oauth2ResourceServer(oAuth2ResourceServerSpec -> oAuth2ResourceServerSpec.jwt(withDefaults()))
+                // add exceptionHandling() from securecapita
+                .addFilterAt(oAuth2JwtWebFilter, AUTHORIZATION) // run app and test described in calendar conflict
                 .build();
-    }
-
-    // set this in filter chain
-    @Bean
-    ReactiveJwtAuthenticationConverter getJwtAuthenticationConverter() {
-        ReactiveJwtAuthenticationConverter jwtAuthenticationConverter = new ReactiveJwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(
-                this.reactiveJwtGrantedAuthoritiesConverterAdapter()
-        );
-        return jwtAuthenticationConverter;
     }
 
     @Bean
     ReactiveJwtGrantedAuthoritiesConverterAdapter reactiveJwtGrantedAuthoritiesConverterAdapter() {
         return new ReactiveJwtGrantedAuthoritiesConverterAdapter(grantedAuthoritiesConverter);
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
