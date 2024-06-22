@@ -5,11 +5,7 @@ import reactor.core.publisher.Mono;
 
 public interface ReactiveUserService {
 
-    Mono<User> getUserById(String id);
-
-    Mono<User> getUserByEmail(String email);
+    Mono<User> getUserByOpenId(String openId);
 
     Mono<User> createUser(User user);
-
-    Mono<Void> deleteUser(String id);
 }

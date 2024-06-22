@@ -1,6 +1,7 @@
 package pl.bartlomiej.marineunitmonitoring.user.service.reactive;
 
 import com.mongodb.DuplicateKeyException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
@@ -12,6 +13,7 @@ import reactor.core.publisher.Mono;
 import static reactor.core.publisher.Mono.error;
 
 @Service
+@Slf4j
 public class ReactiveUserServiceImpl implements ReactiveUserService {
 
     private final ReactiveMongoUserRepository reactiveMongoUserRepository;
@@ -21,14 +23,8 @@ public class ReactiveUserServiceImpl implements ReactiveUserService {
     }
 
     @Override
-    public Mono<User> getUserById(String id) {
-        return reactiveMongoUserRepository.findById(id)
-                .switchIfEmpty(error(new NotFoundException()));
-    }
-
-    @Override
-    public Mono<User> getUserByEmail(String email) {
-        return reactiveMongoUserRepository.findByEmail(email)
+    public Mono<User> getUserByOpenId(String openId) {
+        return reactiveMongoUserRepository.findByOpenId(openId)
                 .switchIfEmpty(error(new NotFoundException()));
     }
 
@@ -42,13 +38,5 @@ public class ReactiveUserServiceImpl implements ReactiveUserService {
                     }
                     return Mono.error(throwable);
                 });
-    }
-
-    @Transactional
-    @Override
-    public Mono<Void> deleteUser(String id) {
-        return reactiveMongoUserRepository.findById(id)
-                .switchIfEmpty(error(new NotFoundException()))
-                .flatMap(reactiveMongoUserRepository::delete);
     }
 }

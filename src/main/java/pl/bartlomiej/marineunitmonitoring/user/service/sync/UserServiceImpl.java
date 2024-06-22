@@ -1,6 +1,6 @@
 package pl.bartlomiej.marineunitmonitoring.user.service.sync;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
@@ -9,16 +9,14 @@ import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.repository.sync.MongoUserRepository;
 
 @Service
-@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-
     private final MongoUserRepository mongoUserRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Override
-    public User getUserId(String id) {
-        return mongoUserRepository.findById(id)
-                .orElseThrow(NotFoundException::new);
+    public UserServiceImpl(MongoUserRepository mongoUserRepository, PasswordEncoder passwordEncoder) {
+        this.mongoUserRepository = mongoUserRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -32,7 +30,7 @@ public class UserServiceImpl implements UserService {
     public User createUser(User user) {
         if (mongoUserRepository.existsByEmail(user.getEmail()))
             throw new UniqueEmailException();
-        // todo encode password
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return mongoUserRepository.save(user);
     }
 

@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserDtoMapper;
@@ -12,6 +14,7 @@ import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShip;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
 import pl.bartlomiej.marineunitmonitoring.user.service.sync.UserService;
 
+import java.security.Principal;
 import java.util.List;
 
 import static java.util.Map.of;
@@ -53,12 +56,13 @@ public class UserController {
                 .body(builder.build());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ResponseModel<User>> getUser(@PathVariable String id) {
+    @GetMapping
+    public ResponseEntity<ResponseModel<User>> getAuthenticatedUser(Principal principal) {
+        Jwt jwt = (Jwt) principal;
         return buildResponse(
                 null,
                 OK,
-                userService.getUserId(id),
+                userService.getUserByOpenId(jwt.getSubject()),
                 "User"
         );
     }
