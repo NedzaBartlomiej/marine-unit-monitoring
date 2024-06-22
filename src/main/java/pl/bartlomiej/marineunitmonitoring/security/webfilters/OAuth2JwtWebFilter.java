@@ -10,7 +10,8 @@ import org.springframework.web.server.WebFilterChain;
 import pl.bartlomiej.marineunitmonitoring.user.service.reactive.ReactiveUserService;
 import reactor.core.publisher.Mono;
 
-import static reactor.core.publisher.Mono.empty;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static reactor.core.publisher.Mono.error;
 
 @Component
 @Slf4j
@@ -25,25 +26,28 @@ public class OAuth2JwtWebFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+
+        if (this.shouldNotFilter(exchange)) return chain.filter(exchange);
+
+        // logic
         return this.extractJwtFromRequest(exchange)
                 .map(jwt -> {
-                    log.info("Jwt received: {}", jwt.getTokenValue()); // todo trzeba wypisac ten token i na jwt.io sobie zobaczyc nazwy claimow i dzialac.
+                    log.info("Jwt received: {}", jwt.getTokenValue());
                     return jwt;
                 })
                 .then(chain.filter(exchange));
     }
 
     private boolean shouldNotFilter(final ServerWebExchange exchange) {
-        return false;
+        return
+                exchange.getRequest().getHeaders().get(AUTHORIZATION) == null;
     }
 
-    private Mono<Jwt> extractJwtFromRequest(ServerWebExchange exchange) {
+    private Mono<Jwt> extractJwtFromRequest(final ServerWebExchange exchange) {
         return exchange.getPrincipal()
-                .filter(principal -> principal instanceof AbstractOAuth2TokenAuthenticationToken)
                 .cast(AbstractOAuth2TokenAuthenticationToken.class)
                 .filter(authToken -> authToken.getToken() instanceof Jwt)
                 .map(authToken -> (Jwt) authToken.getToken())
-                .switchIfEmpty(empty())
-                .onErrorResume(e -> empty());
+                .switchIfEmpty(error(new Throwable("Invalid token. JWT is required type."))); // handle
     }
 }

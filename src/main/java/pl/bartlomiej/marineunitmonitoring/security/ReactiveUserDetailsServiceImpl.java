@@ -7,11 +7,11 @@ import pl.bartlomiej.marineunitmonitoring.user.repository.reactive.ReactiveMongo
 import reactor.core.publisher.Mono;
 
 @Service
-public class UserDetailsServiceImpl implements ReactiveUserDetailsService {
+public class ReactiveUserDetailsServiceImpl implements ReactiveUserDetailsService {
 
     private final ReactiveMongoUserRepository reactiveMongoUserRepository;
 
-    public UserDetailsServiceImpl(ReactiveMongoUserRepository reactiveMongoUserRepository) {
+    public ReactiveUserDetailsServiceImpl(ReactiveMongoUserRepository reactiveMongoUserRepository) {
         this.reactiveMongoUserRepository = reactiveMongoUserRepository;
     }
 
