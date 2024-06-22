@@ -1,12 +1,13 @@
 package pl.bartlomiej.marineunitmonitoring.user.service.sync;
 
 import pl.bartlomiej.marineunitmonitoring.user.User;
-import reactor.core.publisher.Mono;
 
 public interface UserService {
 
 
-    User getUser(String id);
+    User getUserId(String id);
+
+    User getUserByOpenId(String openId);
 
     User createUser(User user);
 

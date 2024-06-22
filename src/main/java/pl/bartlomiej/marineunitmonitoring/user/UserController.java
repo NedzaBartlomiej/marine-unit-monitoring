@@ -58,7 +58,7 @@ public class UserController {
         return buildResponse(
                 null,
                 OK,
-                userService.getUser(id),
+                userService.getUserId(id),
                 "User"
         );
     }

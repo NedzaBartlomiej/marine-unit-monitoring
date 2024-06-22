@@ -16,8 +16,14 @@ public class UserServiceImpl implements UserService {
     private final MongoUserRepository mongoUserRepository;
 
     @Override
-    public User getUser(String id) {
+    public User getUserId(String id) {
         return mongoUserRepository.findById(id)
+                .orElseThrow(NotFoundException::new);
+    }
+
+    @Override
+    public User getUserByOpenId(String openId) {
+        return mongoUserRepository.findByOpenId(openId)
                 .orElseThrow(NotFoundException::new);
     }
 

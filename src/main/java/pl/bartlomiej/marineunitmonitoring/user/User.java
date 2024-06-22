@@ -18,24 +18,19 @@ import java.util.List;
 @Document(collection = "users")
 public class User {
 
-    public User(String username, String email, List<Role> roles) {
+    private String id;
+    private String openId;
+    private String username;
+    @Indexed(unique = true)
+    private String email;
+    private String password;
+    private List<TrackedShip> trackedShips;
+    private List<Role> roles;
+
+    public User(String openId, String username, String email, List<Role> roles) {
+        this.openId = openId;
         this.username = username;
         this.email = email;
         this.roles = roles;
     }
-
-    private String id;
-
-    // subject - integration with oauth2 "user"
-
-    private String username;
-
-    @Indexed(unique = true)
-    private String email;
-
-    private String password;
-
-    private List<TrackedShip> trackedShips;
-
-    private List<Role> roles;
 }
