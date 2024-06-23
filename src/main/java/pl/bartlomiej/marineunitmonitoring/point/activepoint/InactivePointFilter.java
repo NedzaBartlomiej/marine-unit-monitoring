@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
-import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointAsyncService;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.reactive.ActivePointReactiveService;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrackHistoryService;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
 import reactor.core.publisher.Mono;
@@ -19,21 +19,21 @@ import static reactor.core.publisher.Mono.error;
 @Slf4j
 public class InactivePointFilter {
 
-    private final ActivePointAsyncService activePointAsyncService;
+    private final ActivePointReactiveService activePointReactiveService;
     private final ShipTrackHistoryService shipTrackHistoryService;
     private final TrackedShipService trackedShipService;
 
     public InactivePointFilter(
-            @Qualifier("activePointAsyncServiceImpl") ActivePointAsyncService activePointAsyncService,
+            @Qualifier("activePointReactiveServiceImpl") ActivePointReactiveService activePointReactiveService,
             ShipTrackHistoryService shipTrackHistoryService,
             TrackedShipService trackedShipService) {
-        this.activePointAsyncService = activePointAsyncService;
+        this.activePointReactiveService = activePointReactiveService;
         this.shipTrackHistoryService = shipTrackHistoryService;
         this.trackedShipService = trackedShipService;
     }
 
     public Mono<Void> filter(List<Long> activeMmsis) {
-        return activePointAsyncService.getMmsis()
+        return activePointReactiveService.getMmsis()
                 .flatMap(actualMmsis -> {
 
                     if (activeMmsis.isEmpty()) {
@@ -51,7 +51,7 @@ public class InactivePointFilter {
                         inactiveMmsis
                                 .forEach(mmsi -> {
                                     log.info("Removing inactive point - {}", mmsi);
-                                    activePointAsyncService.removeActivePoint(mmsi)
+                                    activePointReactiveService.removeActivePoint(mmsi)
                                             .doOnError(e -> log.warn("Active points - {}", e.getMessage()))
                                             .subscribe();
                                     try {

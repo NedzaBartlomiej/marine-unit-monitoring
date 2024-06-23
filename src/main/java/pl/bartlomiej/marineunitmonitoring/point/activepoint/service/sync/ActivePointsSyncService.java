@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.point.activepoint.service;
+package pl.bartlomiej.marineunitmonitoring.point.activepoint.service.sync;
 
 public interface ActivePointsSyncService {
 

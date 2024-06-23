@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
-import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointsSyncService;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.sync.ActivePointsSyncService;
 import pl.bartlomiej.marineunitmonitoring.user.repository.sync.CustomUserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.repository.sync.MongoUserRepository;
 

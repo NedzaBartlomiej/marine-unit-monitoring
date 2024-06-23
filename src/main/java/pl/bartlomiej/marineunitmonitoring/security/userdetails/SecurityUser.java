@@ -1,8 +1,8 @@
-package pl.bartlomiej.marineunitmonitoring.security;
+package pl.bartlomiej.marineunitmonitoring.security.userdetails;
 
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import pl.bartlomiej.marineunitmonitoring.security.grantedauthorities.UserRoleAuthority;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 
 import java.util.Collection;
@@ -18,7 +18,7 @@ public class SecurityUser implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.name()))
+                .map(role -> new UserRoleAuthority(role.name()))
                 .toList();
     }
 

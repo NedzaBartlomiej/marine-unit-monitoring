@@ -8,5 +8,7 @@ public interface UserService {
 
     User createUser(User user);
 
+    User createOrUpdateOAuth2BasedUser(String openId, String username, String email);
+
     void deleteUser(String id);
 }

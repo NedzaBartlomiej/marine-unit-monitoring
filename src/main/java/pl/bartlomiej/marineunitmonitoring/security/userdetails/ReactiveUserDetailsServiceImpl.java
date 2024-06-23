@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.security;
+package pl.bartlomiej.marineunitmonitoring.security.userdetails;
 
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;

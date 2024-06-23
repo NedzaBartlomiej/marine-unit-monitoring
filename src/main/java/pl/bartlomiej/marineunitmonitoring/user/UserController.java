@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
@@ -23,7 +23,7 @@ import static org.springframework.http.HttpStatus.OK;
 
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UserController { // todo - make all reactive
 
     private final TrackedShipService userTrackedShipService;
     private final UserService userService;
@@ -56,6 +56,7 @@ public class UserController {
                 .body(builder.build());
     }
 
+    @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
     @GetMapping
     public ResponseEntity<ResponseModel<User>> getAuthenticatedUser(Principal principal) {
         Jwt jwt = (Jwt) principal;
@@ -89,6 +90,8 @@ public class UserController {
                 null
         );
     }
+
+    // TRACKED SHIP
 
     @GetMapping("/{id}/tracked-ships")
     public ResponseEntity<ResponseModel<List<TrackedShip>>> getTrackedShips(@PathVariable String id) {

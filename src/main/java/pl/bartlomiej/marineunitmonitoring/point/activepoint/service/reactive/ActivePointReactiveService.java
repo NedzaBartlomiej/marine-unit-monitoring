@@ -1,11 +1,11 @@
-package pl.bartlomiej.marineunitmonitoring.point.activepoint.service;
+package pl.bartlomiej.marineunitmonitoring.point.activepoint.service.reactive;
 
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePoint;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-public interface ActivePointAsyncService {
+public interface ActivePointReactiveService {
 
     Mono<List<Long>> getMmsis();
 

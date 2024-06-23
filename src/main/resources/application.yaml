@@ -12,6 +12,6 @@ spring:
 
 logging:
   level:
-    web: debug
+    org.springframework.security.web: debug
     org.springframework.data.mongodb: debug
     org.springframework.data.redis: debug

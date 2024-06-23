@@ -1,9 +1,8 @@
-package pl.bartlomiej.marineunitmonitoring.security;
+package pl.bartlomiej.marineunitmonitoring.security.grantedauthorities;
 
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 import pl.bartlomiej.marineunitmonitoring.user.User;
@@ -22,9 +21,15 @@ public class CustomJwtGrantedAuthoritiesConverter implements Converter<Jwt, Coll
 
     @Override
     public Collection<GrantedAuthority> convert(Jwt source) {
-        User subjectUser = userService.getUserByOpenId(source.getSubject());
+
+        User subjectUser = userService.createOrUpdateOAuth2BasedUser(
+                source.getSubject(),
+                source.getClaimAsString("name"),
+                source.getClaimAsString("email")
+        );
+
         return subjectUser.getRoles().stream()
-                .<GrantedAuthority>map(role -> new SimpleGrantedAuthority(role.name()))
+                .<GrantedAuthority>map(role -> new UserRoleAuthority(role.name()))
                 .toList();
     }
 }

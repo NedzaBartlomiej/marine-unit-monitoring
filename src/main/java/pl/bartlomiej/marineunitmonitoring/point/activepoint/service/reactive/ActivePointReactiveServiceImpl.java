@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.point.activepoint.service;
+package pl.bartlomiej.marineunitmonitoring.point.activepoint.service.reactive;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import static reactor.core.publisher.Mono.*;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class ActivePointAsyncServiceImpl implements ActivePointAsyncService {
+public class ActivePointReactiveServiceImpl implements ActivePointReactiveService {
 
     private final ActivePointReactiveRepository activePointReactiveRepository;
     private final AisService aisService;

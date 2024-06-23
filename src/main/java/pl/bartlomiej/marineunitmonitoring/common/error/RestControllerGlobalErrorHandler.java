@@ -14,7 +14,7 @@ import static org.springframework.http.HttpStatus.*;
 @RestControllerAdvice
 public class RestControllerGlobalErrorHandler {
 
-    private static ResponseEntity<ResponseModel<Void>> getErrorResponse(String message, HttpStatus httpStatus) {
+    private static ResponseEntity<ResponseModel<Void>> buildErrorResponse(String message, HttpStatus httpStatus) {
         return ResponseEntity.status(httpStatus).body(
                 ResponseModel.<Void>builder()
                         .httpStatus(httpStatus)
@@ -36,22 +36,22 @@ public class RestControllerGlobalErrorHandler {
 
     @ExceptionHandler(UniqueEmailException.class)
     public ResponseEntity<ResponseModel<Void>> handleUniqueEmailException(UniqueEmailException e) {
-        return getErrorResponse(e.getMessage(), CONFLICT);
+        return buildErrorResponse(e.getMessage(), CONFLICT);
     }
 
     @ExceptionHandler(WebExchangeBindException.class)
     public ResponseEntity<ResponseModel<Void>> handleValidationException(BindingResult bindingResult) {
-        return getErrorResponse(requireNonNull(bindingResult.getFieldError()).getDefaultMessage(), BAD_REQUEST);
+        return buildErrorResponse(requireNonNull(bindingResult.getFieldError()).getDefaultMessage(), BAD_REQUEST);
     }
 
     @ExceptionHandler(MmsiConflictException.class)
     public ResponseEntity<ResponseModel<Void>> handleMmsiConflictException(MmsiConflictException e) {
-        return getErrorResponse(e.getMessage(), CONFLICT);
+        return buildErrorResponse(e.getMessage(), CONFLICT);
     }
 
     @ExceptionHandler(WebClientRequestRetryException.class)
     public ResponseEntity<ResponseModel<Void>> handleWebClientRequestRetryException(WebClientRequestRetryException e) {
-        return getErrorResponse(e.getMessage(), INTERNAL_SERVER_ERROR);
+        return buildErrorResponse(e.getMessage(), INTERNAL_SERVER_ERROR);
     }
 
 }

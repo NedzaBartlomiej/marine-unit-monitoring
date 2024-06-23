@@ -26,6 +26,7 @@ public class ShipTrackHistoryController {
             @RequestParam(required = false) LocalDateTime from,
             @RequestParam(required = false) LocalDateTime to) {
 
+        // todo remove mmsis from body, get mmsis from authenticated user
         return ResponseEntity.ok(shipTrackHistoryService.getShipTrackHistory(mmsis, from, to)
                 .map(response ->
                         ServerSentEvent.<ResponseModel<ShipTrack>>builder()
