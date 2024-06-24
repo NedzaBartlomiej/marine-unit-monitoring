@@ -19,7 +19,6 @@ import java.util.List;
 public class User {
 
     private String id;
-    private String openId;
     private String username;
     @Indexed(unique = true)
     private String email;
@@ -27,8 +26,8 @@ public class User {
     private List<TrackedShip> trackedShips;
     private List<Role> roles;
 
-    public User(String openId, String username, String email, List<Role> roles) {
-        this.openId = openId;
+    public User(String id, String username, String email, List<Role> roles) {
+        this.id = id;
         this.username = username;
         this.email = email;
         this.roles = roles;

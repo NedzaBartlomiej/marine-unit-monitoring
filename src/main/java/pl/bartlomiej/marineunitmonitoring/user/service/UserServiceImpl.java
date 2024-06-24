@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.user.service.sync;
+package pl.bartlomiej.marineunitmonitoring.user.service;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -6,10 +6,14 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.UniqueEmailException;
 import pl.bartlomiej.marineunitmonitoring.user.User;
-import pl.bartlomiej.marineunitmonitoring.user.repository.sync.MongoUserRepository;
+import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
+import reactor.core.publisher.Mono;
+
+import java.util.Optional;
 
 import static java.util.List.of;
 import static pl.bartlomiej.marineunitmonitoring.user.nested.Role.SIGNED;
+import static reactor.core.publisher.Mono.error;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -23,26 +27,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserByOpenId(String openId) {
-        return mongoUserRepository.findByOpenId(openId)
-                .orElseThrow(NotFoundException::new);
+    public Mono<User> getUserByOpenId(String openId) {
+        return mongoUserRepository.findById(openId)
+                .switchIfEmpty(error(NotFoundException::new));
     }
 
     @Transactional
     @Override
-    public User createUser(User user) {
-        if (mongoUserRepository.existsByEmail(user.getEmail()))
-            throw new UniqueEmailException();
-        if (user.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-        }
-        return mongoUserRepository.save(user);
+    public Mono<User> createUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return mongoUserRepository.findByEmail(user.getEmail())
+                .flatMap(u -> mongoUserRepository.save(user))
+                .switchIfEmpty(error(UniqueEmailException::new));
     }
 
     @Transactional
     @Override
     public User createOrUpdateOAuth2BasedUser(String openId, String username, String email) {
-        return mongoUserRepository.findByOpenId(openId)
+        return Optional.ofNullable(
+                        mongoUserRepository.findById(openId).block()
+                )
                 .map(user -> {
                     user.setUsername(username);
                     user.setEmail(email);
@@ -56,14 +60,14 @@ public class UserServiceImpl implements UserService {
                                         of(SIGNED)
                                 )
                         )
-                );
+                ).block();
     }
 
     @Transactional
     @Override
-    public void deleteUser(String id) {
-        User user = mongoUserRepository.findById(id)
-                .orElseThrow(NotFoundException::new);
-        mongoUserRepository.delete(user);
+    public Mono<Void> deleteUser(String id) {
+        return mongoUserRepository.findById(id)
+                .switchIfEmpty(error(NotFoundException::new))
+                .flatMap(mongoUserRepository::delete);
     }
 }

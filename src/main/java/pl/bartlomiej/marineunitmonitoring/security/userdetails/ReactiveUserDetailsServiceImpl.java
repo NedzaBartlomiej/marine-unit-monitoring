@@ -3,21 +3,21 @@ package pl.bartlomiej.marineunitmonitoring.security.userdetails;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import pl.bartlomiej.marineunitmonitoring.user.repository.reactive.ReactiveMongoUserRepository;
+import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
 import reactor.core.publisher.Mono;
 
 @Service
 public class ReactiveUserDetailsServiceImpl implements ReactiveUserDetailsService {
 
-    private final ReactiveMongoUserRepository reactiveMongoUserRepository;
+    private final MongoUserRepository mongoUserRepository;
 
-    public ReactiveUserDetailsServiceImpl(ReactiveMongoUserRepository reactiveMongoUserRepository) {
-        this.reactiveMongoUserRepository = reactiveMongoUserRepository;
+    public ReactiveUserDetailsServiceImpl(MongoUserRepository mongoUserRepository) {
+        this.mongoUserRepository = mongoUserRepository;
     }
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {
-        return reactiveMongoUserRepository.findByEmail(username)
+        return mongoUserRepository.findByEmail(username)
                 .map(SecurityUser::new);
     }
 }

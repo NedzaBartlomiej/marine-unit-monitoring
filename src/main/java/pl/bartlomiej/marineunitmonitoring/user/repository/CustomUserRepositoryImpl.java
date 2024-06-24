@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.user.repository.sync;
+package pl.bartlomiej.marineunitmonitoring.user.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;

@@ -6,7 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 import pl.bartlomiej.marineunitmonitoring.user.User;
-import pl.bartlomiej.marineunitmonitoring.user.service.sync.UserService;
+import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 
 import java.util.Collection;
 
@@ -19,6 +19,8 @@ public class CustomJwtGrantedAuthoritiesConverter implements Converter<Jwt, Coll
         this.userService = userService;
     }
 
+
+    // todo - make reactive (smth with adapter idk, to think about)
     @Override
     public Collection<GrantedAuthority> convert(Jwt source) {
 
