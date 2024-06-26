@@ -20,7 +20,6 @@ public class CustomJwtGrantedAuthoritiesConverter implements Converter<Jwt, Coll
     }
 
 
-    // todo - make reactive (smth with adapter idk, to think about)
     @Override
     public Collection<GrantedAuthority> convert(Jwt source) {
 

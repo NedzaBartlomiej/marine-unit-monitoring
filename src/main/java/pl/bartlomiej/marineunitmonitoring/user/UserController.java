@@ -1,6 +1,8 @@
 package pl.bartlomiej.marineunitmonitoring.user;
 
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +27,8 @@ import static reactor.core.publisher.Mono.just;
 
 @RestController
 @RequestMapping("/users")
-public class UserController { // todo - make all reactive
+public class UserController {
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     private final TrackedShipService userTrackedShipService;
     private final UserService userService;
@@ -35,6 +38,10 @@ public class UserController { // todo - make all reactive
         this.userTrackedShipService = userTrackedShipService;
         this.userService = userService;
         this.userDtoMapper = userDtoMapper;
+    }
+
+    private <T> ResponseEntity<ResponseModel<T>> buildResponse(HttpStatus httpStatus, ResponseModel<T> responseModel) {
+        return ResponseEntity.status(httpStatus).body(responseModel);
     }
 
     private <T> ResponseModel<T> buildResponseModel(
@@ -58,10 +65,12 @@ public class UserController { // todo - make all reactive
 
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
     @GetMapping
-    public ResponseEntity<Mono<ResponseModel<User>>> getAuthenticatedUser(Principal principal) {
-        return ok(
-                userService.getUserByOpenId(principal.getName())
-                        .map(user ->
+    public Mono<ResponseEntity<ResponseModel<User>>> getAuthenticatedUser(Principal principal) {
+        log.info("Principal getName(): {}", principal.getName());
+        return userService.getUserById(principal.getName())
+                .map(user ->
+                        this.buildResponse(
+                                OK,
                                 buildResponseModel(
                                         null,
                                         OK,
@@ -69,14 +78,15 @@ public class UserController { // todo - make all reactive
                                         "User"
                                 )
                         )
-        );
+                );
     }
 
     @PostMapping
-    public ResponseEntity<Mono<ResponseModel<User>>> createUser(@RequestBody @Valid UserSaveDto userSaveDto) {
-        return ResponseEntity.status(CREATED).body(
-                userService.createUser(userDtoMapper.mapFrom(userSaveDto))
-                        .map(user ->
+    public Mono<ResponseEntity<ResponseModel<User>>> createUser(@RequestBody @Valid UserSaveDto userSaveDto) {
+        return userService.createUser(userDtoMapper.mapFrom(userSaveDto))
+                .map(user ->
+                        buildResponse(
+                                CREATED,
                                 buildResponseModel(
                                         null,
                                         CREATED,
@@ -84,21 +94,23 @@ public class UserController { // todo - make all reactive
                                         "User"
                                 )
                         )
-        );
+                );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Mono<ResponseModel<Void>>> deleteUser(@PathVariable String id) {
-        userService.deleteUser(id).subscribe();
-        return ok(just(
-                        buildResponseModel(
-                                "User has been deleted successfully.",
+    public Mono<ResponseEntity<ResponseModel<Void>>> deleteUser(@PathVariable String id) {
+        return userService.deleteUser(id)
+                .then(just(
+                        buildResponse(
                                 OK,
-                                null,
-                                null
+                                buildResponseModel(
+                                        "User has been deleted successfully.",
+                                        OK,
+                                        null,
+                                        null
+                                )
                         )
-                )
-        );
+                ));
     }
 
     // TRACKED SHIP // todo - these endpoints also do with Principal
@@ -119,10 +131,11 @@ public class UserController { // todo - make all reactive
     }
 
     @PostMapping("/{id}/tracked-ships/{mmsi}")
-    public ResponseEntity<Mono<ResponseModel<TrackedShip>>> addTrackedShip(@PathVariable String id, @PathVariable Long mmsi) {
-        return ResponseEntity.status(CREATED).body(
-                userTrackedShipService.addTrackedShip(id, mmsi)
-                        .map(trackedShip ->
+    public Mono<ResponseEntity<ResponseModel<TrackedShip>>> addTrackedShip(@PathVariable String id, @PathVariable Long mmsi) {
+        return userTrackedShipService.addTrackedShip(id, mmsi)
+                .map(trackedShip ->
+                        buildResponse(
+                                CREATED,
                                 buildResponseModel(
                                         "Successfully added ship into tracking list.",
                                         CREATED,
@@ -130,21 +143,23 @@ public class UserController { // todo - make all reactive
                                         "TrackedShip"
                                 )
                         )
-        );
+                );
     }
 
     @DeleteMapping("/{id}/tracked-ships/{mmsi}")
-    public ResponseEntity<Mono<ResponseModel<Void>>> removeTrackedShip(@PathVariable String id, @PathVariable Long mmsi) {
-        userTrackedShipService.removeTrackedShip(id, mmsi).subscribe();
-        return ok(
-                just(
-                        buildResponseModel(
-                                "Successfully removed ship from tracking list.",
+    public Mono<ResponseEntity<ResponseModel<Void>>> removeTrackedShip(@PathVariable String id, @PathVariable Long mmsi) {
+
+        return userTrackedShipService.removeTrackedShip(id, mmsi)
+                .then(just(
+                        buildResponse(
                                 OK,
-                                null,
-                                null
+                                buildResponseModel(
+                                        "Successfully removed ship from tracking list.",
+                                        OK,
+                                        null,
+                                        null
+                                )
                         )
-                )
-        );
+                ));
     }
 }

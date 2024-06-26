@@ -4,8 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
-import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
-import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.reactive.ActivePointReactiveService;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrackHistoryService;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
 import reactor.core.publisher.Mono;
@@ -19,21 +18,21 @@ import static reactor.core.publisher.Mono.error;
 @Slf4j
 public class InactivePointFilter {
 
-    private final ActivePointReactiveService activePointReactiveService;
+    private final ActivePointService activePointService;
     private final ShipTrackHistoryService shipTrackHistoryService;
     private final TrackedShipService trackedShipService;
 
     public InactivePointFilter(
-            @Qualifier("activePointReactiveServiceImpl") ActivePointReactiveService activePointReactiveService,
+            @Qualifier("activePointServiceImpl") ActivePointService activePointService,
             ShipTrackHistoryService shipTrackHistoryService,
             TrackedShipService trackedShipService) {
-        this.activePointReactiveService = activePointReactiveService;
+        this.activePointService = activePointService;
         this.shipTrackHistoryService = shipTrackHistoryService;
         this.trackedShipService = trackedShipService;
     }
 
     public Mono<Void> filter(List<Long> activeMmsis) {
-        return activePointReactiveService.getMmsis()
+        return activePointService.getMmsis()
                 .flatMap(actualMmsis -> {
 
                     if (activeMmsis.isEmpty()) {
@@ -51,14 +50,12 @@ public class InactivePointFilter {
                         inactiveMmsis
                                 .forEach(mmsi -> {
                                     log.info("Removing inactive point - {}", mmsi);
-                                    activePointReactiveService.removeActivePoint(mmsi)
+                                    activePointService.removeActivePoint(mmsi)
                                             .doOnError(e -> log.warn("Active points - {}", e.getMessage()))
                                             .subscribe();
-                                    try {
-                                        trackedShipService.removeTrackedShip(mmsi);
-                                    } catch (NotFoundException e) {
-                                        log.warn("Tracked ships - {}", e.getMessage());
-                                    }
+                                    trackedShipService.removeTrackedShip(mmsi)
+                                            .doOnError(e -> log.warn("Tracked ships - {}", e.getMessage()))
+                                            .subscribe();
                                     shipTrackHistoryService.clearShipHistory(mmsi)
                                             .doOnError(e -> log.warn("Ship track history - {}", e.getMessage()))
                                             .subscribe();

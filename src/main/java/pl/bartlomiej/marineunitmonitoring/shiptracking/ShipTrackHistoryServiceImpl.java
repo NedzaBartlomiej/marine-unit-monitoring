@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.ais.AisService;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
-import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.reactive.ActivePointReactiveService;
+import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.helper.DateRangeHelper;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.CustomShipTrackHistoryRepository;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.MongoShipTrackHistoryRepository;
@@ -43,19 +43,19 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     private final MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository;
     private final CustomShipTrackHistoryRepository customShipTrackHistoryRepository;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
-    private final ActivePointReactiveService activePointReactiveService;
+    private final ActivePointService activePointService;
 
     public ShipTrackHistoryServiceImpl(
             AisService aisService,
             MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository,
             CustomShipTrackHistoryRepository customShipTrackHistoryRepository,
             ReactiveMongoTemplate reactiveMongoTemplate,
-            @Qualifier("activePointReactiveServiceImpl") ActivePointReactiveService activePointReactiveService) {
+            @Qualifier("activePointServiceImpl") ActivePointService activePointService) {
         this.aisService = aisService;
         this.mongoShipTrackHistoryRepository = mongoShipTrackHistoryRepository;
         this.customShipTrackHistoryRepository = customShipTrackHistoryRepository;
         this.reactiveMongoTemplate = reactiveMongoTemplate;
-        this.activePointReactiveService = activePointReactiveService;
+        this.activePointService = activePointService;
     }
 
 
@@ -154,7 +154,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     }
 
     private Mono<List<Long>> getShipMmsisToTrack() {
-        return activePointReactiveService.getMmsis()
+        return activePointService.getMmsis()
                 .doOnError(error -> log.error("Something go wrong when getting mmsis to track - {}",
                         error.getMessage())
                 );

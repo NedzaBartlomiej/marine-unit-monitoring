@@ -5,11 +5,13 @@ import reactor.core.publisher.Mono;
 
 public interface UserService {
 
-    Mono<User> getUserByOpenId(String openId);
+    Mono<User> getUserById(String id);
 
     Mono<User> createUser(User user);
 
     User createOrUpdateOAuth2BasedUser(String openId, String username, String email);
 
     Mono<Void> deleteUser(String id);
+
+    Mono<Boolean> isUserExists(String id);
 }
