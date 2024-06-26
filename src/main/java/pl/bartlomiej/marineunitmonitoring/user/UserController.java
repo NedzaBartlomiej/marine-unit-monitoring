@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserDtoMapper;
+import pl.bartlomiej.marineunitmonitoring.user.dto.UserReadDto;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserSaveDto;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShip;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
@@ -65,7 +66,7 @@ public class UserController {
 
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
     @GetMapping
-    public Mono<ResponseEntity<ResponseModel<User>>> getAuthenticatedUser(Principal principal) {
+    public Mono<ResponseEntity<ResponseModel<UserReadDto>>> getAuthenticatedUser(Principal principal) {
         log.info("Principal getName(): {}", principal.getName());
         return userService.getUserById(principal.getName())
                 .map(user ->
@@ -74,7 +75,7 @@ public class UserController {
                                 buildResponseModel(
                                         null,
                                         OK,
-                                        user,
+                                        userDtoMapper.mapToReadDto(user),
                                         "User"
                                 )
                         )
@@ -82,7 +83,7 @@ public class UserController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<ResponseModel<User>>> createUser(@RequestBody @Valid UserSaveDto userSaveDto) {
+    public Mono<ResponseEntity<ResponseModel<UserReadDto>>> createUser(@RequestBody @Valid UserSaveDto userSaveDto) {
         return userService.createUser(userDtoMapper.mapFrom(userSaveDto))
                 .map(user ->
                         buildResponse(
@@ -90,7 +91,7 @@ public class UserController {
                                 buildResponseModel(
                                         null,
                                         CREATED,
-                                        user,
+                                        userDtoMapper.mapToReadDto(user),
                                         "User"
                                 )
                         )
@@ -113,12 +114,12 @@ public class UserController {
                 ));
     }
 
-    // TRACKED SHIP // todo - these endpoints also do with Principal
+    // TRACKED SHIP
 
-    @GetMapping("/{id}/tracked-ships")
-    public ResponseEntity<Flux<ResponseModel<TrackedShip>>> getTrackedShips(@PathVariable String id) {
+    @GetMapping("/tracked-ships") // todo pageable
+    public ResponseEntity<Flux<ResponseModel<TrackedShip>>> getTrackedShips(Principal principal) {
         return ok(
-                userTrackedShipService.getTrackedShips(id)
+                userTrackedShipService.getTrackedShips(principal.getName())
                         .map(trackedShip ->
                                 buildResponseModel(
                                         null,
@@ -130,9 +131,9 @@ public class UserController {
         );
     }
 
-    @PostMapping("/{id}/tracked-ships/{mmsi}")
-    public Mono<ResponseEntity<ResponseModel<TrackedShip>>> addTrackedShip(@PathVariable String id, @PathVariable Long mmsi) {
-        return userTrackedShipService.addTrackedShip(id, mmsi)
+    @PostMapping("/tracked-ships/{mmsi}")
+    public Mono<ResponseEntity<ResponseModel<TrackedShip>>> addTrackedShip(Principal principal, @PathVariable Long mmsi) {
+        return userTrackedShipService.addTrackedShip(principal.getName(), mmsi)
                 .map(trackedShip ->
                         buildResponse(
                                 CREATED,
@@ -146,10 +147,10 @@ public class UserController {
                 );
     }
 
-    @DeleteMapping("/{id}/tracked-ships/{mmsi}")
-    public Mono<ResponseEntity<ResponseModel<Void>>> removeTrackedShip(@PathVariable String id, @PathVariable Long mmsi) {
+    @DeleteMapping("/tracked-ships/{mmsi}")
+    public Mono<ResponseEntity<ResponseModel<Void>>> removeTrackedShip(Principal principal, @PathVariable Long mmsi) {
 
-        return userTrackedShipService.removeTrackedShip(id, mmsi)
+        return userTrackedShipService.removeTrackedShip(principal.getName(), mmsi)
                 .then(just(
                         buildResponse(
                                 OK,
