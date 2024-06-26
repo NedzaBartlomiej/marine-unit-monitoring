@@ -58,16 +58,16 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
 
     @Override
     public Flux<TrackedShip> getTrackedShips(String id) {
-        return reactiveMongoTemplate.findById(
-                id,
-                User.class
-        ).flatMapIterable(User::getTrackedShips);
+        return reactiveMongoTemplate.findById(id, User.class)
+                .flatMapIterable(User::getTrackedShips)
+                .onErrorResume(NullPointerException.class, ex -> Flux.empty());
     }
 
     @Override
     public Flux<TrackedShip> getTrackedShips() {
         return reactiveMongoTemplate.findAll(User.class)
-                .flatMapIterable(User::getTrackedShips);
+                .flatMapIterable(User::getTrackedShips)
+                .onErrorResume(NullPointerException.class, ex -> Flux.empty());
     }
 
 }

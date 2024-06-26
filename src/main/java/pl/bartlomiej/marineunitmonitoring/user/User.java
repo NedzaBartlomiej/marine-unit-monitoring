@@ -17,7 +17,7 @@ import java.util.List;
 @Document(collection = "users")
 public class User {
 
-    private String id; // todo - replace objectid with string
+    private String id;
     private String username;
     private String email;
     private String password;
