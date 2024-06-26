@@ -7,11 +7,13 @@ import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
-import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.function.Function;
+
+import static pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException.Message.INVALID_SHIP;
 import static pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException.Message.SHIP_IS_ALREADY_TRACKED;
 import static reactor.core.publisher.Flux.error;
 
@@ -24,7 +26,7 @@ public class TrackedShipServiceImpl implements TrackedShipService {
     private final ActivePointService activePointService;
 
     public TrackedShipServiceImpl(
-            MongoUserRepository mongoUserRepository, UserService userService,
+            UserService userService,
             CustomUserRepository customUserRepository,
             ActivePointService activePointService) {
         this.userService = userService;
@@ -43,7 +45,7 @@ public class TrackedShipServiceImpl implements TrackedShipService {
     public Mono<TrackedShip> addTrackedShip(String id, Long mmsi) {
         return userService.isUserExists(id)
                 .then(activePointService.isPointActive(mmsi))
-                .then(this.isShipTrackedMono(id, mmsi))
+                .then(this.isShipTrackedMono(id, mmsi, false))
                 .then(activePointService.getName(mmsi)
                         .map(name -> new TrackedShip(mmsi, name))
                 )
@@ -55,38 +57,42 @@ public class TrackedShipServiceImpl implements TrackedShipService {
     @Override
     public Mono<Void> removeTrackedShip(String id, Long mmsi) {
         return userService.isUserExists(id)
-                .then(this.isShipTrackedMono(mmsi))
+                .then(this.isShipTrackedMono(id, mmsi, true))
                 .then(customUserRepository.pullTrackedShip(id, mmsi));
     }
 
     @Transactional
     @Override
     public Mono<Void> removeTrackedShip(Long mmsi) {
-        return this.isShipTrackedMono(mmsi)
+        return this.isShipTrackedMono(mmsi, true)
                 .then(customUserRepository.pullTrackedShip(mmsi));
     }
 
 
-    private Mono<Void> isShipTrackedMono(String id, Long mmsi) {
+    private Mono<Void> isShipTrackedMono(String id, Long mmsi, boolean shouldNegate) {
         return this.isShipTracked(id, mmsi)
-                .flatMap(isTracked -> {
-                    if (isTracked) {
-                        return Mono.error(new MmsiConflictException(SHIP_IS_ALREADY_TRACKED.message));
-                    }
-                    return Mono.empty();
-                });
+                .flatMap(this.processIsShipTrackedMono(shouldNegate));
     }
 
-    private Mono<Void> isShipTrackedMono(Long mmsi) {
+    private Mono<Void> isShipTrackedMono(Long mmsi, boolean shouldNegate) {
         return this.isShipTracked(mmsi)
-                .flatMap(isTracked -> {
-                    if (isTracked) {
-                        return Mono.error(new MmsiConflictException(SHIP_IS_ALREADY_TRACKED.message));
-                    }
-                    return Mono.empty();
-                });
+                .flatMap(this.processIsShipTrackedMono(shouldNegate));
     }
 
+    private Function<Boolean, Mono<? extends Void>> processIsShipTrackedMono(boolean shouldShipBeTracked) {
+        return isTracked -> {
+            if (shouldShipBeTracked) {
+                if (!isTracked) {
+                    return Mono.error(new MmsiConflictException(INVALID_SHIP.message));
+                }
+            } else {
+                if (isTracked) {
+                    return Mono.error(new MmsiConflictException(SHIP_IS_ALREADY_TRACKED.message));
+                }
+            }
+            return Mono.empty();
+        };
+    }
 
     private Mono<Boolean> isShipTracked(String id, Long mmsi) {
         return customUserRepository.getTrackedShips(id)
