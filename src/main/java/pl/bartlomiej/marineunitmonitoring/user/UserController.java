@@ -98,6 +98,7 @@ public class UserController {
                 );
     }
 
+    @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).ADMIN.name())")
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<ResponseModel<Void>>> deleteUser(@PathVariable String id) {
         return userService.deleteUser(id)
@@ -116,6 +117,7 @@ public class UserController {
 
     // TRACKED SHIP
 
+    @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).PREMIUM.name())")
     @GetMapping("/tracked-ships") // todo pageable
     public ResponseEntity<Flux<ResponseModel<TrackedShip>>> getTrackedShips(Principal principal) {
         return ok(
@@ -131,6 +133,7 @@ public class UserController {
         );
     }
 
+    @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).PREMIUM.name())")
     @PostMapping("/tracked-ships/{mmsi}")
     public Mono<ResponseEntity<ResponseModel<TrackedShip>>> addTrackedShip(Principal principal, @PathVariable Long mmsi) {
         return userTrackedShipService.addTrackedShip(principal.getName(), mmsi)
@@ -147,6 +150,7 @@ public class UserController {
                 );
     }
 
+    @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).PREMIUM.name())")
     @DeleteMapping("/tracked-ships/{mmsi}")
     public Mono<ResponseEntity<ResponseModel<Void>>> removeTrackedShip(Principal principal, @PathVariable Long mmsi) {
 

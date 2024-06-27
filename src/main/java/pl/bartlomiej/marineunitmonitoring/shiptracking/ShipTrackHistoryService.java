@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ShipTrackHistoryService {
-    Flux<ShipTrack> getShipTrackHistory(List<Long> mmsis, LocalDateTime from, LocalDateTime to);
+    Flux<ShipTrack> getShipTrackHistory(String userId, LocalDateTime from, LocalDateTime to);
 
     Mono<Void> clearShipHistory(Long mmsi);
 }

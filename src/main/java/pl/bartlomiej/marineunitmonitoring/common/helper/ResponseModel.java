@@ -19,6 +19,6 @@ public class ResponseModel<T> {
     private final Integer httpStatusCode;
     private final String message;
     @Builder.Default
-    private final LocalDateTime readingTime = now(); // todo - LocalDateTime type not working in reactive spring security response
+    private final LocalDateTime readingTime = now();
     private final Map<String, T> body;
 }

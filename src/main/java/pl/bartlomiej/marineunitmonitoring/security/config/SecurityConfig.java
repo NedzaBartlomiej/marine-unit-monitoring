@@ -13,8 +13,6 @@ import org.springframework.security.oauth2.server.resource.authentication.Reacti
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 import pl.bartlomiej.marineunitmonitoring.security.grantedauthorities.CustomJwtGrantedAuthoritiesConverter;
-import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAccessDeniedHandler;
-import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAuthenticationEntryPoint;
 
 import static org.springframework.http.HttpMethod.GET;
 
@@ -24,16 +22,11 @@ import static org.springframework.http.HttpMethod.GET;
 public class SecurityConfig {
 
     private final CustomJwtGrantedAuthoritiesConverter grantedAuthoritiesConverter;
-    private final ResponseModelServerAuthenticationEntryPoint authenticationEntryPoint;
-    private final ResponseModelServerAccessDeniedHandler accessDeniedHandler;
 
-    public SecurityConfig(CustomJwtGrantedAuthoritiesConverter grantedAuthoritiesConverter, ResponseModelServerAuthenticationEntryPoint authenticationEntryPoint, ResponseModelServerAccessDeniedHandler accessDeniedHandler) {
+    public SecurityConfig(CustomJwtGrantedAuthoritiesConverter grantedAuthoritiesConverter) {
         this.grantedAuthoritiesConverter = grantedAuthoritiesConverter;
-        this.authenticationEntryPoint = authenticationEntryPoint;
-        this.accessDeniedHandler = accessDeniedHandler;
     }
 
-    // todo define roles authorization for endpoints with @PreAuthorize
     @Bean
     SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
@@ -50,10 +43,6 @@ public class SecurityConfig {
                         oAuth2ResourceServerSpec.jwt(jwtSpec ->
                                 jwtSpec.jwtAuthenticationConverter(jwtAuthenticationConverter())
                         )
-                ).exceptionHandling(exceptionHandlingSpec ->
-                        exceptionHandlingSpec
-                                .accessDeniedHandler(accessDeniedHandler)
-                                .authenticationEntryPoint(authenticationEntryPoint)
                 )
                 .build();
     }

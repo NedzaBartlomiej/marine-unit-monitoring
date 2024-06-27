@@ -18,6 +18,8 @@ import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointS
 import pl.bartlomiej.marineunitmonitoring.shiptracking.helper.DateRangeHelper;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.CustomShipTrackHistoryRepository;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.MongoShipTrackHistoryRepository;
+import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShip;
+import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -40,18 +42,20 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
     private static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60 * 5;
     private final AisService aisService;
+    private final TrackedShipService trackedShipService;
     private final MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository;
     private final CustomShipTrackHistoryRepository customShipTrackHistoryRepository;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
     private final ActivePointService activePointService;
 
     public ShipTrackHistoryServiceImpl(
-            AisService aisService,
+            AisService aisService, TrackedShipService trackedShipService,
             MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository,
             CustomShipTrackHistoryRepository customShipTrackHistoryRepository,
             ReactiveMongoTemplate reactiveMongoTemplate,
             @Qualifier("activePointServiceImpl") ActivePointService activePointService) {
         this.aisService = aisService;
+        this.trackedShipService = trackedShipService;
         this.mongoShipTrackHistoryRepository = mongoShipTrackHistoryRepository;
         this.customShipTrackHistoryRepository = customShipTrackHistoryRepository;
         this.reactiveMongoTemplate = reactiveMongoTemplate;
@@ -62,52 +66,56 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     // TRACK HISTORY - operations
 
     @Override
-    public Flux<ShipTrack> getShipTrackHistory(List<Long> mmsis, LocalDateTime from, LocalDateTime to) {
+    public Flux<ShipTrack> getShipTrackHistory(String userId, LocalDateTime from, LocalDateTime to) {
+        return trackedShipService.getTrackedShips(userId)
+                .map(TrackedShip::getMmsi)
+                .collectList()
+                .flatMapMany(mmsis -> {
 
-        // PROCESS DATE RANGE
-        DateRangeHelper dateRangeHelper = new DateRangeHelper(from, to);
+                    // PROCESS DATE RANGE
+                    DateRangeHelper dateRangeHelper = new DateRangeHelper(from, to);
 
-        // DB RESULT STREAM
-        Flux<ShipTrack> dbStream = customShipTrackHistoryRepository
-                .findByMmsiInAndReadingTimeBetween(mmsis, dateRangeHelper.from(), dateRangeHelper.to())
-                .switchIfEmpty(error(NoContentException::new));
+                    // DB RESULT STREAM
+                    Flux<ShipTrack> dbStream = customShipTrackHistoryRepository
+                            .findByMmsiInAndReadingTimeBetween(mmsis, dateRangeHelper.from(), dateRangeHelper.to())
+                            .switchIfEmpty(error(NoContentException::new));
 
-        // CHANGE STREAM - used when the client wants to track the future
-        if (dateRangeHelper.to().isAfter(now()) || to == null) {
+                    // CHANGE STREAM - used when the client wants to track the future
+                    if (dateRangeHelper.to().isAfter(now()) || to == null) {
 
-            AggregationOperation match;
-            if (to == null) {
-                match = match(
-                        Criteria.where(OPERATION_TYPE).is(INSERT)
-                                .and(MMSI.fieldName).in(mmsis)
-                );
-            } else {
-                match = match(
-                        Criteria.where(OPERATION_TYPE).is(INSERT)
-                                .and(MMSI.fieldName).in(mmsis)
-                                .and(READING_TIME.fieldName).lte(dateRangeHelper.to())
-                );
-            }
-            Aggregation pipeline = newAggregation(match);
+                        AggregationOperation match;
+                        if (to == null) {
+                            match = match(
+                                    Criteria.where(OPERATION_TYPE).is(INSERT)
+                                            .and(MMSI.fieldName).in(mmsis)
+                            );
+                        } else {
+                            match = match(
+                                    Criteria.where(OPERATION_TYPE).is(INSERT)
+                                            .and(MMSI.fieldName).in(mmsis)
+                                            .and(READING_TIME.fieldName).lte(dateRangeHelper.to())
+                            );
+                        }
+                        Aggregation pipeline = newAggregation(match);
 
-            Flux<ChangeStreamEvent<ShipTrack>> changeStream = reactiveMongoTemplate.changeStream(
-                    SHIP_TRACK_HISTORY.fieldName,
-                    ChangeStreamOptions.builder()
-                            .filter(pipeline)
-                            .build(),
-                    ShipTrack.class
-            );
+                        Flux<ChangeStreamEvent<ShipTrack>> changeStream = reactiveMongoTemplate.changeStream(
+                                SHIP_TRACK_HISTORY.fieldName,
+                                ChangeStreamOptions.builder()
+                                        .filter(pipeline)
+                                        .build(),
+                                ShipTrack.class
+                        );
 
-            Flux<ShipTrack> shipTrackStream = changeStream
-                    .mapNotNull(ChangeStreamEvent::getBody)
-                    .doOnNext(shipTrack ->
-                            log.info("New ShipTrack returning... mmsi: {}", shipTrack.getMmsi())
-                    );
-            return dbStream.concatWith(shipTrackStream);
-        } else {
-            return dbStream;
-        }
-
+                        Flux<ShipTrack> shipTrackStream = changeStream
+                                .mapNotNull(ChangeStreamEvent::getBody)
+                                .doOnNext(shipTrack ->
+                                        log.info("New ShipTrack returning... mmsi: {}", shipTrack.getMmsi())
+                                );
+                        return dbStream.concatWith(shipTrackStream);
+                    } else {
+                        return dbStream;
+                    }
+                });
     }
 
     @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
