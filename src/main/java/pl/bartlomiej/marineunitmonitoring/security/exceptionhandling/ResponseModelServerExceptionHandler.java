@@ -29,7 +29,6 @@ public abstract class ResponseModelServerExceptionHandler {
         this.objectMapper = objectMapper;
     }
 
-    // todo - handle jwt expired exception, bad token format exception (needs to see what exceptions are that in AuthenticationWebFilter)
     protected Mono<Void> processException(final Exception exception, ServerWebExchange exchange) {
         switch (exception) {
             case AccessDeniedException ignoredAccessDeniedException -> {

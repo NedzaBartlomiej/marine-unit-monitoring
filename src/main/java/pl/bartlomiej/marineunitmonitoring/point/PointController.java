@@ -59,7 +59,7 @@ public class PointController {
                                 ResponseModel.<Point>builder()
                                         .httpStatus(OK)
                                         .httpStatusCode(OK.value())
-                                        .body(of("Point", point))
+                                        .body(of("point", point))
                                         .build()
                         )
         );

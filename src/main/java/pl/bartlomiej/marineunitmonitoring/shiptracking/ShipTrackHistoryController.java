@@ -43,7 +43,7 @@ public class ShipTrackHistoryController {
                                         ResponseModel.<ShipTrack>builder()
                                                 .httpStatus(OK)
                                                 .httpStatusCode(OK.value())
-                                                .body(of("ShipTracks", response))
+                                                .body(of("shipTracks", response))
                                                 .build()
                                 )
                                 .build()

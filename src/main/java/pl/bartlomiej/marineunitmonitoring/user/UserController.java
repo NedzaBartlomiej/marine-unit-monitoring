@@ -76,7 +76,7 @@ public class UserController {
                                         null,
                                         OK,
                                         userDtoMapper.mapToReadDto(user),
-                                        "User"
+                                        "user"
                                 )
                         )
                 );
@@ -92,7 +92,7 @@ public class UserController {
                                         null,
                                         CREATED,
                                         userDtoMapper.mapToReadDto(user),
-                                        "User"
+                                        "user"
                                 )
                         )
                 );
@@ -131,7 +131,7 @@ public class UserController {
                                         null,
                                         OK,
                                         trackedShip,
-                                        "TrackedShip"
+                                        "trackedShip"
                                 )
                         )
         );
@@ -152,7 +152,7 @@ public class UserController {
                                         "Successfully added ship into tracking list.",
                                         CREATED,
                                         trackedShip,
-                                        "TrackedShip"
+                                        "trackedShip"
                                 )
                         )
                 );
