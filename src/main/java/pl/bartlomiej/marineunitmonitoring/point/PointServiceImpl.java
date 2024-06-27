@@ -10,6 +10,8 @@ import pl.bartlomiej.marineunitmonitoring.geocode.GeocodeService;
 import pl.bartlomiej.marineunitmonitoring.geocode.Position;
 import reactor.core.publisher.Flux;
 
+import java.util.Objects;
+
 import static pl.bartlomiej.marineunitmonitoring.ais.nested.Geometry.X_COORDINATE_INDEX;
 import static pl.bartlomiej.marineunitmonitoring.ais.nested.Geometry.Y_COORDINATE_INDEX;
 import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.POINTS_CACHE_NAME;
@@ -34,8 +36,8 @@ public class PointServiceImpl implements PointService {
 
     private Flux<Point> mapToPoint(AisShip aisShip) {
 
-        String mayNullName = aisShip.properties().name() == null ? UNKNOWN_NOT_REPORTED : aisShip.properties().name();
-        String mayNullDestination = aisShip.properties().destination() == null ? UNKNOWN_NOT_REPORTED : aisShip.properties().destination();
+        String mayNullName = Objects.requireNonNullElse(aisShip.properties().name(), UNKNOWN_NOT_REPORTED);
+        String mayNullDestination = Objects.requireNonNullElse(aisShip.properties().destination(), UNKNOWN_NOT_REPORTED);
 
         return this.getShipDestinationCoordinates(aisShip)
                 .map(position ->

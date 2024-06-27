@@ -12,9 +12,12 @@ import org.springframework.security.oauth2.server.resource.authentication.Reacti
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtGrantedAuthoritiesConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAccessDeniedHandler;
+import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAuthenticationEntryPoint;
 import pl.bartlomiej.marineunitmonitoring.security.grantedauthorities.CustomJwtGrantedAuthoritiesConverter;
 
 import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -22,9 +25,13 @@ import static org.springframework.http.HttpMethod.GET;
 public class SecurityConfig {
 
     private final CustomJwtGrantedAuthoritiesConverter grantedAuthoritiesConverter;
+    private final ResponseModelServerAuthenticationEntryPoint authenticationEntryPoint;
+    private final ResponseModelServerAccessDeniedHandler accessDeniedHandler;
 
-    public SecurityConfig(CustomJwtGrantedAuthoritiesConverter grantedAuthoritiesConverter) {
+    public SecurityConfig(CustomJwtGrantedAuthoritiesConverter grantedAuthoritiesConverter, ResponseModelServerAuthenticationEntryPoint authenticationEntryPoint, ResponseModelServerAccessDeniedHandler accessDeniedHandler) {
         this.grantedAuthoritiesConverter = grantedAuthoritiesConverter;
+        this.authenticationEntryPoint = authenticationEntryPoint;
+        this.accessDeniedHandler = accessDeniedHandler;
     }
 
     @Bean
@@ -36,6 +43,7 @@ public class SecurityConfig {
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange(auth ->
                         auth
+                                .pathMatchers(POST, "/users").permitAll()
                                 .pathMatchers(GET, "/points").permitAll()
                                 .anyExchange().authenticated()
                 )
@@ -43,6 +51,10 @@ public class SecurityConfig {
                         oAuth2ResourceServerSpec.jwt(jwtSpec ->
                                 jwtSpec.jwtAuthenticationConverter(jwtAuthenticationConverter())
                         )
+                ).exceptionHandling(exceptionHandlingSpec ->
+                        exceptionHandlingSpec
+                                .accessDeniedHandler(accessDeniedHandler)
+                                .authenticationEntryPoint(authenticationEntryPoint)
                 )
                 .build();
     }
