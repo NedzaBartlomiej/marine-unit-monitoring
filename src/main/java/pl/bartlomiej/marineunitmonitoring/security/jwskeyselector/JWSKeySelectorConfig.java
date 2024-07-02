@@ -6,6 +6,7 @@ import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.jwt.proc.JWTClaimsSetAwareJWSKeySelector;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 
@@ -20,7 +21,11 @@ public class JWSKeySelectorConfig {
     @Bean
     ReactiveJwtDecoder jwtDecoder(ConfigurableJWTProcessor<SecurityContext> jwtProcessor) {
         var converter = new ReactiveJWTProcessorConverter((DefaultJWTProcessor<SecurityContext>) jwtProcessor);
-        return new NimbusReactiveJwtDecoder(converter);
+        var validator = JwtValidators.createDefault();
+
+        NimbusReactiveJwtDecoder decoder = new NimbusReactiveJwtDecoder(converter);
+        decoder.setJwtValidator(validator);
+        return decoder;
     }
 
     @Bean
