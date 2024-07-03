@@ -23,7 +23,7 @@ public class AisServiceImpl implements AisService {
     private static final String BEARER = "Bearer ";
     private final AisApiAuthTokenProvider aisApiAuthTokenProvider;
     private final WebClient webClient;
-    @Value("${vars.api.ais.result-limit}")
+    @Value("${project-properties.external-apis.ais-api.result-limit}")
     private long resultLimit;
     @Value("${secrets.ais-api.latest-ais-url}")
     private String apiFetchLatestUri;
