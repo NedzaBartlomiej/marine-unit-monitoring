@@ -14,7 +14,7 @@ rs.initiate({
 })
 BLOCK
 
-#todo automate it
+#todo automate it - maybe i should add the config file and it will be work and reconfig
 # add it to readme in installation info
 #cfg = rs.conf()
 #cfg.members[0].priority = 100

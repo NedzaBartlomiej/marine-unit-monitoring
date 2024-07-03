@@ -46,6 +46,6 @@ until [ $inst_status = "running" ]; do
   echo "Waiting for '$primary_rs_instance'"
   sleep 2
 done
-sleep 3
+sleep 10
 
 docker exec $primary_rs_instance usr/docker-entrypoint-init.d/rs-init.sh
