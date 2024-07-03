@@ -67,19 +67,19 @@ public class UserController {
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
     @GetMapping
     public Mono<ResponseEntity<ResponseModel<UserReadDto>>> getAuthenticatedUser(Principal principal) {
-        log.info("Principal getName(): {}", principal.getName());
-        return userService.getUserById(principal.getName())
-                .map(user ->
-                        this.buildResponse(
-                                OK,
-                                buildResponseModel(
-                                        null,
+        return userService.identifyUser(principal.getName())
+                .flatMap(id -> userService.getUser(id)
+                        .map(user ->
+                                this.buildResponse(
                                         OK,
-                                        userDtoMapper.mapToReadDto(user),
-                                        "user"
+                                        buildResponseModel(
+                                                null,
+                                                OK,
+                                                userDtoMapper.mapToReadDto(user),
+                                                "user"
+                                        )
                                 )
-                        )
-                );
+                        ));
     }
 
     @PostMapping
@@ -124,8 +124,8 @@ public class UserController {
     )
     @GetMapping("/tracked-ships") // todo pageable
     public ResponseEntity<Flux<ResponseModel<TrackedShip>>> getTrackedShips(Principal principal) {
-        return ok(
-                userTrackedShipService.getTrackedShips(principal.getName())
+        return ok(userService.identifyUser(principal.getName())
+                .flatMapMany(id -> userTrackedShipService.getTrackedShips(id)
                         .map(trackedShip ->
                                 buildResponseModel(
                                         null,
@@ -134,6 +134,7 @@ public class UserController {
                                         "trackedShip"
                                 )
                         )
+                )
         );
     }
 
@@ -144,15 +145,17 @@ public class UserController {
     )
     @PostMapping("/tracked-ships/{mmsi}")
     public Mono<ResponseEntity<ResponseModel<TrackedShip>>> addTrackedShip(Principal principal, @PathVariable Long mmsi) {
-        return userTrackedShipService.addTrackedShip(principal.getName(), mmsi)
-                .map(trackedShip ->
-                        buildResponse(
-                                CREATED,
-                                buildResponseModel(
-                                        "Successfully added ship into tracking list.",
+        return userService.identifyUser(principal.getName())
+                .flatMap(id -> userTrackedShipService.addTrackedShip(id, mmsi)
+                        .map(trackedShip ->
+                                buildResponse(
                                         CREATED,
-                                        trackedShip,
-                                        "trackedShip"
+                                        buildResponseModel(
+                                                "Successfully added ship into tracking list.",
+                                                CREATED,
+                                                trackedShip,
+                                                "trackedShip"
+                                        )
                                 )
                         )
                 );
@@ -166,17 +169,19 @@ public class UserController {
     @DeleteMapping("/tracked-ships/{mmsi}")
     public Mono<ResponseEntity<ResponseModel<Void>>> removeTrackedShip(Principal principal, @PathVariable Long mmsi) {
 
-        return userTrackedShipService.removeTrackedShip(principal.getName(), mmsi)
-                .then(just(
-                        buildResponse(
-                                OK,
-                                buildResponseModel(
-                                        "Successfully removed ship from tracking list.",
+        return userService.identifyUser(principal.getName())
+                .flatMap(id -> userTrackedShipService.removeTrackedShip(id, mmsi)
+                        .then(just(
+                                buildResponse(
                                         OK,
-                                        null,
-                                        null
+                                        buildResponseModel(
+                                                "Successfully removed ship from tracking list.",
+                                                OK,
+                                                null,
+                                                null
+                                        )
                                 )
-                        )
-                ));
+                        ))
+                );
     }
 }

@@ -5,7 +5,7 @@ import reactor.core.publisher.Mono;
 
 public interface UserService {
 
-    Mono<User> getUserById(String id);
+    Mono<User> getUser(String id);
 
     Mono<User> createUser(User user);
 
@@ -14,4 +14,6 @@ public interface UserService {
     Mono<Void> deleteUser(String id);
 
     Mono<Boolean> isUserExists(String id);
+
+    Mono<String> identifyUser(String subjectId);
 }

@@ -13,11 +13,13 @@ import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import pl.bartlomiej.marineunitmonitoring.security.jwskeyselector.ReactiveJWTProcessorConverter;
 
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 public class JWSKeySelectorConfig {
 
-    private JWSAlgorithmFamilyJWSKeySelector<SecurityContext> jwsKeySelector;
+    private final Map<String, JWSAlgorithmFamilyJWSKeySelector<SecurityContext>> jwsKeySelectorMap = new HashMap<>();
 
     @Bean
     ReactiveJwtDecoder jwtDecoder(ConfigurableJWTProcessor<SecurityContext> jwtProcessor) {
@@ -36,10 +38,11 @@ public class JWSKeySelectorConfig {
 
 
     public JWSAlgorithmFamilyJWSKeySelector<SecurityContext> getJWSKeySelector(URL jwksUrl) {
-        if (jwsKeySelector == null) {
-            jwsKeySelector = createJWSKeySelector(jwksUrl);
+        String urlString = jwksUrl.toString();
+        if (!jwsKeySelectorMap.containsKey(urlString)) {
+            jwsKeySelectorMap.put(urlString, this.createJWSKeySelector(jwksUrl));
         }
-        return jwsKeySelector;
+        return jwsKeySelectorMap.get(urlString);
     }
 
     private JWSAlgorithmFamilyJWSKeySelector<SecurityContext> createJWSKeySelector(URL jwksUrl) {

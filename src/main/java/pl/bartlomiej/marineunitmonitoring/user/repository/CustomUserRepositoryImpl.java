@@ -2,6 +2,7 @@ package pl.bartlomiej.marineunitmonitoring.user.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
@@ -68,6 +69,16 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         return reactiveMongoTemplate.findAll(User.class)
                 .flatMapIterable(User::getTrackedShips)
                 .onErrorResume(NullPointerException.class, ex -> Flux.empty());
+    }
+
+    @Override
+    public Mono<User> findByOpenId(String openId) {
+        return reactiveMongoTemplate.findOne(
+                new Query().addCriteria(
+                        Criteria.where("openIds").is(openId)
+                ),
+                User.class
+        );
     }
 
 }

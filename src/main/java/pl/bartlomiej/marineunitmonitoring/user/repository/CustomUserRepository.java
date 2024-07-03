@@ -1,10 +1,9 @@
 package pl.bartlomiej.marineunitmonitoring.user.repository;
 
+import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShip;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 public interface CustomUserRepository {
 
@@ -17,4 +16,6 @@ public interface CustomUserRepository {
     Flux<TrackedShip> getTrackedShips(String id);
 
     Flux<TrackedShip> getTrackedShips();
+
+    Mono<User> findByOpenId(String openId);
 }

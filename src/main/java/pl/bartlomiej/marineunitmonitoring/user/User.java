@@ -18,16 +18,17 @@ import java.util.List;
 public class User {
 
     private String id;
+    private List<String> openIds;
     private String username;
     private String email;
     private String password;
     private List<TrackedShip> trackedShips;
     private List<Role> roles;
 
-    public User(String id, String username, String email, List<Role> roles) {
-        this.id = id;
+    public User(String username, String email, List<Role> roles, List<String> openIds) {
         this.username = username;
         this.email = email;
         this.roles = roles;
+        this.openIds = openIds;
     }
 }
