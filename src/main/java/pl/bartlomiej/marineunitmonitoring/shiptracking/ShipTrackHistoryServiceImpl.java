@@ -31,7 +31,8 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.matc
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.INSERT;
 import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.OPERATION_TYPE;
-import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.*;
+import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.MMSI;
+import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.READING_TIME;
 import static reactor.core.publisher.Flux.just;
 import static reactor.core.publisher.Mono.empty;
 import static reactor.core.publisher.Mono.error;
@@ -47,6 +48,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     private final CustomShipTrackHistoryRepository customShipTrackHistoryRepository;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
     private final ActivePointService activePointService;
+    private final String SHIP_TRACK_HISTORY_COLL_NAME = "ship_track_history";
 
     public ShipTrackHistoryServiceImpl(
             AisService aisService, TrackedShipService trackedShipService,
@@ -99,7 +101,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                         Aggregation pipeline = newAggregation(match);
 
                         Flux<ChangeStreamEvent<ShipTrack>> changeStream = reactiveMongoTemplate.changeStream(
-                                SHIP_TRACK_HISTORY.fieldName,
+                                SHIP_TRACK_HISTORY_COLL_NAME,
                                 ChangeStreamOptions.builder()
                                         .filter(pipeline)
                                         .build(),

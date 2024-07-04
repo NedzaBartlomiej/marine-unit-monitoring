@@ -13,18 +13,18 @@ import reactor.core.publisher.Mono;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
-import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.ID;
 import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.MMSI;
 
 @Repository
 @RequiredArgsConstructor
 public class CustomUserRepositoryImpl implements CustomUserRepository {
 
-    public static final String TRACKED_SHIPS = "trackedShips";
+    public final String TRACKED_SHIPS_EMBEDDED_LIST_NAME = "trackedShips";
     private final ReactiveMongoTemplate reactiveMongoTemplate;
 
     private Query getIdValidQuery(String id) {
-        return new Query(where(ID.fieldName).is(id));
+        String ID_FIELD_NAME = "_id";
+        return new Query(where(ID_FIELD_NAME).is(id));
     }
 
     @Override
@@ -32,7 +32,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         return reactiveMongoTemplate
                 .updateFirst(
                         this.getIdValidQuery(id),
-                        new Update().push(TRACKED_SHIPS, trackedShip),
+                        new Update().push(TRACKED_SHIPS_EMBEDDED_LIST_NAME, trackedShip),
                         User.class
                 ).map(updateResult -> trackedShip);
     }
@@ -42,7 +42,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         return reactiveMongoTemplate
                 .updateFirst(
                         this.getIdValidQuery(id),
-                        new Update().pull(TRACKED_SHIPS, query(where(MMSI.fieldName).is(mmsi))),
+                        new Update().pull(TRACKED_SHIPS_EMBEDDED_LIST_NAME, query(where(MMSI.fieldName).is(mmsi))),
                         User.class
                 ).then();
     }
@@ -52,7 +52,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         return reactiveMongoTemplate
                 .updateMulti(
                         new Query(),
-                        new Update().pull(TRACKED_SHIPS, query(where(MMSI.fieldName).is(mmsi))),
+                        new Update().pull(TRACKED_SHIPS_EMBEDDED_LIST_NAME, query(where(MMSI.fieldName).is(mmsi))),
                         User.class
                 ).then();
     }
