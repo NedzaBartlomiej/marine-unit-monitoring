@@ -7,9 +7,11 @@ public interface UserService {
 
     Mono<User> getUser(String id);
 
+    Mono<User> getUserByEmail(String email);
+
     Mono<User> createUser(User user);
 
-    User createOrUpdateOAuth2BasedUser(String openId, String username, String email);
+    Mono<User> processAuthenticationFlowUser(String id, String username, String email, String tokenIssuer);
 
     Mono<Void> deleteUser(String id);
 

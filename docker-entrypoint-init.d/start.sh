@@ -47,5 +47,6 @@ until [ $inst_status = "running" ]; do
   sleep 2
 done
 sleep 10
+# todo - check in loop when file is exists and then exec rs-init
 
 docker exec $primary_rs_instance usr/docker-entrypoint-init.d/rs-init.sh

@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import pl.bartlomiej.marineunitmonitoring.security.jwskeyselector.config.properties.MultiProvidersJWSKeySelectorProperties;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.properties.MultiProvidersJWSKeySelectorProperties;
 
 @SpringBootApplication
 @EnableScheduling

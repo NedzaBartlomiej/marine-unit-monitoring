@@ -1,6 +1,5 @@
 package pl.bartlomiej.marineunitmonitoring.shiptracking.repository;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -22,10 +21,13 @@ import static reactor.core.publisher.Mono.error;
 import static reactor.core.publisher.Mono.from;
 
 @Repository
-@RequiredArgsConstructor
 public class CustomShipTrackHistoryRepositoryImpl implements CustomShipTrackHistoryRepository {
 
     private final ReactiveMongoTemplate reactiveMongoTemplate;
+
+    public CustomShipTrackHistoryRepositoryImpl(ReactiveMongoTemplate reactiveMongoTemplate) {
+        this.reactiveMongoTemplate = reactiveMongoTemplate;
+    }
 
     @Override
     public Flux<ShipTrack> findByMmsiInAndReadingTimeBetween(List<Long> mmsis, LocalDateTime from, LocalDateTime to) {

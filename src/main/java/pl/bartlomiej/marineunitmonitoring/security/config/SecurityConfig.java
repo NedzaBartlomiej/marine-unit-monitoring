@@ -8,13 +8,13 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity.CsrfSpec;
 import org.springframework.security.config.web.server.ServerHttpSecurity.FormLoginSpec;
 import org.springframework.security.config.web.server.ServerHttpSecurity.HttpBasicSpec;
+import org.springframework.security.config.web.server.ServerHttpSecurity.LogoutSpec;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtGrantedAuthoritiesConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.grantedauthorities.CustomReactiveJwtGrantedAuthoritiesConverter;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAccessDeniedHandler;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAuthenticationEntryPoint;
-import pl.bartlomiej.marineunitmonitoring.security.grantedauthorities.CustomJwtGrantedAuthoritiesConverter;
 
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
@@ -24,34 +24,33 @@ import static org.springframework.http.HttpMethod.POST;
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
-    private final CustomJwtGrantedAuthoritiesConverter grantedAuthoritiesConverter;
-    private final ResponseModelServerAuthenticationEntryPoint authenticationEntryPoint;
-    private final ResponseModelServerAccessDeniedHandler accessDeniedHandler;
+    private final CustomReactiveJwtGrantedAuthoritiesConverter grantedAuthoritiesConverter;
 
-    public SecurityConfig(CustomJwtGrantedAuthoritiesConverter grantedAuthoritiesConverter, ResponseModelServerAuthenticationEntryPoint authenticationEntryPoint, ResponseModelServerAccessDeniedHandler accessDeniedHandler) {
+    public SecurityConfig(CustomReactiveJwtGrantedAuthoritiesConverter grantedAuthoritiesConverter) {
         this.grantedAuthoritiesConverter = grantedAuthoritiesConverter;
-        this.authenticationEntryPoint = authenticationEntryPoint;
-        this.accessDeniedHandler = accessDeniedHandler;
     }
 
     @Bean
-    SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+    SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, ResponseModelServerAuthenticationEntryPoint authenticationEntryPoint, ResponseModelServerAccessDeniedHandler accessDeniedHandler) {
         return http
                 .httpBasic(HttpBasicSpec::disable)
                 .formLogin(FormLoginSpec::disable)
+                .logout(LogoutSpec::disable)
                 .csrf(CsrfSpec::disable)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange(auth ->
                         auth
-                                .pathMatchers(POST, "/users").permitAll()
-                                .pathMatchers(GET, "/points").permitAll()
+                                .pathMatchers(POST, "*/users").permitAll()
+                                .pathMatchers(GET, "*/points").permitAll()
+                                .pathMatchers(GET, "*/users/authenticate").permitAll()
                                 .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oAuth2ResourceServerSpec ->
                         oAuth2ResourceServerSpec.jwt(jwtSpec ->
                                 jwtSpec.jwtAuthenticationConverter(jwtAuthenticationConverter())
                         )
-                ).exceptionHandling(exceptionHandlingSpec ->
+                )
+                .exceptionHandling(exceptionHandlingSpec ->
                         exceptionHandlingSpec
                                 .accessDeniedHandler(accessDeniedHandler)
                                 .authenticationEntryPoint(authenticationEntryPoint)
@@ -61,15 +60,8 @@ public class SecurityConfig {
 
     @Bean
     ReactiveJwtAuthenticationConverter jwtAuthenticationConverter() {
-        ReactiveJwtAuthenticationConverter jwtAuthenticationConverter = new ReactiveJwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(
-                this.reactiveJwtGrantedAuthoritiesConverterAdapter()
-        );
+        var jwtAuthenticationConverter = new ReactiveJwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
         return jwtAuthenticationConverter;
-    }
-
-    @Bean
-    ReactiveJwtGrantedAuthoritiesConverterAdapter reactiveJwtGrantedAuthoritiesConverterAdapter() {
-        return new ReactiveJwtGrantedAuthoritiesConverterAdapter(grantedAuthoritiesConverter);
     }
 }

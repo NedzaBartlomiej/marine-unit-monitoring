@@ -1,8 +1,8 @@
-package pl.bartlomiej.marineunitmonitoring.security.userdetails;
+package pl.bartlomiej.marineunitmonitoring.security.authentication.userdetails;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import pl.bartlomiej.marineunitmonitoring.security.grantedauthorities.UserRoleAuthority;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.grantedauthorities.UserRoleAuthority;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 
 import java.util.Collection;
@@ -29,7 +29,7 @@ public class SecurityUser implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return user.getId();
     }
 
     @Override

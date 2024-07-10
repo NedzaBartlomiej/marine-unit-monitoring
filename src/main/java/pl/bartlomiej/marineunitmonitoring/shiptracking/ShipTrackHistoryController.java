@@ -18,12 +18,16 @@ import static java.util.Map.of;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
-@RequiredArgsConstructor
-@RequestMapping("/ship-track-history")
+@RequestMapping("/v1/ship-track-history")
 public class ShipTrackHistoryController {
 
     private final ShipTrackHistoryService shipTrackHistoryService;
     private final UserService userService;
+
+    public ShipTrackHistoryController(ShipTrackHistoryService shipTrackHistoryService, UserService userService) {
+        this.shipTrackHistoryService = shipTrackHistoryService;
+        this.userService = userService;
+    }
 
     @PreAuthorize("hasAnyRole(" +
             "T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).PREMIUM.name()," +

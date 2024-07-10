@@ -1,6 +1,5 @@
 package pl.bartlomiej.marineunitmonitoring.point.activepoint.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -18,12 +17,16 @@ import static pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictExcept
 import static reactor.core.publisher.Mono.*;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
 public class ActivePointServiceImpl implements ActivePointService {
 
     private final MongoActivePointRepository mongoActivePointRepository;
     private final AisService aisService;
+
+    public ActivePointServiceImpl(MongoActivePointRepository mongoActivePointRepository, AisService aisService) {
+        this.mongoActivePointRepository = mongoActivePointRepository;
+        this.aisService = aisService;
+    }
 
     @Override
     public Mono<List<Long>> getMmsis() {

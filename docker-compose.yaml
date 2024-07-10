@@ -72,6 +72,7 @@ services:
     image: marine-unit-monitoring:latest
     ports:
       - "8080:8080"
+      - "5005:5005"
     depends_on:
       - redis
       - mongodb-primary
@@ -79,6 +80,10 @@ services:
       - mongodb3
     networks:
       - marine-unit-monitoring-network
+    environment:
+      _JAVA_OPTIONS: >
+        -Xdebug
+        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
 volumes:
   cache-volume:
   db-volume1:

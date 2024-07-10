@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.security.jwskeyselector.config;
+package pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config;
 
 import com.nimbusds.jose.KeySourceException;
 import com.nimbusds.jose.proc.JWSAlgorithmFamilyJWSKeySelector;
@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
-import pl.bartlomiej.marineunitmonitoring.security.jwskeyselector.ReactiveJWTProcessorConverter;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.ReactiveJWTProcessorConverter;
 
 import java.net.URL;
 import java.util.HashMap;

@@ -17,7 +17,6 @@ import static org.springframework.data.redis.cache.RedisCacheConfiguration.defau
 
 @Configuration
 @EnableCaching
-@RequiredArgsConstructor
 @Slf4j
 public class RedisCacheConfig {
 
@@ -25,6 +24,10 @@ public class RedisCacheConfig {
     public static final String ADDRESS_COORDS_CACHE_NAME = "AddressCoords";
     public static final String POINTS_CACHE_NAME = "Points";
     private final AisApiAuthTokenProvider aisApiAuthTokenProvider;
+
+    public RedisCacheConfig(AisApiAuthTokenProvider aisApiAuthTokenProvider) {
+        this.aisApiAuthTokenProvider = aisApiAuthTokenProvider;
+    }
 
     @Bean
     public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {

@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.security.jwskeyselector.config.properties;
+package pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.core.convert.converter.Converter;

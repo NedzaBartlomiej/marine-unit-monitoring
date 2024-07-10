@@ -16,7 +16,6 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.MMSI;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class AisServiceImpl implements AisService {
 
@@ -29,6 +28,11 @@ public class AisServiceImpl implements AisService {
     private String apiFetchLatestUri;
     @Value("${secrets.ais-api.latest-ais-bymmsi-url}")
     private String apiFetchByMmsiUri;
+
+    public AisServiceImpl(AisApiAuthTokenProvider aisApiAuthTokenProvider, WebClient webClient) {
+        this.aisApiAuthTokenProvider = aisApiAuthTokenProvider;
+        this.webClient = webClient;
+    }
 
     @Override
     public Flux<AisShip> fetchLatestShips() {

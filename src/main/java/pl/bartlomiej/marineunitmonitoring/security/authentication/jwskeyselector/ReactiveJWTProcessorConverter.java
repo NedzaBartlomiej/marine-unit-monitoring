@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.security.jwskeyselector;
+package pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.proc.BadJOSEException;

@@ -6,12 +6,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
+import pl.bartlomiej.marineunitmonitoring.common.error.RegisterBasedUserNotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.UniqueEmailException;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTServiceImpl;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
-import pl.bartlomiej.marineunitmonitoring.user.repository.SyncMongoUserRepository;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
 
 import static java.util.List.of;
 import static pl.bartlomiej.marineunitmonitoring.user.nested.Role.SIGNED;
@@ -23,19 +26,23 @@ public class UserServiceImpl implements UserService {
 
     private final CustomUserRepository customUserRepository;
     private final MongoUserRepository mongoUserRepository;
-    private final SyncMongoUserRepository syncMongoUserRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(CustomUserRepository customUserRepository, MongoUserRepository mongoUserRepository, SyncMongoUserRepository syncMongoUserRepository, BCryptPasswordEncoder passwordEncoder) {
+    public UserServiceImpl(CustomUserRepository customUserRepository, MongoUserRepository mongoUserRepository, BCryptPasswordEncoder passwordEncoder) {
         this.customUserRepository = customUserRepository;
         this.mongoUserRepository = mongoUserRepository;
-        this.syncMongoUserRepository = syncMongoUserRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public Mono<User> getUser(String id) {
         return mongoUserRepository.findById(id)
+                .switchIfEmpty(error(NotFoundException::new));
+    }
+
+    @Override
+    public Mono<User> getUserByEmail(String email) {
+        return mongoUserRepository.findByEmail(email)
                 .switchIfEmpty(error(NotFoundException::new));
     }
 
@@ -79,22 +86,48 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User createOrUpdateOAuth2BasedUser(String openId, String username, String email) {
-        return syncMongoUserRepository.findByEmail(email)
-                .map(user -> {
-                    if (!user.getOpenIds().contains(openId)) {
-                        user.getOpenIds().add(openId);
-                    }
-                    return syncMongoUserRepository.save(user);
-                })
-                .orElseGet(() -> syncMongoUserRepository.save(
-                                new User(
-                                        username,
-                                        email,
-                                        of(SIGNED),
-                                        of(openId)
-                                )
-                        )
-                );
+    public Mono<User> processAuthenticationFlowUser(String id, String username, String email, String tokenIssuer) {
+        log.info("Processing authentication flow user.");
+        return mongoUserRepository.findByEmail(email)
+                .flatMap(user -> this.processUserOpenIds(user, id))
+                .switchIfEmpty(this.processUserCreation(id, username, email, tokenIssuer));
+    }
+
+    private Mono<User> processUserOpenIds(User user, String id) {
+        log.info("Processing authentication flow user openid cases.");
+        if (id.equals(user.getId())) {
+            log.info("Registration based user detected, no adding openid.");
+            return Mono.just(user);
+        }
+        if (!user.getOpenIds().contains(id)) {
+            log.info("Adding new openid for user.");
+            this.addOpenId(user, id);
+            return mongoUserRepository.save(user);
+        }
+        log.info("Existing openid, returning user.");
+        return Mono.just(user);
+    }
+
+    private void addOpenId(User user, String openId) {
+        if (user.getOpenIds() == null) {
+            user.setOpenIds(new ArrayList<>());
+        }
+        user.getOpenIds().add(openId);
+    }
+
+    private Mono<User> processUserCreation(String id, String username, String email, String tokenIssuer) {
+        log.info("Processing authentication flow user creation.");
+        if (tokenIssuer.equals(JWTServiceImpl.TOKEN_ISSUER)) {
+            return Mono.error(RegisterBasedUserNotFoundException::new);
+        }
+        log.info("Creating OAuth2 based user.");
+        return mongoUserRepository.save(
+                new User(
+                        username,
+                        email,
+                        of(SIGNED),
+                        of(id)
+                )
+        );
     }
 }

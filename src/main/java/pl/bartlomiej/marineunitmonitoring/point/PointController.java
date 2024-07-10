@@ -16,7 +16,7 @@ import static java.util.Map.of;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
-@RequestMapping("/points")
+@RequestMapping("/v1/points")
 public class PointController {
 
     private static final Logger log = LoggerFactory.getLogger(PointController.class);

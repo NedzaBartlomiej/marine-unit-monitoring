@@ -16,11 +16,14 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.MMSI;
 
 @Repository
-@RequiredArgsConstructor
 public class CustomUserRepositoryImpl implements CustomUserRepository {
 
     public final String TRACKED_SHIPS_EMBEDDED_LIST_NAME = "trackedShips";
     private final ReactiveMongoTemplate reactiveMongoTemplate;
+
+    public CustomUserRepositoryImpl(ReactiveMongoTemplate reactiveMongoTemplate) {
+        this.reactiveMongoTemplate = reactiveMongoTemplate;
+    }
 
     private Query getIdValidQuery(String id) {
         String ID_FIELD_NAME = "_id";

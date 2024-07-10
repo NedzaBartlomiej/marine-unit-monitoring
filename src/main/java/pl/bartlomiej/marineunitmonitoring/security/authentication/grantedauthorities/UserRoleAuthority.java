@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.security.grantedauthorities;
+package pl.bartlomiej.marineunitmonitoring.security.authentication.grantedauthorities;
 
 import org.springframework.security.core.GrantedAuthority;
 

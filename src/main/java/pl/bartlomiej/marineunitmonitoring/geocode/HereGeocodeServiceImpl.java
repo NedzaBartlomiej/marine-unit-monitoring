@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -16,7 +15,6 @@ import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class HereGeocodeServiceImpl implements GeocodeService {
 
     public static final String LAT = "lat";
@@ -25,6 +23,10 @@ public class HereGeocodeServiceImpl implements GeocodeService {
     private final WebClient webClient;
     @Value("${secrets.geocode-api.api-key}")
     private String geocodeApiKey;
+
+    public HereGeocodeServiceImpl(WebClient webClient) {
+        this.webClient = webClient;
+    }
 
     @Cacheable(cacheNames = ADDRESS_COORDS_CACHE_NAME)
     public Flux<Position> getAddressCoordinates(String address) {

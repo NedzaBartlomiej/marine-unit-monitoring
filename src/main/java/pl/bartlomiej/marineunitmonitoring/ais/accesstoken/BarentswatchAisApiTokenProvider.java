@@ -1,7 +1,6 @@
 package pl.bartlomiej.marineunitmonitoring.ais.accesstoken;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -18,7 +17,6 @@ import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class BarentswatchAisApiTokenProvider implements AisApiAuthTokenProvider {
 
     private final WebClient webClient;
@@ -32,6 +30,10 @@ public class BarentswatchAisApiTokenProvider implements AisApiAuthTokenProvider 
     private String grantType;
     @Value("${secrets.ais-api.auth.url}")
     private String accessTokenApiUrl;
+
+    public BarentswatchAisApiTokenProvider(WebClient webClient) {
+        this.webClient = webClient;
+    }
 
     private MultiValueMap<String, String> buildAuthBody() {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();

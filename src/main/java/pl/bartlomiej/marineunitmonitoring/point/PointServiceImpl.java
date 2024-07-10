@@ -17,13 +17,17 @@ import static pl.bartlomiej.marineunitmonitoring.ais.nested.Geometry.Y_COORDINAT
 import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.POINTS_CACHE_NAME;
 import static reactor.core.publisher.Flux.error;
 
-@RequiredArgsConstructor
 @Service
 public class PointServiceImpl implements PointService {
 
     public static final String UNKNOWN_NOT_REPORTED = "UNKNOWN (NOT REPORTED)";
     private final AisService aisService;
     private final GeocodeService geocodeService;
+
+    public PointServiceImpl(AisService aisService, GeocodeService geocodeService) {
+        this.aisService = aisService;
+        this.geocodeService = geocodeService;
+    }
 
     @Cacheable(cacheNames = POINTS_CACHE_NAME)
     @Override

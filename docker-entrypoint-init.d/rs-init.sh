@@ -14,6 +14,8 @@ rs.initiate({
 })
 BLOCK
 
+# add config file to container and if the file exists, then run rs-init fro mongo container
+
 #todo automate it - maybe i should add the config file and it will be work and reconfig
 # add it to readme in installation info
 #cfg = rs.conf()
