@@ -1,13 +1,11 @@
 package pl.bartlomiej.marineunitmonitoring.user;
 
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.service.AuthenticationService;
-import pl.bartlomiej.marineunitmonitoring.user.dto.UserAuthDto;
+import pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserDtoMapper;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserReadDto;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserSaveDto;
@@ -18,12 +16,12 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
-import java.util.Map;
 
-import static java.util.Map.of;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.ResponseEntity.ok;
+import static pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil.buildResponse;
+import static pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil.buildResponseModel;
 import static reactor.core.publisher.Mono.just;
 
 @RestController
@@ -33,36 +31,11 @@ public class UserController {
     private final TrackedShipService userTrackedShipService;
     private final UserService userService;
     private final UserDtoMapper userDtoMapper;
-    private final AuthenticationService authenticationService;
 
-    public UserController(TrackedShipService userTrackedShipService, UserService userService, UserDtoMapper userDtoMapper, AuthenticationService authenticationService) {
+    public UserController(TrackedShipService userTrackedShipService, UserService userService, UserDtoMapper userDtoMapper) {
         this.userTrackedShipService = userTrackedShipService;
         this.userService = userService;
         this.userDtoMapper = userDtoMapper;
-        this.authenticationService = authenticationService;
-    }
-
-    private <T> ResponseEntity<ResponseModel<T>> buildResponse(HttpStatus httpStatus, ResponseModel<T> responseModel) {
-        return ResponseEntity.status(httpStatus).body(responseModel);
-    }
-
-    private <T> ResponseModel<T> buildResponseModel(
-            String message, HttpStatus httpStatus, T bodyValue, String bodyKey) {
-
-        ResponseModel.ResponseModelBuilder<T> builder =
-                ResponseModel.<T>builder()
-                        .httpStatus(httpStatus)
-                        .httpStatusCode(httpStatus.value());
-
-        if (message != null) {
-            builder.message(message);
-        }
-
-        if (bodyValue != null && bodyKey != null) {
-            builder.body(of(bodyKey, bodyValue));
-        }
-
-        return builder.build();
     }
 
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
@@ -71,9 +44,9 @@ public class UserController {
         return userService.identifyUser(principal.getName())
                 .flatMap(id -> userService.getUser(id)
                         .map(user ->
-                                this.buildResponse(
+                                ControllerResponseUtil.buildResponse(
                                         OK,
-                                        buildResponseModel(
+                                        ControllerResponseUtil.buildResponseModel(
                                                 null,
                                                 OK,
                                                 userDtoMapper.mapToReadDto(user),
@@ -99,29 +72,6 @@ public class UserController {
                 );
     }
 
-    @GetMapping("/authenticate")
-    public Mono<ResponseEntity<ResponseModel<Map<String, String>>>> authenticate(@RequestBody @Valid UserAuthDto userAuthDto) {
-        return userService.getUserByEmail(userAuthDto.getEmail())
-                .flatMap(user -> authenticationService.authenticate(
-                                        user.getId(), userAuthDto.getEmail(), userAuthDto.getPassword()
-                                )
-                                .map(tokensMap ->
-                                        buildResponse(
-                                                OK,
-                                                buildResponseModel(
-                                                        "Authenticated successfully.",
-                                                        OK,
-                                                        tokensMap,
-                                                        "authenticationTokens"
-                                                )
-                                        )
-                                )
-                );
-    }
-
-    // GET - refreshAccessToken(String refreshToken)
-
-    // GET - invalidateToken(String token)
 
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).ADMIN.name())")
     @DeleteMapping("/{id}")

@@ -12,7 +12,8 @@ project-properties:
     resource-server:
       multi-providers-jws-key-selector:
         providers:
-          - issuer-uri: https://accounts.google.com
+          -
+            issuer-uri: https://accounts.google.com
             jwks-uri: https://www.googleapis.com/oauth2/v3/certs
           -
             issuer-uri: https://www.facebook.com

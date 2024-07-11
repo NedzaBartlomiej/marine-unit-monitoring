@@ -3,7 +3,7 @@ package pl.bartlomiej.marineunitmonitoring.user.dto;
 import org.springframework.stereotype.Component;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 
-import static pl.bartlomiej.marineunitmonitoring.common.util.MapperUtils.copyProperties;
+import static pl.bartlomiej.marineunitmonitoring.common.util.MapperUtil.copyProperties;
 
 @Component
 public class UserDtoMapper {

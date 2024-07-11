@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 
 @Slf4j
-final public class MapperUtils {
+final public class MapperUtil {
 
-    private MapperUtils() {
+    private MapperUtil() {
     }
 
     @SneakyThrows
