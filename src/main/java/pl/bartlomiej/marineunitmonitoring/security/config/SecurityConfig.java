@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity.CsrfSpec;
 import org.springframework.security.config.web.server.ServerHttpSecurity.FormLoginSpec;
@@ -13,6 +14,7 @@ import org.springframework.security.oauth2.server.resource.authentication.Reacti
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.grantedauthorities.CustomReactiveJwtGrantedAuthoritiesConverter;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTBlacklistVerifier;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAccessDeniedHandler;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAuthenticationEntryPoint;
 
@@ -31,7 +33,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, ResponseModelServerAuthenticationEntryPoint authenticationEntryPoint, ResponseModelServerAccessDeniedHandler accessDeniedHandler) {
+    SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, ResponseModelServerAuthenticationEntryPoint authenticationEntryPoint, ResponseModelServerAccessDeniedHandler accessDeniedHandler, JWTBlacklistVerifier jwtBlacklistVerifier) {
         return http
                 .httpBasic(HttpBasicSpec::disable)
                 .formLogin(FormLoginSpec::disable)
@@ -55,6 +57,7 @@ public class SecurityConfig {
                                 .accessDeniedHandler(accessDeniedHandler)
                                 .authenticationEntryPoint(authenticationEntryPoint)
                 )
+                .addFilterBefore(jwtBlacklistVerifier, SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();
     }
 

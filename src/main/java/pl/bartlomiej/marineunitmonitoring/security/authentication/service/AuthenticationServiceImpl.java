@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTService;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
@@ -25,7 +25,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         var authenticationToken = new UsernamePasswordAuthenticationToken(id, password);
         return authenticationManager.authenticate(authenticationToken)
                 .map(ignoredAuthentication -> Map.of(
-                        "refreshToken", jwtService.createRefreshToken(id),
+                        "refreshToken", jwtService.createRefreshToken(id, email),
                         "accessToken", jwtService.createAccessToken(id, email)
                 ));
     }

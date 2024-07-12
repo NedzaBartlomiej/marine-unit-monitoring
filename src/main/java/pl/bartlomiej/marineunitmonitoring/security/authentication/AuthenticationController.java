@@ -3,10 +3,14 @@ package pl.bartlomiej.marineunitmonitoring.security.authentication;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerWebExchange;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTService;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.service.AuthenticationService;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserAuthDto;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
@@ -15,6 +19,9 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 
 import static org.springframework.http.HttpStatus.OK;
+import static pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil.buildResponse;
+import static pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil.buildResponseModel;
+import static reactor.core.publisher.Mono.just;
 
 @RestController
 @RequestMapping("/v1/authentication")
@@ -52,20 +59,21 @@ public class AuthenticationController {
 
     // GET - refreshAccessToken(String refreshToken)
 
-    // todo test
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
-    @GetMapping("/invalidate/{token}")
-    public Mono<ResponseEntity<ResponseModel<String>>> invalidateToken(@PathVariable String token) {
-        return Mono.just(
-                ControllerResponseUtil.buildResponse(
+    @GetMapping("/invalidateToken")
+    public Mono<ResponseEntity<ResponseModel<Void>>> invalidateToken(ServerWebExchange exchange) {
+        return jwtService.invalidate(
+                jwtService.extract(exchange)
+        ).then(just(
+                buildResponse(
                         OK,
-                        ControllerResponseUtil.buildResponseModel(
-                                "Invalidated token successfully.",
+                        buildResponseModel(
+                                "Token has been successfully invalidated.",
                                 OK,
-                                jwtService.invalidate(token),
-                                "invalidatedToken"
+                                null,
+                                null
                         )
                 )
-        );
+        ));
     }
 }

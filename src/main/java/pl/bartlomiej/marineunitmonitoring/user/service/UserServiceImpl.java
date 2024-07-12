@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.RegisterBasedUserNotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.UniqueEmailException;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTServiceImpl;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import static java.util.List.of;
 import static pl.bartlomiej.marineunitmonitoring.user.nested.Role.SIGNED;
 import static reactor.core.publisher.Mono.error;
+import static reactor.core.publisher.Mono.just;
 
 @Slf4j
 @Service
@@ -65,15 +66,13 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public Mono<Void> deleteUser(String id) {
-        return mongoUserRepository.findById(id)
-                .switchIfEmpty(error(NotFoundException::new))
-                .flatMap(mongoUserRepository::delete);
+        return this.isUserExists(id)
+                .flatMap(exists -> mongoUserRepository.deleteById(id));
     }
 
     public Mono<Boolean> isUserExists(String id) {
-        return mongoUserRepository.findById(id)
-                .map(user -> true)
-                .switchIfEmpty(error(NotFoundException::new));
+        return mongoUserRepository.existsById(id)
+                .flatMap(exists -> exists ? just(true) : error(NotFoundException::new));
     }
 
     @Override
@@ -118,7 +117,7 @@ public class UserServiceImpl implements UserService {
     private Mono<User> processUserCreation(String id, String username, String email, String tokenIssuer) {
         log.info("Processing authentication flow user creation.");
         if (tokenIssuer.equals(JWTServiceImpl.TOKEN_ISSUER)) {
-            return Mono.error(RegisterBasedUserNotFoundException::new);
+            return Mono.error(RegisterBasedUserNotFoundException::new); // todo handle in security exhandler (authex inheritor)
         }
         log.info("Creating OAuth2 based user.");
         return mongoUserRepository.save(

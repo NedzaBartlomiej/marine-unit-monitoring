@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.JWSKeySelectorConfig;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.properties.MultiProvidersJWSKeySelectorProperties;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.properties.Provider;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTService;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTServiceImpl;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl;
 
 import java.net.URL;
 import java.security.Key;

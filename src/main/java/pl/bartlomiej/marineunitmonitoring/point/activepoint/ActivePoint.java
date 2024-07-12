@@ -13,7 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "active_points")
 public class ActivePoint {
     private String id;
-    private Long mmsi;
+    private Long mmsi; // todo replace mmsi to be an id value
     private String name;
 
     public ActivePoint(Long mmsi, String name) {

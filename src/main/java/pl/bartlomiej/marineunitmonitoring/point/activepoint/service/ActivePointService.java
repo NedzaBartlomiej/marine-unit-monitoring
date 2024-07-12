@@ -13,7 +13,7 @@ public interface ActivePointService {
 
     Mono<Void> addActivePoint(ActivePoint activePoint);
 
-    Mono<Void> isPointActive(Long mmsi);
+    Mono<Boolean> isPointActive(Long mmsi);
 
     Mono<String> getName(Long mmsi);
 }
