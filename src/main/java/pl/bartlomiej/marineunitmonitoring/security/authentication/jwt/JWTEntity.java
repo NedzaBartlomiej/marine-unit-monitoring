@@ -12,5 +12,5 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @Document(collection = "jwt_blacklist")
 public class JWTEntity {
-    private String jti;
+    private String id;
 }

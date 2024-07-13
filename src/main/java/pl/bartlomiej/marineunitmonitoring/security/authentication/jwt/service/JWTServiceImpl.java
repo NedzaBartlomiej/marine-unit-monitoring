@@ -46,7 +46,14 @@ public class JWTServiceImpl implements JWTService {
         return this.buildToken(uid, refreshTokenCustomClaims, REFRESH_TOKEN_EXPIRATION_TIME);
     }
 
-    // todo test
+    @Override
+    public String refreshAccessToken(String token) {
+        // verify refreshToken - write handling in globalAdvice
+        // get user by token subject
+        // this.createAccessToken()
+        return "";
+    }
+
     @Override
     public Mono<Void> invalidate(String token) {
         Claims claims = this.extractClaims(token);

@@ -9,7 +9,8 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class ResponseModelServerAuthenticationEntryPoint extends ResponseModelServerExceptionHandler implements ServerAuthenticationEntryPoint {
-    protected ResponseModelServerAuthenticationEntryPoint(ObjectMapper objectMapper) {
+
+    public ResponseModelServerAuthenticationEntryPoint(ObjectMapper objectMapper) {
         super(objectMapper);
     }
 

@@ -53,6 +53,6 @@ public class MultiProvidersJWSKeySelector implements JWTClaimsSetAwareJWSKeySele
                         provider.issuerUri().equals(issuer)
                 ).map(Provider::jwksUri)
                 .findFirst()
-                .orElseThrow(); // todo handle it (for now 500 status is returned)
+                .orElseThrow(); // todo handle it (jwks url for provided provider not found)
     }
 }

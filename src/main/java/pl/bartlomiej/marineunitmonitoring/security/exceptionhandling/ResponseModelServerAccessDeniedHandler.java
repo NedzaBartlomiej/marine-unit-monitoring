@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class ResponseModelServerAccessDeniedHandler extends ResponseModelServerExceptionHandler implements ServerAccessDeniedHandler {
-    protected ResponseModelServerAccessDeniedHandler(ObjectMapper objectMapper) {
+    public ResponseModelServerAccessDeniedHandler(ObjectMapper objectMapper) {
         super(objectMapper);
     }
 

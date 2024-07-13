@@ -58,6 +58,23 @@ public class AuthenticationController {
     }
 
     // GET - refreshAccessToken(String refreshToken)
+    @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
+    @GetMapping("/refreshAccessToken")
+    public Mono<ResponseEntity<ResponseModel<String>>> refreshAccessToken(ServerWebExchange exchange) {
+        return just(
+                buildResponse(
+                        OK,
+                        buildResponseModel(
+                                "Token has been refreshed successfully.",
+                                OK,
+                                jwtService.refreshAccessToken(
+                                        jwtService.extract(exchange)
+                                ),
+                                "refreshedAccessToken"
+                        )
+                )
+        );
+    }
 
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
     @GetMapping("/invalidateToken")

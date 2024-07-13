@@ -117,7 +117,7 @@ public class UserServiceImpl implements UserService {
     private Mono<User> processUserCreation(String id, String username, String email, String tokenIssuer) {
         log.info("Processing authentication flow user creation.");
         if (tokenIssuer.equals(JWTServiceImpl.TOKEN_ISSUER)) {
-            return Mono.error(RegisterBasedUserNotFoundException::new); // todo handle in security exhandler (authex inheritor)
+            return Mono.error(RegisterBasedUserNotFoundException::new);
         }
         log.info("Creating OAuth2 based user.");
         return mongoUserRepository.save(

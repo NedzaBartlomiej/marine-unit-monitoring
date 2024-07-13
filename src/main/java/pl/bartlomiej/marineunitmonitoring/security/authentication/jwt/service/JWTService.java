@@ -11,6 +11,8 @@ public interface JWTService {
 
     String createRefreshToken(String uid, String email);
 
+    String refreshAccessToken(String token);
+
     Mono<Void> invalidate(String token);
 
     Mono<Boolean> isBlacklisted(String jti);
