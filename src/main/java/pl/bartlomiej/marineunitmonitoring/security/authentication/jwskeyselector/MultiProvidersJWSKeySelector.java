@@ -7,6 +7,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.JWTClaimsSetAwareJWSKeySelector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import pl.bartlomiej.marineunitmonitoring.common.error.JWKsUrlNotFoundException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.JWSKeySelectorConfig;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.properties.MultiProvidersJWSKeySelectorProperties;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.properties.Provider;
@@ -39,9 +40,7 @@ public class MultiProvidersJWSKeySelector implements JWTClaimsSetAwareJWSKeySele
         }
 
         log.info("Attempting to return key set for OAuth2 issuer.");
-        var selector = jwsKeySelectorConfig.getJWSKeySelector(
-                this.getJwksUrl(jwtClaimsSet.getIssuer())
-        );
+        var selector = jwsKeySelectorConfig.getJWSKeySelector(this.getJwksUrl(jwtClaimsSet.getIssuer()));
         log.info("Returning key set.");
         return selector.selectJWSKeys(jwsHeader, securityContext);
     }
@@ -49,10 +48,9 @@ public class MultiProvidersJWSKeySelector implements JWTClaimsSetAwareJWSKeySele
     private URL getJwksUrl(String issuer) {
         log.info("Recognising token provider and returning dependent JWKs url.");
         return keySelectorProperties.providers().stream()
-                .filter(provider ->
-                        provider.issuerUri().equals(issuer)
-                ).map(Provider::jwksUri)
+                .filter(provider -> provider.issuerUri().equals(issuer))
+                .map(Provider::jwksUri)
                 .findFirst()
-                .orElseThrow(); // todo handle it (jwks url for provided provider not found)
+                .orElseThrow(JWKsUrlNotFoundException::new);
     }
 }
