@@ -21,11 +21,8 @@ public class WebClientConfig {
     public static final long RETRY_REQUEST_DELAY = 250L;
     public static final long MAX_ATTEMPTS = 4L;
 
-    // todo refactor for open/closed principle
-
     @Bean
-    public WebClient webClient() {
-
+    public WebClient retryWebClient() {
         return WebClient
                 .builder()
                 .filter(this.buildRetryExchangeFilterFunction())
