@@ -41,7 +41,6 @@ import static reactor.core.publisher.Mono.error;
 @Slf4j
 public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
-    private static final int TRACK_HISTORY_SAVE_DELAY = 1000 * 60 * 5;
     private final AisService aisService;
     private final TrackedShipService trackedShipService;
     private final MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository;
@@ -120,7 +119,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 });
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = TRACK_HISTORY_SAVE_DELAY)
+    @Scheduled(initialDelay = 0, fixedDelayString = "${project-properties.scheduling-delays.in-ms.ship-tracking.saving}")
     public void saveTracksForTrackedShips() {
         this.getShipTracks()
                 .flatMap(this::saveNoStationaryTrack)

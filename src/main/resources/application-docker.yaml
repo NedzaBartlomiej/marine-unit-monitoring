@@ -12,12 +12,16 @@ project-properties:
     resource-server:
       multi-providers-jws-key-selector:
         providers:
-          -
-            issuer-uri: https://accounts.google.com
+          - issuer-uri: https://accounts.google.com
             jwks-uri: https://www.googleapis.com/oauth2/v3/certs
-          -
-            issuer-uri: https://www.facebook.com
+          - issuer-uri: https://www.facebook.com
             jwks-uri: https://limited.facebook.com/.well-known/oauth/openid/jwks/
   external-apis:
     ais-api:
       result-limit: 5
+  scheduling-delays:
+    in-ms:
+      ship-tracking:
+        saving: 300000
+      jwt-blacklist:
+        clearing: 86400000

@@ -9,6 +9,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
+import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.JWTType.ACCESS_TOKEN;
+import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.JWTType.REFRESH_TOKEN;
+
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
 
@@ -25,8 +28,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         var authenticationToken = new UsernamePasswordAuthenticationToken(id, password);
         return authenticationManager.authenticate(authenticationToken)
                 .map(ignoredAuthentication -> Map.of(
-                        "refreshToken", jwtService.createRefreshToken(id, email),
-                        "accessToken", jwtService.createAccessToken(id, email)
+                        REFRESH_TOKEN.getType(), jwtService.createRefreshToken(id, email),
+                        ACCESS_TOKEN.getType(), jwtService.createAccessToken(id, email)
                 ));
     }
 }

@@ -1,9 +1,11 @@
 package pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service;
 
+import io.jsonwebtoken.Claims;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.security.Key;
+import java.util.Map;
 
 public interface JWTService {
 
@@ -11,7 +13,7 @@ public interface JWTService {
 
     String createRefreshToken(String uid, String email);
 
-    String refreshAccessToken(String token);
+    Mono<Map<String, String>> refreshAccessToken(String refreshToken);
 
     Mono<Void> invalidate(String token);
 
@@ -19,7 +21,7 @@ public interface JWTService {
 
     String extract(ServerWebExchange exchange);
 
-    String getJti(String token);
+    Claims extractClaims(String token);
 
     Key getSigningKey();
 }

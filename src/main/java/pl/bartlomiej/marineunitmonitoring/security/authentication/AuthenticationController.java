@@ -43,13 +43,13 @@ public class AuthenticationController {
                 .flatMap(user -> authenticationService.authenticate(
                                         user.getId(), userAuthDto.getEmail(), userAuthDto.getPassword()
                                 )
-                                .map(tokensMap ->
+                                .map(tokens ->
                                         ControllerResponseUtil.buildResponse(
                                                 OK,
                                                 ControllerResponseUtil.buildResponseModel(
                                                         "Authenticated successfully.",
                                                         OK,
-                                                        tokensMap,
+                                                        tokens,
                                                         "authenticationTokens"
                                                 )
                                         )
@@ -57,20 +57,19 @@ public class AuthenticationController {
                 );
     }
 
-    // GET - refreshAccessToken(String refreshToken)
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
     @GetMapping("/refreshAccessToken")
-    public Mono<ResponseEntity<ResponseModel<String>>> refreshAccessToken(ServerWebExchange exchange) {
-        return just(
+    public Mono<ResponseEntity<ResponseModel<Map<String, String>>>> refreshAccessToken(ServerWebExchange exchange) {
+        return jwtService.refreshAccessToken(
+                jwtService.extract(exchange)
+        ).map(tokens ->
                 buildResponse(
                         OK,
                         buildResponseModel(
-                                "Token has been refreshed successfully.",
+                                "Token has been refreshed successfully. Refresh token has been rotated.",
                                 OK,
-                                jwtService.refreshAccessToken(
-                                        jwtService.extract(exchange)
-                                ),
-                                "refreshedAccessToken"
+                                tokens,
+                                "authenticationTokens"
                         )
                 )
         );
