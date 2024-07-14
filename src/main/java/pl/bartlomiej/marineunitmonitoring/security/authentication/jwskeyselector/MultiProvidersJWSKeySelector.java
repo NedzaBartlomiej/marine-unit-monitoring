@@ -7,7 +7,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.JWTClaimsSetAwareJWSKeySelector;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import pl.bartlomiej.marineunitmonitoring.common.error.JWKsUrlNotFoundException;
+import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.JWKsUrlNotFoundException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.JWSKeySelectorConfig;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.properties.MultiProvidersJWSKeySelectorProperties;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.properties.Provider;

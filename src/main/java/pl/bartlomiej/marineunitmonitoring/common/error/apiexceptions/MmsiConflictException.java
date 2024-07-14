@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.common.error;
+package pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions;
 
 public class MmsiConflictException extends RuntimeException {
     public MmsiConflictException(String message) {

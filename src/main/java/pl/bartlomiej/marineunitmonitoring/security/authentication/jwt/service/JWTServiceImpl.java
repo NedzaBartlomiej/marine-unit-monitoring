@@ -12,7 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
-import pl.bartlomiej.marineunitmonitoring.common.error.InvalidTokenException;
+import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.InvalidTokenException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTEntity;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.MongoJWTEntityRepository;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;

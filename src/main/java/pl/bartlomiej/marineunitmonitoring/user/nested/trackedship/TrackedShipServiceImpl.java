@@ -3,8 +3,8 @@ package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException;
-import pl.bartlomiej.marineunitmonitoring.common.error.NoContentException;
+import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException;
+import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
@@ -13,8 +13,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 
-import static pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException.Message.INVALID_SHIP;
-import static pl.bartlomiej.marineunitmonitoring.common.error.MmsiConflictException.Message.SHIP_IS_ALREADY_TRACKED;
+import static pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException.Message.INVALID_SHIP;
+import static pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException.Message.SHIP_IS_ALREADY_TRACKED;
 import static reactor.core.publisher.Flux.error;
 
 @Service

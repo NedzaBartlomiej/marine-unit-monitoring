@@ -4,7 +4,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
-import pl.bartlomiej.marineunitmonitoring.common.error.NotFoundException;
+import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

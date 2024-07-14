@@ -9,7 +9,7 @@ import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.security.oauth2.jwt.BadJwtException;
-import pl.bartlomiej.marineunitmonitoring.common.error.JWKsUrlNotFoundException;
+import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.JWKsUrlNotFoundException;
 import reactor.core.publisher.Mono;
 
 public class ReactiveJWTProcessorConverter implements Converter<JWT, Mono<JWTClaimsSet>> {
