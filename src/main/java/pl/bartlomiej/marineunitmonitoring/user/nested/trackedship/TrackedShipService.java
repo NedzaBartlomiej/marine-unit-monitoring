@@ -6,9 +6,9 @@ import reactor.core.publisher.Mono;
 public interface TrackedShipService {
     Flux<TrackedShip> getTrackedShips(String id);
 
-    Mono<TrackedShip> addTrackedShip(String id, Long mmsi);
+    Mono<TrackedShip> addTrackedShip(String id, String mmsi);
 
-    Mono<Void> removeTrackedShip(String id, Long mmsi);
+    Mono<Void> removeTrackedShip(String id, String mmsi);
 
-    Mono<Void> removeTrackedShip(Long mmsi);
+    Mono<Void> removeTrackedShip(String mmsi);
 }

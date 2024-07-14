@@ -119,7 +119,7 @@ public class UserController {
             ")"
     )
     @PostMapping("/tracked-ships/{mmsi}")
-    public Mono<ResponseEntity<ResponseModel<TrackedShip>>> addTrackedShip(Principal principal, @PathVariable Long mmsi) {
+    public Mono<ResponseEntity<ResponseModel<TrackedShip>>> addTrackedShip(Principal principal, @PathVariable String mmsi) {
         return userService.identifyUser(principal.getName())
                 .flatMap(id -> userTrackedShipService.addTrackedShip(id, mmsi)
                         .map(trackedShip ->
@@ -142,7 +142,7 @@ public class UserController {
             ")"
     )
     @DeleteMapping("/tracked-ships/{mmsi}")
-    public Mono<ResponseEntity<ResponseModel<Void>>> removeTrackedShip(Principal principal, @PathVariable Long mmsi) {
+    public Mono<ResponseEntity<ResponseModel<Void>>> removeTrackedShip(Principal principal, @PathVariable String mmsi) {
 
         return userService.identifyUser(principal.getName())
                 .flatMap(id -> userTrackedShipService.removeTrackedShip(id, mmsi)

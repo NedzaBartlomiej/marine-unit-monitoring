@@ -42,7 +42,7 @@ public class TrackedShipServiceImpl implements TrackedShipService {
 
     @Transactional
     @Override
-    public Mono<TrackedShip> addTrackedShip(String id, Long mmsi) {
+    public Mono<TrackedShip> addTrackedShip(String id, String mmsi) {
         return userService.isUserExists(id)
                 .then(activePointService.isPointActive(mmsi))
                 .then(this.isShipTrackedMono(id, mmsi, false))
@@ -55,7 +55,7 @@ public class TrackedShipServiceImpl implements TrackedShipService {
 
     @Transactional
     @Override
-    public Mono<Void> removeTrackedShip(String id, Long mmsi) {
+    public Mono<Void> removeTrackedShip(String id, String mmsi) {
         return userService.isUserExists(id)
                 .then(this.isShipTrackedMono(id, mmsi, true))
                 .then(customUserRepository.pullTrackedShip(id, mmsi));
@@ -63,18 +63,18 @@ public class TrackedShipServiceImpl implements TrackedShipService {
 
     @Transactional
     @Override
-    public Mono<Void> removeTrackedShip(Long mmsi) {
+    public Mono<Void> removeTrackedShip(String mmsi) {
         return this.isShipTrackedMono(mmsi, true)
                 .then(customUserRepository.pullTrackedShip(mmsi));
     }
 
 
-    private Mono<Void> isShipTrackedMono(String id, Long mmsi, boolean shouldNegate) {
+    private Mono<Void> isShipTrackedMono(String id, String mmsi, boolean shouldNegate) {
         return this.isShipTracked(id, mmsi)
                 .flatMap(this.processIsShipTrackedMono(shouldNegate));
     }
 
-    private Mono<Void> isShipTrackedMono(Long mmsi, boolean shouldNegate) {
+    private Mono<Void> isShipTrackedMono(String mmsi, boolean shouldNegate) {
         return this.isShipTracked(mmsi)
                 .flatMap(this.processIsShipTrackedMono(shouldNegate));
     }
@@ -94,12 +94,12 @@ public class TrackedShipServiceImpl implements TrackedShipService {
         };
     }
 
-    private Mono<Boolean> isShipTracked(String id, Long mmsi) {
+    private Mono<Boolean> isShipTracked(String id, String mmsi) {
         return customUserRepository.getTrackedShips(id)
                 .any(trackedShip -> trackedShip.getMmsi().equals(mmsi));
     }
 
-    private Mono<Boolean> isShipTracked(Long mmsi) {
+    private Mono<Boolean> isShipTracked(String mmsi) {
         return customUserRepository.getTrackedShips()
                 .any(trackedShip -> trackedShip.getMmsi().equals(mmsi));
     }

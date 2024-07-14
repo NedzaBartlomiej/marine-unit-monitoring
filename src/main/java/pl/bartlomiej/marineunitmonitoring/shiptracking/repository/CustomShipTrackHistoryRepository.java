@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface CustomShipTrackHistoryRepository {
-    Flux<ShipTrack> findByMmsiInAndReadingTimeBetween(List<Long> mmsis, LocalDateTime from, LocalDateTime to);
+    Flux<ShipTrack> findByMmsiInAndReadingTimeBetween(List<String> mmsis, LocalDateTime from, LocalDateTime to);
 
-    Mono<ShipTrack> getLatest(Long mmsi);
+    Mono<ShipTrack> getLatest(String mmsi);
 }

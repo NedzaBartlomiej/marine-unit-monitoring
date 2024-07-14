@@ -1,10 +1,10 @@
 package pl.bartlomiej.marineunitmonitoring.shiptracking;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -18,14 +18,13 @@ import static java.time.LocalDateTime.now;
 @Document(collection = "ship_track_history")
 public class ShipTrack {
 
-    @JsonIgnore
-    private String id;
-    private Long mmsi;
+    @Id
+    private String mmsi;
     private Double x;
     private Double y;
     private LocalDateTime readingTime = now();
 
-    ShipTrack(Long mmsi, Double x, Double y) {
+    ShipTrack(String mmsi, Double x, Double y) {
         this.mmsi = mmsi;
         this.x = x;
         this.y = y;

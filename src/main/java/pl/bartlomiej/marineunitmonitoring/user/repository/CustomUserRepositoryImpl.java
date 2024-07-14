@@ -41,7 +41,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     }
 
     @Override
-    public Mono<Void> pullTrackedShip(String id, Long mmsi) {
+    public Mono<Void> pullTrackedShip(String id, String mmsi) {
         return reactiveMongoTemplate
                 .updateFirst(
                         this.getIdValidQuery(id),
@@ -51,7 +51,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     }
 
     @Override
-    public Mono<Void> pullTrackedShip(Long mmsi) {
+    public Mono<Void> pullTrackedShip(String mmsi) {
         return reactiveMongoTemplate
                 .updateMulti(
                         new Query(),

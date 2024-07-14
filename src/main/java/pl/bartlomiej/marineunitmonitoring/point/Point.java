@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public record Point(
 
-        Long mmsi,
+        String mmsi,
         String name,
         Double pointX,
         Double pointY,

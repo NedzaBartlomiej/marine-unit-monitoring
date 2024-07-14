@@ -44,7 +44,7 @@ public class ShipTrackHistoryController {
                 .flatMapMany(id -> shipTrackHistoryService.getShipTrackHistory(id, from, to)
                         .map(response ->
                                 ServerSentEvent.<ResponseModel<ShipTrack>>builder()
-                                        .id(response.getId())
+                                        .id(response.getMmsi())
                                         .event("NEW_SHIP_TRACK_EVENT")
                                         .data(
                                                 ResponseModel.<ShipTrack>builder()

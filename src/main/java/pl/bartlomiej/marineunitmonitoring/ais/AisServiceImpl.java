@@ -1,7 +1,6 @@
 package pl.bartlomiej.marineunitmonitoring.ais;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -48,7 +47,7 @@ public class AisServiceImpl implements AisService {
     }
 
     @Override
-    public Flux<JsonNode> fetchShipsByIdentifiers(List<Long> identifiers) {
+    public Flux<JsonNode> fetchShipsByIdentifiers(List<String> identifiers) {
         return aisApiAuthTokenProvider.getAisAuthToken()
                 .flatMapMany(token -> webClient
                         .post()

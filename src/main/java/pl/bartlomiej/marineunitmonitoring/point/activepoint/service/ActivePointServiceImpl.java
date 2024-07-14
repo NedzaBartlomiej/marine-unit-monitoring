@@ -28,7 +28,7 @@ public class ActivePointServiceImpl implements ActivePointService {
     }
 
     @Override
-    public Mono<List<Long>> getMmsis() {
+    public Mono<List<String>> getMmsis() {
         return activePointRepository.findAll()
                 .switchIfEmpty(error(new MmsiConflictException("No active points found.")))
                 .map(ActivePoint::getMmsi)
@@ -36,14 +36,14 @@ public class ActivePointServiceImpl implements ActivePointService {
     }
 
     @Override
-    public Mono<Void> removeActivePoint(Long mmsi) {
+    public Mono<Void> removeActivePoint(String mmsi) {
         return this.isPointActive(mmsi)
-                .flatMap(exists -> activePointRepository.deleteByMmsi(mmsi));
+                .flatMap(exists -> activePointRepository.deleteById(mmsi));
     }
 
     @Override
     public Mono<Void> addActivePoint(ActivePoint activePoint) {
-        return activePointRepository.existsByMmsi(activePoint.getMmsi())
+        return activePointRepository.existsById(activePoint.getMmsi())
                 .flatMap(exists -> {
                     if (exists) {
                         log.warn("Point already exists.");
@@ -60,7 +60,7 @@ public class ActivePointServiceImpl implements ActivePointService {
         return from(aisService.fetchLatestShips()
                 .flatMap(aisShip -> this.addActivePoint(
                                 new ActivePoint(
-                                        aisShip.properties().mmsi(),
+                                        aisShip.properties().mmsi().toString(),
                                         aisShip.properties().name()
                                 )
                         )
@@ -69,16 +69,16 @@ public class ActivePointServiceImpl implements ActivePointService {
     }
 
     @Override
-    public Mono<Boolean> isPointActive(Long mmsi) {
-        return activePointRepository.existsByMmsi(mmsi)
+    public Mono<Boolean> isPointActive(String mmsi) {
+        return activePointRepository.existsById(mmsi)
                 .flatMap(exists -> exists
                         ? just(true)
                         : error(new MmsiConflictException(INVALID_SHIP.message)));
     }
 
     @Override
-    public Mono<String> getName(Long mmsi) {
-        return activePointRepository.getByMmsi(mmsi)
+    public Mono<String> getName(String mmsi) {
+        return activePointRepository.findById(mmsi)
                 .map(ActivePoint::getName)
                 .switchIfEmpty(error(new MmsiConflictException(INVALID_SHIP.message)));
     }

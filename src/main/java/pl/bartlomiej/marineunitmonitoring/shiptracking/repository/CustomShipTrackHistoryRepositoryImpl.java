@@ -30,7 +30,7 @@ public class CustomShipTrackHistoryRepositoryImpl implements CustomShipTrackHist
     }
 
     @Override
-    public Flux<ShipTrack> findByMmsiInAndReadingTimeBetween(List<Long> mmsis, LocalDateTime from, LocalDateTime to) {
+    public Flux<ShipTrack> findByMmsiInAndReadingTimeBetween(List<String> mmsis, LocalDateTime from, LocalDateTime to) {
         Query q = new Query().addCriteria(
                 Criteria
                         .where(MMSI.fieldName).in(mmsis)
@@ -40,7 +40,7 @@ public class CustomShipTrackHistoryRepositoryImpl implements CustomShipTrackHist
     }
 
     @Override
-    public Mono<ShipTrack> getLatest(Long mmsi) {
+    public Mono<ShipTrack> getLatest(String mmsi) {
         Query q = new Query();
         q.addCriteria(where(MMSI.fieldName).is(mmsi));
         q.with(by(DESC, READING_TIME.fieldName));

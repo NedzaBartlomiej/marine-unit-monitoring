@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class TrackedShip {
 
-    private Long mmsi;
+    private String mmsi;
 
     private String name;
 }

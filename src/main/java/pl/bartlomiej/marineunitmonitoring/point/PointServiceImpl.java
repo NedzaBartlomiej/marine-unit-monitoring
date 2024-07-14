@@ -46,7 +46,7 @@ public class PointServiceImpl implements PointService {
         return this.getShipDestinationCoordinates(aisShip)
                 .map(position ->
                         new Point(
-                                aisShip.properties().mmsi(),
+                                aisShip.properties().mmsi().toString(),
                                 mayNullName,
                                 aisShip.geometry().coordinates().get(X_COORDINATE_INDEX),
                                 aisShip.geometry().coordinates().get(Y_COORDINATE_INDEX),

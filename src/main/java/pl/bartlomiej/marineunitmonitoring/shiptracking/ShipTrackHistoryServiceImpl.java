@@ -141,13 +141,13 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 .onErrorResume(t -> mongoShipTrackHistoryRepository.save(shipTrack).then());
     }
 
-    public Mono<Void> clearShipHistory(Long mmsi) {
-        return mongoShipTrackHistoryRepository.existsByMmsi(mmsi)
+    public Mono<Void> clearShipHistory(String mmsi) {
+        return mongoShipTrackHistoryRepository.existsById(mmsi)
                 .flatMap(exists -> {
                     if (!exists) {
                         return error(new NotFoundException());
                     }
-                    return mongoShipTrackHistoryRepository.deleteByMmsi(mmsi);
+                    return mongoShipTrackHistoryRepository.deleteById(mmsi);
                 });
     }
 
@@ -162,7 +162,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                 .flatMap(this::mapToShipTrack);
     }
 
-    private Mono<List<Long>> getShipMmsisToTrack() {
+    private Mono<List<String>> getShipMmsisToTrack() {
         return activePointService.getMmsis()
                 .doOnError(error -> log.error("Something go wrong when getting mmsis to track - {}",
                         error.getMessage())
@@ -176,7 +176,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
         return just(
                 new ShipTrack(
-                        ship.get(MMSI.fieldName).asLong(),
+                        ship.get(MMSI.fieldName).asText(),
                         ship.get(LONGITUDE).asDouble(),
                         ship.get(LATITUDE).asDouble()
                 )

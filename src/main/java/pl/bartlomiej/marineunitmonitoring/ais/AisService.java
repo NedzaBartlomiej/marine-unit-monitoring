@@ -8,5 +8,5 @@ import java.util.List;
 public interface AisService {
     Flux<AisShip> fetchLatestShips();
 
-    Flux<JsonNode> fetchShipsByIdentifiers(List<Long> identifiers);
+    Flux<JsonNode> fetchShipsByIdentifiers(List<String> identifiers);
 }

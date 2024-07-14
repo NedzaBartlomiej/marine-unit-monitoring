@@ -9,9 +9,9 @@ public interface CustomUserRepository {
 
     Mono<TrackedShip> pushTrackedShip(String id, TrackedShip trackedShip);
 
-    Mono<Void> pullTrackedShip(String id, Long mmsi);
+    Mono<Void> pullTrackedShip(String id, String mmsi);
 
-    Mono<Void> pullTrackedShip(Long mmsi);
+    Mono<Void> pullTrackedShip(String mmsi);
 
     Flux<TrackedShip> getTrackedShips(String id);
 

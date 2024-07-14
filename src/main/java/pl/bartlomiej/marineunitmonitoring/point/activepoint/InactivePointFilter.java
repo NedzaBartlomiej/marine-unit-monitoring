@@ -31,7 +31,7 @@ public class InactivePointFilter {
         this.trackedShipService = trackedShipService;
     }
 
-    public Mono<Void> filter(List<Long> activeMmsis) {
+    public Mono<Void> filter(List<String> activeMmsis) {
         return activePointService.getMmsis()
                 .flatMap(actualMmsis -> {
 
@@ -40,7 +40,7 @@ public class InactivePointFilter {
                     }
 
                     // exclude matching mmsis and detailing inactive mmsis
-                    List<Long> inactiveMmsis = actualMmsis.stream()
+                    List<String> inactiveMmsis = actualMmsis.stream()
                             .filter(actualMmsi -> !activeMmsis.contains(actualMmsi))
                             .toList();
 

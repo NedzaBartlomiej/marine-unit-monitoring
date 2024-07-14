@@ -9,5 +9,5 @@ import java.util.List;
 public interface ShipTrackHistoryService {
     Flux<ShipTrack> getShipTrackHistory(String userId, LocalDateTime from, LocalDateTime to);
 
-    Mono<Void> clearShipHistory(Long mmsi);
+    Mono<Void> clearShipHistory(String mmsi);
 }
