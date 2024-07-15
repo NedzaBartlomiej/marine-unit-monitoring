@@ -18,4 +18,6 @@ public interface CustomUserRepository {
     Flux<TrackedShip> getTrackedShips();
 
     Mono<User> findByOpenId(String openId);
+
+    Mono<Void> updateIsVerified(String id, boolean isVerified);
 }

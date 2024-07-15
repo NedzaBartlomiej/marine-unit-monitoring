@@ -92,4 +92,6 @@ public class AuthenticationController {
                 )
         ));
     }
+
+    // todo verifyEmail()
 }

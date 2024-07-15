@@ -22,13 +22,15 @@ public class User {
     private String username;
     private String email;
     private String password;
+    private Boolean isVerified = false;
     private List<TrackedShip> trackedShips;
     private List<Role> roles;
 
-    public User(String username, String email, List<Role> roles, List<String> openIds) {
+    public User(String username, String email, List<Role> roles, List<String> openIds, Boolean isVerified) {
         this.username = username;
         this.email = email;
         this.roles = roles;
         this.openIds = openIds;
+        this.isVerified = isVerified;
     }
 }

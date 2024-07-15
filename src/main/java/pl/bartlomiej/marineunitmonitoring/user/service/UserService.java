@@ -11,6 +11,8 @@ public interface UserService {
 
     Mono<User> createUser(User user);
 
+    Mono<Void> verifyUser(String id);
+
     Mono<User> processAuthenticationFlowUser(String id, String username, String email, String tokenIssuer);
 
     Mono<Void> deleteUser(String id);

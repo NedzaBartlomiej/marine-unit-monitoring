@@ -6,8 +6,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
-import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.RegisterBasedUserNotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.UniqueEmailException;
+import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.RegisterBasedUserNotFoundException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
@@ -61,6 +61,12 @@ public class UserServiceImpl implements UserService {
                         return error(throwable);
                     }
                 });
+    }
+
+    @Transactional
+    @Override
+    public Mono<Void> verifyUser(String id) {
+        return customUserRepository.updateIsVerified(id, true);
     }
 
     @Transactional
@@ -125,7 +131,8 @@ public class UserServiceImpl implements UserService {
                         username,
                         email,
                         of(SIGNED),
-                        of(id)
+                        of(id),
+                        true
                 )
         );
     }

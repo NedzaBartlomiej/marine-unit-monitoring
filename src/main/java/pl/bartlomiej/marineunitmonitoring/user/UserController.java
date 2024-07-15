@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil;
+import pl.bartlomiej.marineunitmonitoring.security.emailverification.EmailVerificationService;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserDtoMapper;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserReadDto;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserSaveDto;
@@ -31,11 +32,13 @@ public class UserController {
     private final TrackedShipService userTrackedShipService;
     private final UserService userService;
     private final UserDtoMapper userDtoMapper;
+    private final EmailVerificationService emailVerificationService;
 
-    public UserController(TrackedShipService userTrackedShipService, UserService userService, UserDtoMapper userDtoMapper) {
+    public UserController(TrackedShipService userTrackedShipService, UserService userService, UserDtoMapper userDtoMapper, EmailVerificationService emailVerificationService) {
         this.userTrackedShipService = userTrackedShipService;
         this.userService = userService;
         this.userDtoMapper = userDtoMapper;
+        this.emailVerificationService = emailVerificationService;
     }
 
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
@@ -53,17 +56,21 @@ public class UserController {
                                                 "user"
                                         )
                                 )
-                        ));
+                        )
+                );
     }
 
     @PostMapping
     public Mono<ResponseEntity<ResponseModel<UserReadDto>>> createUser(@RequestBody @Valid UserSaveDto userSaveDto) {
         return userService.createUser(userDtoMapper.mapFrom(userSaveDto))
+                .flatMap(user -> emailVerificationService.issueVerificationToken(user.getId())
+                        .then(just(user))
+                )
                 .map(user ->
                         buildResponse(
                                 CREATED,
                                 buildResponseModel(
-                                        null,
+                                        "Your account is currently unavailable, you need to verify your email address, the message has been sent to your mailbox.",
                                         CREATED,
                                         userDtoMapper.mapToReadDto(user),
                                         "user"
