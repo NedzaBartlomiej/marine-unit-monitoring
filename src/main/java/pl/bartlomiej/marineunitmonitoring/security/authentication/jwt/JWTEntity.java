@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -15,5 +15,5 @@ import java.util.Date;
 @Document(collection = "jwt_blacklist")
 public class JWTEntity {
     private String id;
-    private Date expiration;
+    private LocalDateTime expiration;
 }

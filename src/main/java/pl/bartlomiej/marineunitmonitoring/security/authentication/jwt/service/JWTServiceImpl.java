@@ -19,6 +19,8 @@ import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
 
 import java.security.Key;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -32,11 +34,14 @@ import static reactor.core.publisher.Mono.just;
 @Slf4j
 @Service
 public class JWTServiceImpl implements JWTService {
-    public static final String TOKEN_ISSUER = "marine-unit-monitoring";
-    public static final int REFRESH_TOKEN_EXPIRATION_TIME = 1000 * 60 * 60 * 24;
-    public static final int ACCESS_TOKEN_EXPIRATION_TIME = 1000 * 60 * 60;
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String APP_AUDIENCE_URI = "http://localhost:8080, http://localhost:3306";
+    @Value("${project-properties.security.jwt.issuer}")
+    public static String TOKEN_ISSUER;
+    @Value("${project-properties.expiration-times.jwt.refresh-token}")
+    public static int refreshTokenExpirationTime;
+    @Value("${project-properties.expiration-times.jwt.access-token}")
+    public static int accessTokenExpirationTime;
     private final MongoJWTEntityRepository mongoJWTEntityRepository;
     private final UserService userService;
     @Value("${secrets.jwt.secret-key}")
@@ -52,7 +57,7 @@ public class JWTServiceImpl implements JWTService {
                 EMAIL.getClaim(), email,
                 TYPE.getClaim(), ACCESS_TOKEN.getType()
         );
-        return this.buildToken(uid, accessTokenCustomClaims, ACCESS_TOKEN_EXPIRATION_TIME);
+        return this.buildToken(uid, accessTokenCustomClaims, accessTokenExpirationTime);
     }
 
     public String createRefreshToken(String uid, String email) {
@@ -60,7 +65,7 @@ public class JWTServiceImpl implements JWTService {
                 EMAIL.getClaim(), email,
                 TYPE.getClaim(), REFRESH_TOKEN.getType()
         );
-        return this.buildToken(uid, refreshTokenCustomClaims, REFRESH_TOKEN_EXPIRATION_TIME);
+        return this.buildToken(uid, refreshTokenCustomClaims, refreshTokenExpirationTime);
     }
 
     @Override
@@ -86,7 +91,13 @@ public class JWTServiceImpl implements JWTService {
     public Mono<Void> invalidate(String token) {
         Claims claims = this.extractClaims(token);
         // here there is no checking isExist, because it will be checked in the JWTBlacklistVerifier
-        return mongoJWTEntityRepository.save(new JWTEntity(claims.getId(), claims.getExpiration())
+        return mongoJWTEntityRepository.save(
+                new JWTEntity(claims.getId(),
+                        LocalDateTime.ofInstant(
+                                claims.getExpiration().toInstant(),
+                                ZoneId.systemDefault()
+                        )
+                )
         ).then();
     }
 
@@ -127,7 +138,7 @@ public class JWTServiceImpl implements JWTService {
     public void clearJwtBlacklist() {
         log.info("Clearing the JWT blacklist of expired tokens.");
         mongoJWTEntityRepository.findAll()
-                .filter(jwtEntity -> new Date().after(jwtEntity.getExpiration()))
+                .filter(jwtEntity -> LocalDateTime.now().isAfter(jwtEntity.getExpiration()))
                 .flatMap(mongoJWTEntityRepository::delete)
                 .doOnNext(jwtEntity -> log.info("Deleted expired token from blacklist."))
                 .subscribe();

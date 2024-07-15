@@ -59,6 +59,11 @@ public class RestControllerGlobalErrorHandler {
         return buildErrorResponse(e.getMessage(), INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(AccountAlreadyVerifiedException.class)
+    public ResponseEntity<ResponseModel<Void>> handleAccountAlreadyVerifiedException(AccountAlreadyVerifiedException e) {
+        return buildErrorResponse(e.getMessage(), CONFLICT);
+    }
+
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<ResponseModel<Void>> handleJwtException(JwtException e) {
         log.error("Invalid JWT: {}", e.getMessage());

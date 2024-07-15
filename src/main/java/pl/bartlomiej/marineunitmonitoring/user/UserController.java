@@ -6,7 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil;
-import pl.bartlomiej.marineunitmonitoring.security.emailverification.EmailVerificationService;
+import pl.bartlomiej.marineunitmonitoring.security.emailverification.service.EmailVerificationService;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserDtoMapper;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserReadDto;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserSaveDto;
@@ -63,10 +63,10 @@ public class UserController {
     @PostMapping
     public Mono<ResponseEntity<ResponseModel<UserReadDto>>> createUser(@RequestBody @Valid UserSaveDto userSaveDto) {
         return userService.createUser(userDtoMapper.mapFrom(userSaveDto))
-                .flatMap(user -> emailVerificationService.issueVerificationToken(user.getId())
+                .flatMap(user -> emailVerificationService
+                        .issueVerificationToken(user.getId())
                         .then(just(user))
-                )
-                .map(user ->
+                ).map(user ->
                         buildResponse(
                                 CREATED,
                                 buildResponseModel(
