@@ -1,10 +1,12 @@
 package pl.bartlomiej.marineunitmonitoring.security.emailverification.service;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.AccountAlreadyVerifiedException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.security.emailverification.EmailVerificationEntity;
@@ -16,10 +18,10 @@ import reactor.core.publisher.Mono;
 import static reactor.core.publisher.Mono.error;
 import static reactor.core.publisher.Mono.just;
 
-@Slf4j
 @Service // todo - test
 public class EmailVerificationServiceImpl implements EmailVerificationService {
 
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private final MongoEmailVerificationEntityRepository mongoEmailVerificationEntityRepository;
     private final CustomEmailVerificationEntityRepository customEmailVerificationEntityRepository;
     private final UserService userService;
@@ -62,7 +64,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
                         userService.getUser(emailVerificationEntity.getUid())
                 ).flatMap(user -> {
                     log.info("Checking whether user with an expired verification token has been verified.");
-                    if (!user.getIsVerified()) {
+                    if (!user.getVerified()) {
                         log.info("Deleting an unverified user.");
                         return userService.deleteUser(user.getId());
                     }

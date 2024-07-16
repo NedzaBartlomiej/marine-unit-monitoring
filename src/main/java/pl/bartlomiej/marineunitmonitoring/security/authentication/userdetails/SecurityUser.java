@@ -49,6 +49,6 @@ public class SecurityUser implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.getIsVerified();
+        return user.getVerified();
     }
 }

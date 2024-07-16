@@ -1,8 +1,10 @@
 package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
@@ -18,9 +20,9 @@ import static pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.Mmsi
 import static reactor.core.publisher.Flux.error;
 
 @Service
-@Slf4j
 public class TrackedShipServiceImpl implements TrackedShipService {
 
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private final UserService userService;
     private final CustomUserRepository customUserRepository;
     private final ActivePointService activePointService;
@@ -96,11 +98,11 @@ public class TrackedShipServiceImpl implements TrackedShipService {
 
     private Mono<Boolean> isShipTracked(String id, String mmsi) {
         return customUserRepository.getTrackedShips(id)
-                .any(trackedShip -> trackedShip.getMmsi().equals(mmsi));
+                .any(trackedShip -> trackedShip.mmsi().equals(mmsi));
     }
 
     private Mono<Boolean> isShipTracked(String mmsi) {
         return customUserRepository.getTrackedShips()
-                .any(trackedShip -> trackedShip.getMmsi().equals(mmsi));
+                .any(trackedShip -> trackedShip.mmsi().equals(mmsi));
     }
 }

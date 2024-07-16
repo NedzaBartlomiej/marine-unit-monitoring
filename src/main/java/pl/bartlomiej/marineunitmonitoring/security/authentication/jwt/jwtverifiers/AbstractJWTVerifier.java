@@ -2,16 +2,18 @@ package pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifi
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import reactor.core.publisher.Mono;
 
-@Slf4j
 public abstract class AbstractJWTVerifier {
 
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private static final String BEARER_REGEX = "^Bearer\\s+(\\S+)";
     private final JWTService jwtService;
 

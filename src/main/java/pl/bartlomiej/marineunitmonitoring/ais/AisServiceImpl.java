@@ -1,7 +1,6 @@
 package pl.bartlomiej.marineunitmonitoring.ais;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -15,7 +14,6 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.MMSI;
 
 @Service
-@Slf4j
 public class AisServiceImpl implements AisService {
 
     private static final String BEARER = "Bearer ";

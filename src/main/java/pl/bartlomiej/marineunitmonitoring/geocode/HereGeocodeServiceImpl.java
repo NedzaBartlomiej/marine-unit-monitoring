@@ -4,22 +4,24 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import reactor.core.publisher.Flux;
 
 import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.ADDRESS_COORDS_CACHE_NAME;
 
 @Service
-@Slf4j
 public class HereGeocodeServiceImpl implements GeocodeService {
 
     public static final String LAT = "lat";
     public static final String LNG = "lng";
     public static final int FIRST_GEOCODE_SUGGESTION = 0;
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private final WebClient webClient;
     @Value("${secrets.geocode-api.api-key}")
     private String geocodeApiKey;

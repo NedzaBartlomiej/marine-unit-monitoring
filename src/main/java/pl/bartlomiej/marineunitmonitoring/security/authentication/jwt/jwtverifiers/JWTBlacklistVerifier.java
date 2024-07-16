@@ -1,7 +1,8 @@
 package pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifiers;
 
 import io.jsonwebtoken.Claims;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.ServerAuthenticationEntryPointFailureHandler;
@@ -10,16 +11,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.InvalidTokenException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAuthenticationEntryPoint;
 import reactor.core.publisher.Mono;
 
-@Slf4j
 @Component
 public class JWTBlacklistVerifier extends AbstractJWTVerifier implements WebFilter {
 
-
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private final JWTService jwtService;
     private final ServerAuthenticationFailureHandler serverAuthenticationFailureHandler;
 

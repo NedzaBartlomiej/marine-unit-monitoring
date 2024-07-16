@@ -4,7 +4,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.InvalidTokenException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTEntity;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.MongoJWTEntityRepository;
@@ -31,9 +33,10 @@ import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.ser
 import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.JWTType.REFRESH_TOKEN;
 import static reactor.core.publisher.Mono.just;
 
-@Slf4j
 @Service
 public class JWTServiceImpl implements JWTService {
+
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String APP_AUDIENCE_URI = "http://localhost:8080, http://localhost:3306";
     @Value("${project-properties.security.jwt.issuer}")

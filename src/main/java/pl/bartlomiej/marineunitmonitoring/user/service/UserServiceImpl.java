@@ -1,10 +1,12 @@
 package pl.bartlomiej.marineunitmonitoring.user.service;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.UniqueEmailException;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.RegisterBasedUserNotFoundException;
@@ -21,10 +23,10 @@ import static pl.bartlomiej.marineunitmonitoring.user.nested.Role.SIGNED;
 import static reactor.core.publisher.Mono.error;
 import static reactor.core.publisher.Mono.just;
 
-@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private final CustomUserRepository customUserRepository;
     private final MongoUserRepository mongoUserRepository;
     private final BCryptPasswordEncoder passwordEncoder;

@@ -1,13 +1,15 @@
 package pl.bartlomiej.marineunitmonitoring.ais.accesstoken;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -16,9 +18,9 @@ import static org.springframework.web.reactive.function.BodyInserters.fromFormDa
 import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.AIS_AUTH_TOKEN_CACHE_NAME;
 
 @Service
-@Slf4j
 public class BarentswatchAisApiTokenProvider implements AisApiAuthTokenProvider {
 
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private final WebClient webClient;
     @Value("${secrets.ais-api.auth.client-id}")
     private String clientId;

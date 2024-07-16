@@ -2,7 +2,8 @@ package pl.bartlomiej.marineunitmonitoring.security.exceptionhandling;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -10,6 +11,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.InvalidTokenException;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import reactor.core.publisher.Flux;
@@ -20,10 +22,10 @@ import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.HttpStatusCode.valueOf;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
-@Slf4j
 @Component
 public abstract class ResponseModelServerExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private final ObjectMapper objectMapper;
 
     protected ResponseModelServerExceptionHandler(ObjectMapper objectMapper) {

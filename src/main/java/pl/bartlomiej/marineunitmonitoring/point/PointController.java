@@ -1,7 +1,5 @@
 package pl.bartlomiej.marineunitmonitoring.point;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +17,6 @@ import static org.springframework.http.HttpStatus.OK;
 @RequestMapping("/v1/points")
 public class PointController {
 
-    private static final Logger log = LoggerFactory.getLogger(PointController.class);
     private final PointService pointService;
     private final ActivePointService activePointService;
     private final InactivePointFilter inactivePointFilter;

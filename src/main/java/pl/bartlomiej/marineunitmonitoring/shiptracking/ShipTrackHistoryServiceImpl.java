@@ -1,7 +1,8 @@
 package pl.bartlomiej.marineunitmonitoring.shiptracking;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.ChangeStreamEvent;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
@@ -12,6 +13,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.ais.AisService;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
@@ -38,9 +40,9 @@ import static reactor.core.publisher.Mono.empty;
 import static reactor.core.publisher.Mono.error;
 
 @Service
-@Slf4j
 public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private final AisService aisService;
     private final TrackedShipService trackedShipService;
     private final MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository;
@@ -69,7 +71,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     @Override
     public Flux<ShipTrack> getShipTrackHistory(String userId, LocalDateTime from, LocalDateTime to) {
         return trackedShipService.getTrackedShips(userId)
-                .map(TrackedShip::getMmsi)
+                .map(TrackedShip::mmsi)
                 .collectList()
                 .flatMapMany(mmsis -> {
 

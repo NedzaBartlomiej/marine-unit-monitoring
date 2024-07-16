@@ -1,10 +1,12 @@
 package pl.bartlomiej.marineunitmonitoring.point.activepoint.service;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.ais.AisService;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePoint;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.repository.MongoActivePointRepository;
@@ -15,10 +17,10 @@ import java.util.List;
 import static pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException.Message.INVALID_SHIP;
 import static reactor.core.publisher.Mono.*;
 
-@Slf4j
 @Service
 public class ActivePointServiceImpl implements ActivePointService {
 
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private final MongoActivePointRepository activePointRepository;
     private final AisService aisService;
 

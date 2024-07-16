@@ -1,7 +1,8 @@
 package pl.bartlomiej.marineunitmonitoring.common.error;
 
 import io.jsonwebtoken.JwtException;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -15,9 +16,10 @@ import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.SecurityErr
 import static java.util.Objects.requireNonNull;
 import static org.springframework.http.HttpStatus.*;
 
-@Slf4j
 @RestControllerAdvice
 public class RestControllerGlobalErrorHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
 
     private static ResponseEntity<ResponseModel<Void>> buildErrorResponse(String message, HttpStatus httpStatus) {
         return ResponseEntity.status(httpStatus).body(

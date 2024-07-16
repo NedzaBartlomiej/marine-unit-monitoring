@@ -1,8 +1,10 @@
 package pl.bartlomiej.marineunitmonitoring.point.activepoint;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrackHistoryService;
@@ -15,9 +17,9 @@ import static reactor.core.publisher.Mono.empty;
 import static reactor.core.publisher.Mono.error;
 
 @Component
-@Slf4j
 public class InactivePointFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private final ActivePointService activePointService;
     private final ShipTrackHistoryService shipTrackHistoryService;
     private final TrackedShipService trackedShipService;

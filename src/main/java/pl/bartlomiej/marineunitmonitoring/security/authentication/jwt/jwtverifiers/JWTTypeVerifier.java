@@ -1,13 +1,15 @@
 package pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifiers;
 
 import io.jsonwebtoken.Claims;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.server.PathContainer;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.InvalidTokenException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import reactor.core.publisher.Mono;
@@ -18,10 +20,10 @@ import java.util.stream.Collectors;
 import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.CommonCustomTokenClaim.TYPE;
 import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.JWTType.REFRESH_TOKEN;
 
-@Slf4j
 @Component
 public class JWTTypeVerifier extends AbstractJWTVerifier implements WebFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
     private final List<String> refreshTokenPaths = List.of(
             "/authentication/refreshAccessToken",
             "/authentication/invalidateToken"
