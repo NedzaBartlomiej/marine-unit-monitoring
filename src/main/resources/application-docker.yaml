@@ -36,3 +36,5 @@ project-properties:
   security:
     jwt:
       issuer: marine-unit-monitoring
+  app:
+    base-uri: http://localhost:8080

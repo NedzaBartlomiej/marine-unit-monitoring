@@ -2,6 +2,7 @@ package pl.bartlomiej.marineunitmonitoring.security.emailverification.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -9,9 +10,11 @@ import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.AccountAlreadyVerifiedException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
+import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
 import pl.bartlomiej.marineunitmonitoring.security.emailverification.EmailVerificationEntity;
 import pl.bartlomiej.marineunitmonitoring.security.emailverification.repository.CustomEmailVerificationEntityRepository;
 import pl.bartlomiej.marineunitmonitoring.security.emailverification.repository.MongoEmailVerificationEntityRepository;
+import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
 
@@ -22,14 +25,18 @@ import static reactor.core.publisher.Mono.just;
 public class EmailVerificationServiceImpl implements EmailVerificationService {
 
     private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    @Value("${project-properties.app.base-uri}")
+    private static String baseUri;
     private final MongoEmailVerificationEntityRepository mongoEmailVerificationEntityRepository;
     private final CustomEmailVerificationEntityRepository customEmailVerificationEntityRepository;
     private final UserService userService;
+    private final EmailService emailService;
 
-    public EmailVerificationServiceImpl(MongoEmailVerificationEntityRepository mongoEmailVerificationEntityRepository, CustomEmailVerificationEntityRepository customEmailVerificationEntityRepository, UserService userService) {
+    public EmailVerificationServiceImpl(MongoEmailVerificationEntityRepository mongoEmailVerificationEntityRepository, CustomEmailVerificationEntityRepository customEmailVerificationEntityRepository, UserService userService, EmailService emailService) {
         this.mongoEmailVerificationEntityRepository = mongoEmailVerificationEntityRepository;
         this.customEmailVerificationEntityRepository = customEmailVerificationEntityRepository;
         this.userService = userService;
+        this.emailService = emailService;
     }
 
     @Override
@@ -37,9 +44,11 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         return userService.getUser(uid)
                 .switchIfEmpty(error(NotFoundException::new))
                 .flatMap(user -> mongoEmailVerificationEntityRepository
-                        .save(new EmailVerificationEntity(uid)) // todo - sendEmail() -> maybe smth like interface EmailService -> VerificationEmailService etc.
-                )
-                .then();
+                        .save(new EmailVerificationEntity(uid))
+                        .flatMap(emailVerificationEntity ->
+                                this.sendVerificationEmail(user, emailVerificationEntity.getId())
+                        )
+                );
     }
 
     @Override
@@ -73,5 +82,21 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
                 })
                 .doOnError(error -> log.error("Some error occurred in flow: {}", error.getMessage()))
                 .subscribe();
+    }
+
+    private Mono<Void> sendVerificationEmail(User user, String token) {
+        return emailService.sendEmail(
+                user.getUsername(),
+                user.getEmail(),
+                this.buildVerificationMessage(this.buildVerificationUrl(token))
+        );
+    }
+
+    private String buildVerificationMessage(String verificationUrl) {
+        return "To verify your email click this link -> " + verificationUrl;
+    }
+
+    private String buildVerificationUrl(String token) {
+        return baseUri + "/v1/authentication/verifyEmail/" + token; // todo baseUri is null
     }
 }

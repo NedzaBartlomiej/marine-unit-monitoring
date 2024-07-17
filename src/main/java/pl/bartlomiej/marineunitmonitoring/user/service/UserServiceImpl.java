@@ -10,6 +10,7 @@ import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalError
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.UniqueEmailException;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.RegisterBasedUserNotFoundException;
+import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.UnverifiedUserException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
@@ -96,8 +97,18 @@ public class UserServiceImpl implements UserService {
     public Mono<User> processAuthenticationFlowUser(String id, String username, String email, String tokenIssuer) {
         log.info("Processing authentication flow user.");
         return mongoUserRepository.findByEmail(email)
+                .flatMap(this::isUserVerified)
                 .flatMap(user -> this.processUserOpenIds(user, id))
                 .switchIfEmpty(this.processUserCreation(id, username, email, tokenIssuer));
+    }
+
+    private Mono<User> isUserVerified(User user) {
+        return just(user)
+                .map(User::getVerified)
+                .flatMap(isVerified -> isVerified
+                        ? just(user)
+                        : error(UnverifiedUserException::new)
+                );
     }
 
     private Mono<User> processUserOpenIds(User user, String id) {

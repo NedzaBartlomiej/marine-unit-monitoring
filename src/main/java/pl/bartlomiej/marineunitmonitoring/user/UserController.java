@@ -62,7 +62,7 @@ public class UserController {
 
     @PostMapping
     public Mono<ResponseEntity<ResponseModel<UserReadDto>>> createUser(@RequestBody @Valid UserSaveDto userSaveDto) {
-        return userService.createUser(userDtoMapper.mapFrom(userSaveDto))
+        return userService.createUser(userDtoMapper.mapFrom(userSaveDto)) // todo - do some protection (when email sending go wrong, don't save user.)
                 .flatMap(user -> emailVerificationService
                         .issueVerificationToken(user.getId())
                         .then(just(user))

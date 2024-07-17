@@ -20,14 +20,15 @@ public class ReactiveJWTProcessorConverter implements Converter<JWT, Mono<JWTCla
         this.jwtProcessor = jwtProcessor;
     }
 
+    // todo - test
     @Override
     public Mono<JWTClaimsSet> convert(@NonNull JWT source) {
-        return Mono.just(source)
-                .handle((s, sink) -> {
-                    try {
-                        sink.next(jwtProcessor.process(s, null));
-                    } catch (BadJOSEException | JOSEException | JWKsUrlNotFoundException e) {
-                        sink.error(new BadJwtException(e.getMessage(), e));
+        return Mono.fromCallable(() -> jwtProcessor.process(source, null))
+                .onErrorMap(e -> {
+                    if (e instanceof BadJOSEException || e instanceof JOSEException || e instanceof JWKsUrlNotFoundException) {
+                        return new BadJwtException(e.getMessage(), e);
+                    } else {
+                        return e;
                     }
                 });
     }

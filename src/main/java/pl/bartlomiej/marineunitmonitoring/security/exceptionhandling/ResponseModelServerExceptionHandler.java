@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.InvalidTokenException;
+import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.UnverifiedUserException;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -41,6 +42,10 @@ public abstract class ResponseModelServerExceptionHandler {
             case BadCredentialsException ignoredBadCredentialsException -> {
                 return writeExchange(exchange,
                         buildErrorResponse(UNAUTHORIZED, SecurityError.UNAUTHORIZED_CREDENTIALS.getMessage()));
+            }
+            case UnverifiedUserException unverifiedUserException -> {
+                return writeExchange(exchange,
+                        buildErrorResponse(UNAUTHORIZED, unverifiedUserException.getMessage()));
             }
             case InvalidTokenException invalidTokenException -> {
                 return writeExchange(exchange,
