@@ -58,7 +58,7 @@ public class AuthenticationController {
     }
 
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
-    @GetMapping("/refreshAccessToken")
+    @GetMapping("/refresh-access-token")
     public Mono<ResponseEntity<ResponseModel<Map<String, String>>>> refreshAccessToken(ServerWebExchange exchange) {
         return jwtService.refreshAccessToken(
                 jwtService.extract(exchange)
@@ -76,7 +76,7 @@ public class AuthenticationController {
     }
 
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
-    @GetMapping("/invalidateToken")
+    @GetMapping("/invalidate-token")
     public Mono<ResponseEntity<ResponseModel<Void>>> invalidateToken(ServerWebExchange exchange) {
         return jwtService.invalidate(
                 jwtService.extract(exchange)
@@ -93,7 +93,7 @@ public class AuthenticationController {
         ));
     }
 
-    @GetMapping("/verifyEmail/{token}")
+    @GetMapping("/verify-email/{token}")
     public Mono<ResponseEntity<ResponseModel<Void>>> verifyEmail(@PathVariable String token) {
         return emailVerificationService.verify(token)
                 .then(just(

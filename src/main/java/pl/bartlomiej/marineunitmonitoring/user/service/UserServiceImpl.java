@@ -5,12 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.UniqueEmailException;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.RegisterBasedUserNotFoundException;
-import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.UnverifiedUserException;
+import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.UnverifiedAccountException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
@@ -50,7 +49,6 @@ public class UserServiceImpl implements UserService {
                 .switchIfEmpty(error(NotFoundException::new));
     }
 
-    @Transactional
     @Override
     public Mono<User> createUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -66,13 +64,11 @@ public class UserServiceImpl implements UserService {
                 });
     }
 
-    @Transactional
     @Override
     public Mono<Void> verifyUser(String id) {
         return customUserRepository.updateIsVerified(id, true);
     }
 
-    @Transactional
     @Override
     public Mono<Void> deleteUser(String id) {
         return this.isUserExists(id)
@@ -92,7 +88,6 @@ public class UserServiceImpl implements UserService {
                 .switchIfEmpty(error(NotFoundException::new));
     }
 
-    @Transactional
     @Override
     public Mono<User> processAuthenticationFlowUser(String id, String username, String email, String tokenIssuer) {
         log.info("Processing authentication flow user.");
@@ -107,7 +102,7 @@ public class UserServiceImpl implements UserService {
                 .map(User::getVerified)
                 .flatMap(isVerified -> isVerified
                         ? just(user)
-                        : error(UnverifiedUserException::new)
+                        : error(UnverifiedAccountException::new) // todo - set custom failureHandler in AuthWebFilter to properly handle exception with my custom handler
                 );
     }
 

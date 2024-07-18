@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono;
 public class EmailServiceImpl implements EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
-    private static final String issuer = "Marine-Unit-Monitoring";
 
     private final JavaMailSender javaMailSender;
 
@@ -21,11 +20,11 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    public Mono<Void> sendEmail(String receiverName, String receiverEmail, String message) {
+    public Mono<Void> sendEmail(String receiverEmail, String title, String message) {
+
         SimpleMailMessage mailMessage = new SimpleMailMessage();
 
-        mailMessage.setFrom(issuer);
-        mailMessage.setSubject(receiverName);
+        mailMessage.setSubject(title);
         mailMessage.setTo(receiverEmail);
         mailMessage.setText(message);
 

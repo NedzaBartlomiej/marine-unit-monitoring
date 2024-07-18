@@ -7,7 +7,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShip;
-import pl.bartlomiej.marineunitmonitoring.user.service.UserServiceImpl;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -89,8 +88,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         return reactiveMongoTemplate.updateFirst(
                 this.getIdValidQuery(id),
                 new Update().set("isVerified", true),
-                UserServiceImpl.class
+                User.class
         ).then();
     }
-
 }

@@ -19,8 +19,7 @@ public class ReactiveJWTProcessorConverter implements Converter<JWT, Mono<JWTCla
     public ReactiveJWTProcessorConverter(DefaultJWTProcessor<SecurityContext> jwtProcessor) {
         this.jwtProcessor = jwtProcessor;
     }
-
-    // todo - test
+    
     @Override
     public Mono<JWTClaimsSet> convert(@NonNull JWT source) {
         return Mono.fromCallable(() -> jwtProcessor.process(source, null))

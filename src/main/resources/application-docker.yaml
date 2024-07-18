@@ -8,6 +8,8 @@ spring:
       port: 6379
 
 project-properties:
+  app:
+    base-uri: http://localhost:8080
   oauth2:
     resource-server:
       multi-providers-jws-key-selector:
@@ -36,5 +38,3 @@ project-properties:
   security:
     jwt:
       issuer: marine-unit-monitoring
-  app:
-    base-uri: http://localhost:8080

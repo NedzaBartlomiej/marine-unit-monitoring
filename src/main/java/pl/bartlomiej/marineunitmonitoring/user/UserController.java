@@ -3,6 +3,7 @@ package pl.bartlomiej.marineunitmonitoring.user;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil;
@@ -33,12 +34,14 @@ public class UserController {
     private final UserService userService;
     private final UserDtoMapper userDtoMapper;
     private final EmailVerificationService emailVerificationService;
+    private final TransactionalOperator transactionalOperator;
 
-    public UserController(TrackedShipService userTrackedShipService, UserService userService, UserDtoMapper userDtoMapper, EmailVerificationService emailVerificationService) {
+    public UserController(TrackedShipService userTrackedShipService, UserService userService, UserDtoMapper userDtoMapper, EmailVerificationService emailVerificationService, TransactionalOperator transactionalOperator) {
         this.userTrackedShipService = userTrackedShipService;
         this.userService = userService;
         this.userDtoMapper = userDtoMapper;
         this.emailVerificationService = emailVerificationService;
+        this.transactionalOperator = transactionalOperator;
     }
 
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
@@ -62,11 +65,13 @@ public class UserController {
 
     @PostMapping
     public Mono<ResponseEntity<ResponseModel<UserReadDto>>> createUser(@RequestBody @Valid UserSaveDto userSaveDto) {
-        return userService.createUser(userDtoMapper.mapFrom(userSaveDto)) // todo - do some protection (when email sending go wrong, don't save user.)
-                .flatMap(user -> emailVerificationService
-                        .issueVerificationToken(user.getId())
-                        .then(just(user))
-                ).map(user ->
+        return transactionalOperator.transactional(
+                        userService.createUser(userDtoMapper.mapFrom(userSaveDto))
+                                .flatMap(user -> emailVerificationService.issueVerificationToken(user.getId())
+                                        .then(just(user))
+                                )
+                )
+                .map(user ->
                         buildResponse(
                                 CREATED,
                                 buildResponseModel(

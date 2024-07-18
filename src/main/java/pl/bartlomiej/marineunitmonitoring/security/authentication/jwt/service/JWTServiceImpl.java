@@ -41,12 +41,12 @@ public class JWTServiceImpl implements JWTService {
     private static final String APP_AUDIENCE_URI = "http://localhost:8080, http://localhost:3306";
     @Value("${project-properties.security.jwt.issuer}")
     public static String TOKEN_ISSUER;
-    @Value("${project-properties.expiration-times.jwt.refresh-token}")
-    public static int refreshTokenExpirationTime;
-    @Value("${project-properties.expiration-times.jwt.access-token}")
-    public static int accessTokenExpirationTime;
     private final MongoJWTEntityRepository mongoJWTEntityRepository;
     private final UserService userService;
+    @Value("${project-properties.expiration-times.jwt.refresh-token}")
+    private int refreshTokenExpirationTime;
+    @Value("${project-properties.expiration-times.jwt.access-token}")
+    private int accessTokenExpirationTime;
     @Value("${secrets.jwt.secret-key}")
     private String SECRET_KEY;
 

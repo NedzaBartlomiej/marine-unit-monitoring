@@ -3,7 +3,6 @@ package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NoContentException;
@@ -42,7 +41,6 @@ public class TrackedShipServiceImpl implements TrackedShipService {
                 .switchIfEmpty(error(NoContentException::new));
     }
 
-    @Transactional
     @Override
     public Mono<TrackedShip> addTrackedShip(String id, String mmsi) {
         return userService.isUserExists(id)
@@ -54,8 +52,6 @@ public class TrackedShipServiceImpl implements TrackedShipService {
                 .flatMap(trackedShip -> customUserRepository.pushTrackedShip(id, trackedShip));
     }
 
-
-    @Transactional
     @Override
     public Mono<Void> removeTrackedShip(String id, String mmsi) {
         return userService.isUserExists(id)
@@ -63,7 +59,6 @@ public class TrackedShipServiceImpl implements TrackedShipService {
                 .then(customUserRepository.pullTrackedShip(id, mmsi));
     }
 
-    @Transactional
     @Override
     public Mono<Void> removeTrackedShip(String mmsi) {
         return this.isShipTrackedMono(mmsi, true)

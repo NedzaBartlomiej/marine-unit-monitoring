@@ -3,8 +3,6 @@ package pl.bartlomiej.marineunitmonitoring.security.emailverification.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
@@ -21,16 +19,16 @@ import reactor.core.publisher.Mono;
 import static reactor.core.publisher.Mono.error;
 import static reactor.core.publisher.Mono.just;
 
-@Service // todo - test
+@Service
 public class EmailVerificationServiceImpl implements EmailVerificationService {
 
     private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
-    @Value("${project-properties.app.base-uri}")
-    private static String baseUri;
     private final MongoEmailVerificationEntityRepository mongoEmailVerificationEntityRepository;
     private final CustomEmailVerificationEntityRepository customEmailVerificationEntityRepository;
     private final UserService userService;
     private final EmailService emailService;
+    @Value("${project-properties.app.base-uri}")
+    private String baseUri;
 
     public EmailVerificationServiceImpl(MongoEmailVerificationEntityRepository mongoEmailVerificationEntityRepository, CustomEmailVerificationEntityRepository customEmailVerificationEntityRepository, UserService userService, EmailService emailService) {
         this.mongoEmailVerificationEntityRepository = mongoEmailVerificationEntityRepository;
@@ -41,26 +39,26 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
     @Override
     public Mono<Void> issueVerificationToken(String uid) {
+        log.info("Issuing email verification token.");
         return userService.getUser(uid)
                 .switchIfEmpty(error(NotFoundException::new))
-                .flatMap(user -> mongoEmailVerificationEntityRepository
-                        .save(new EmailVerificationEntity(uid))
-                        .flatMap(emailVerificationEntity ->
-                                this.sendVerificationEmail(user, emailVerificationEntity.getId())
-                        )
-                );
+                .flatMap(this::createAndSendVerificationToken);
     }
 
     @Override
     public Mono<Void> verify(String token) {
+        log.info("Verifying email verification token.");
         return mongoEmailVerificationEntityRepository.findById(token)
-                .switchIfEmpty(error(AccountAlreadyVerifiedException::new))
+                .switchIfEmpty(error(NotFoundException::new))
                 .flatMap(emailVerificationEntity -> userService.getUser(emailVerificationEntity.getUid()))
+                .flatMap(user -> user.getVerified()
+                        ? error(AccountAlreadyVerifiedException::new)
+                        : just(user)
+                )
                 .flatMap(user -> userService.verifyUser(user.getId()))
                 .then(mongoEmailVerificationEntityRepository.deleteById(token));
     }
 
-    @EventListener(ApplicationReadyEvent.class)
     @Scheduled(initialDelay = 0, fixedDelayString = "${project-properties.scheduling-delays.in-ms.email-verification.clearing}")
     public void clearAbandonedVerificationIngredients() {
         log.info("Clearing abandoned email verification ingredients.");
@@ -84,19 +82,27 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
                 .subscribe();
     }
 
-    private Mono<Void> sendVerificationEmail(User user, String token) {
+    private Mono<Void> createAndSendVerificationToken(User user) {
+        return mongoEmailVerificationEntityRepository.save(new EmailVerificationEntity(user.getId()))
+                .flatMap(emailVerificationEntity -> {
+                    log.info("Sending verification email.");
+                    return this.sendVerificationEmail(user.getEmail(), emailVerificationEntity.getId());
+                });
+    }
+
+    private Mono<Void> sendVerificationEmail(String email, String token) {
         return emailService.sendEmail(
-                user.getUsername(),
-                user.getEmail(),
+                email,
+                "Marine Unit Monitoring app - verification email.",
                 this.buildVerificationMessage(this.buildVerificationUrl(token))
         );
     }
 
     private String buildVerificationMessage(String verificationUrl) {
-        return "To verify your email click this link -> " + verificationUrl;
+        return "To verify your email click this link: " + verificationUrl;
     }
 
     private String buildVerificationUrl(String token) {
-        return baseUri + "/v1/authentication/verifyEmail/" + token; // todo baseUri is null
+        return baseUri + "/v1/authentication/verify-email/" + token;
     }
 }

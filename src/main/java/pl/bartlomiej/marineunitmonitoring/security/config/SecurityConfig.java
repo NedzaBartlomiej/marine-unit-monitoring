@@ -50,6 +50,7 @@ public class SecurityConfig {
                                 .pathMatchers(POST, "*/users").permitAll()
                                 .pathMatchers(GET, "*/points").permitAll()
                                 .pathMatchers(GET, "*/authentication/authenticate").permitAll()
+                                .pathMatchers(GET, "*/authentication/verify-email/*").permitAll()
                                 .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oAuth2ResourceServerSpec ->
