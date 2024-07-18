@@ -6,7 +6,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.ais.AisService;
-import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePoint;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.repository.MongoActivePointRepository;
@@ -20,7 +19,7 @@ import static reactor.core.publisher.Mono.*;
 @Service
 public class ActivePointServiceImpl implements ActivePointService {
 
-    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(ActivePointServiceImpl.class);
     private final MongoActivePointRepository activePointRepository;
     private final AisService aisService;
 

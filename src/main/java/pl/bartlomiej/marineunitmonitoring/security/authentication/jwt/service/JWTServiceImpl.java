@@ -11,10 +11,9 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
-import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
-import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.InvalidTokenException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTEntity;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.MongoJWTEntityRepository;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
@@ -36,7 +35,7 @@ import static reactor.core.publisher.Mono.just;
 @Service
 public class JWTServiceImpl implements JWTService {
 
-    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(JWTServiceImpl.class);
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String APP_AUDIENCE_URI = "http://localhost:8080, http://localhost:3306";
     @Value("${project-properties.security.jwt.issuer}")
@@ -77,7 +76,7 @@ public class JWTServiceImpl implements JWTService {
         String tokenType = (String) claims.get(TYPE.getClaim());
         String subject = claims.getSubject();
 
-        if (!tokenType.equals(REFRESH_TOKEN.getType())) throw new InvalidTokenException();
+        if (!tokenType.equals(REFRESH_TOKEN.getType())) throw new InvalidBearerTokenException("Invalid JWT.");
 
         return userService.getUser(subject)
                 .flatMap(user -> this.invalidate(refreshToken)

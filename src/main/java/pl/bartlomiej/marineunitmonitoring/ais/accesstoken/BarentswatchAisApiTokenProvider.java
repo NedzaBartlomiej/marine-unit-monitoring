@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
-import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -20,7 +19,7 @@ import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.
 @Service
 public class BarentswatchAisApiTokenProvider implements AisApiAuthTokenProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(BarentswatchAisApiTokenProvider.class);
     private final WebClient webClient;
     @Value("${secrets.ais-api.auth.client-id}")
     private String clientId;

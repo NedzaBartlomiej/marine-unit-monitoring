@@ -54,9 +54,10 @@ public class SecurityConfig {
                                 .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oAuth2ResourceServerSpec ->
-                        oAuth2ResourceServerSpec.jwt(jwtSpec ->
-                                jwtSpec.jwtAuthenticationConverter(jwtAuthenticationConverter())
-                        )
+                        oAuth2ResourceServerSpec
+                                .jwt(jwtSpec -> jwtSpec.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                                .accessDeniedHandler(accessDeniedHandler)
+                                .authenticationEntryPoint(authenticationEntryPoint)
                 )
                 .exceptionHandling(exceptionHandlingSpec ->
                         exceptionHandlingSpec

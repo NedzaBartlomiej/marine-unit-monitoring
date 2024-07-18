@@ -5,12 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.server.PathContainer;
 import org.springframework.lang.NonNull;
+import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
-import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
-import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.InvalidTokenException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import reactor.core.publisher.Mono;
 
@@ -23,7 +22,7 @@ import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.ser
 @Component
 public class JWTTypeVerifier extends AbstractJWTVerifier implements WebFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(JWTTypeVerifier.class);
     private final List<String> refreshTokenPaths = List.of(
             "/authentication/refreshAccessToken",
             "/authentication/invalidateToken"
@@ -45,8 +44,7 @@ public class JWTTypeVerifier extends AbstractJWTVerifier implements WebFilter {
                 .map(c -> c.get(TYPE.getClaim(), String.class))
                 .flatMap(type -> {
                     if (type.equals(REFRESH_TOKEN.getType())) {
-                        log.info("Invalid token type, refresh token.");
-                        return Mono.error(InvalidTokenException::new);
+                        return Mono.error(new InvalidBearerTokenException("Invalid JWT."));
                     }
                     return chain.filter(exchange);
                 });

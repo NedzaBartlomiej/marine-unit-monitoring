@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.WebClientRequestRetryException;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
@@ -21,7 +20,7 @@ public class WebClientConfig {
 
     public static final long RETRY_REQUEST_DELAY = 250L;
     public static final long MAX_ATTEMPTS = 4L;
-    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(WebClientConfig.class);
 
     @Bean
     public WebClient retryWebClient() {

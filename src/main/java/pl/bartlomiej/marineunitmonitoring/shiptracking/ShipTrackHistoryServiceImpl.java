@@ -13,7 +13,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.ais.AisService;
-import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
@@ -42,7 +41,7 @@ import static reactor.core.publisher.Mono.error;
 @Service
 public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
-    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(ShipTrackHistoryServiceImpl.class);
     private final AisService aisService;
     private final TrackedShipService trackedShipService;
     private final MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository;

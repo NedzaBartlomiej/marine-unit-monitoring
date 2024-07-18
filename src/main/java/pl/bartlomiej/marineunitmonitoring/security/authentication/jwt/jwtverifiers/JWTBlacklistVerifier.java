@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
+import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.ServerAuthenticationEntryPointFailureHandler;
 import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
@@ -11,8 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
-import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
-import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.InvalidTokenException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAuthenticationEntryPoint;
 import reactor.core.publisher.Mono;
@@ -20,7 +19,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class JWTBlacklistVerifier extends AbstractJWTVerifier implements WebFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(JWTBlacklistVerifier.class);
     private final JWTService jwtService;
     private final ServerAuthenticationFailureHandler serverAuthenticationFailureHandler;
 
@@ -42,13 +41,12 @@ public class JWTBlacklistVerifier extends AbstractJWTVerifier implements WebFilt
         return jwtService.isBlacklisted(claims.getId())
                 .flatMap(isBlacklisted -> {
                     if (isBlacklisted) {
-                        log.error("Invalid JWT.");
-                        return Mono.error(InvalidTokenException::new);
+                        return Mono.error(new InvalidBearerTokenException("Invalid JWT."));
                     }
                     log.info("Valid JWT, forwarding to further flow.");
                     return chain.filter(exchange);
                 })
-                .onErrorResume(InvalidTokenException.class, ex ->
+                .onErrorResume(InvalidBearerTokenException.class, ex ->
                         serverAuthenticationFailureHandler.onAuthenticationFailure(
                                 new WebFilterExchange(exchange, chain), ex)
                 );

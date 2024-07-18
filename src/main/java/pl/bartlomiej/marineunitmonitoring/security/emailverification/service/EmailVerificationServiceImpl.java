@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.AccountAlreadyVerifiedException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
@@ -22,7 +21,7 @@ import static reactor.core.publisher.Mono.just;
 @Service
 public class EmailVerificationServiceImpl implements EmailVerificationService {
 
-    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(EmailVerificationServiceImpl.class);
     private final MongoEmailVerificationEntityRepository mongoEmailVerificationEntityRepository;
     private final CustomEmailVerificationEntityRepository customEmailVerificationEntityRepository;
     private final UserService userService;

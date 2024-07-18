@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAuthTokenProvider;
-import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import reactor.core.publisher.Mono;
 
 import static java.time.Duration.ofMinutes;
@@ -23,7 +22,7 @@ public class RedisCacheConfig {
     public static final String AIS_AUTH_TOKEN_CACHE_NAME = "AisAuthToken";
     public static final String ADDRESS_COORDS_CACHE_NAME = "AddressCoords";
     public static final String POINTS_CACHE_NAME = "Points";
-    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(RedisCacheConfig.class);
     private final AisApiAuthTokenProvider aisApiAuthTokenProvider;
 
     public RedisCacheConfig(AisApiAuthTokenProvider aisApiAuthTokenProvider) {

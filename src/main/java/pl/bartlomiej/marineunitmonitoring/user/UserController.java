@@ -65,12 +65,7 @@ public class UserController {
 
     @PostMapping
     public Mono<ResponseEntity<ResponseModel<UserReadDto>>> createUser(@RequestBody @Valid UserSaveDto userSaveDto) {
-        return transactionalOperator.transactional(
-                        userService.createUser(userDtoMapper.mapFrom(userSaveDto))
-                                .flatMap(user -> emailVerificationService.issueVerificationToken(user.getId())
-                                        .then(just(user))
-                                )
-                )
+        return this.transactionalUserCreationProcess(userSaveDto)
                 .map(user ->
                         buildResponse(
                                 CREATED,
@@ -82,6 +77,16 @@ public class UserController {
                                 )
                         )
                 );
+    }
+
+    private Mono<User> transactionalUserCreationProcess(UserSaveDto userSaveDto) {
+        return transactionalOperator.transactional(
+                userService.createUser(userDtoMapper.mapFrom(userSaveDto))
+                        .flatMap(user ->
+                                emailVerificationService.issueVerificationToken(user.getId())
+                                        .then(just(user))
+                        )
+        );
     }
 
 

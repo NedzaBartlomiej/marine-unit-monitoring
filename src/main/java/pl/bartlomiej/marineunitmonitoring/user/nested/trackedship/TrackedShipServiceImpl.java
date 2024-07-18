@@ -3,7 +3,6 @@ package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
@@ -21,7 +20,7 @@ import static reactor.core.publisher.Flux.error;
 @Service
 public class TrackedShipServiceImpl implements TrackedShipService {
 
-    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(TrackedShipServiceImpl.class);
     private final UserService userService;
     private final CustomUserRepository customUserRepository;
     private final ActivePointService activePointService;

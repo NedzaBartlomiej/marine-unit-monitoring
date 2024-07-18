@@ -8,7 +8,6 @@ import com.nimbusds.jwt.proc.JWTClaimsSetAwareJWSKeySelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.JWKsUrlNotFoundException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.JWSKeySelectorConfig;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.properties.MultiProvidersJWSKeySelectorProperties;
@@ -23,7 +22,7 @@ import java.util.List;
 @Component
 public class MultiProvidersJWSKeySelector implements JWTClaimsSetAwareJWSKeySelector<SecurityContext> {
 
-    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(MultiProvidersJWSKeySelector.class);
     private final JWSKeySelectorConfig jwsKeySelectorConfig;
     private final MultiProvidersJWSKeySelectorProperties keySelectorProperties;
     private final JWTService jwtService;

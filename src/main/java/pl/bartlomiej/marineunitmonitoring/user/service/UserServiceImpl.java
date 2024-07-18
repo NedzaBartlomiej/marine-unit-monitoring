@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import pl.bartlomiej.marineunitmonitoring.common.error.RestControllerGlobalErrorHandler;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.UniqueEmailException;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.RegisterBasedUserNotFoundException;
@@ -26,7 +25,7 @@ import static reactor.core.publisher.Mono.just;
 @Service
 public class UserServiceImpl implements UserService {
 
-    private static final Logger log = LoggerFactory.getLogger(RestControllerGlobalErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     private final CustomUserRepository customUserRepository;
     private final MongoUserRepository mongoUserRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -102,7 +101,7 @@ public class UserServiceImpl implements UserService {
                 .map(User::getVerified)
                 .flatMap(isVerified -> isVerified
                         ? just(user)
-                        : error(UnverifiedAccountException::new) // todo - set custom failureHandler in AuthWebFilter to properly handle exception with my custom handler
+                        : error(UnverifiedAccountException::new)
                 );
     }
 
