@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.shiptracking;
+package pl.bartlomiej.marineunitmonitoring.shiptracking.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
@@ -12,10 +12,11 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import pl.bartlomiej.marineunitmonitoring.ais.AisService;
+import pl.bartlomiej.marineunitmonitoring.ais.service.AisService;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.helper.DateRangeHelper;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.CustomShipTrackHistoryRepository;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.MongoShipTrackHistoryRepository;

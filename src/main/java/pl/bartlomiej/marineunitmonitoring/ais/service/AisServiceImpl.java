@@ -1,9 +1,10 @@
-package pl.bartlomiej.marineunitmonitoring.ais;
+package pl.bartlomiej.marineunitmonitoring.ais.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import pl.bartlomiej.marineunitmonitoring.ais.AisShip;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAuthTokenProvider;
 import reactor.core.publisher.Flux;
 

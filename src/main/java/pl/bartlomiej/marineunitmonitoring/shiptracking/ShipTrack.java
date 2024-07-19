@@ -16,7 +16,7 @@ public class ShipTrack {
     private Double x;
     private Double y;
 
-    ShipTrack(String mmsi, Double x, Double y) {
+    public ShipTrack(String mmsi, Double x, Double y) {
         this.mmsi = mmsi;
         this.x = x;
         this.y = y;

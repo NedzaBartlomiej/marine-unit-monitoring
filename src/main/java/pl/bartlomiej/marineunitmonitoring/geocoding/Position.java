@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.geocode;
+package pl.bartlomiej.marineunitmonitoring.geocoding;
 
 import java.io.Serializable;
 

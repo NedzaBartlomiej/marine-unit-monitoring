@@ -1,6 +1,5 @@
 package pl.bartlomiej.marineunitmonitoring.shiptracking;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.service.ShipTrackHistoryService;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Flux;
 

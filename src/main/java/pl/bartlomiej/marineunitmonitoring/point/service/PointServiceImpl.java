@@ -1,12 +1,13 @@
-package pl.bartlomiej.marineunitmonitoring.point;
+package pl.bartlomiej.marineunitmonitoring.point.service;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import pl.bartlomiej.marineunitmonitoring.ais.AisService;
+import pl.bartlomiej.marineunitmonitoring.ais.service.AisService;
 import pl.bartlomiej.marineunitmonitoring.ais.AisShip;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NoContentException;
-import pl.bartlomiej.marineunitmonitoring.geocode.GeocodeService;
-import pl.bartlomiej.marineunitmonitoring.geocode.Position;
+import pl.bartlomiej.marineunitmonitoring.geocoding.service.GeocodeService;
+import pl.bartlomiej.marineunitmonitoring.geocoding.Position;
+import pl.bartlomiej.marineunitmonitoring.point.Point;
 import reactor.core.publisher.Flux;
 
 import java.util.Objects;

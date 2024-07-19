@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
-import pl.bartlomiej.marineunitmonitoring.ais.AisService;
+import pl.bartlomiej.marineunitmonitoring.ais.service.AisService;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePoint;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.repository.MongoActivePointRepository;

@@ -8,6 +8,7 @@ import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.ActivePoint;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.InactivePointFilter;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
+import pl.bartlomiej.marineunitmonitoring.point.service.PointService;
 import reactor.core.publisher.Flux;
 
 import static java.util.Map.of;

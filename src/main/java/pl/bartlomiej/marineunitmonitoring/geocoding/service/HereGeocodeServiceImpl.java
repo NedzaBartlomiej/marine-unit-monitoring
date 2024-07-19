@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.geocode;
+package pl.bartlomiej.marineunitmonitoring.geocoding.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import pl.bartlomiej.marineunitmonitoring.geocoding.Position;
 import reactor.core.publisher.Flux;
 
 import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.ADDRESS_COORDS_CACHE_NAME;

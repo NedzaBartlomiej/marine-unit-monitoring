@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
-import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrackHistoryService;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.service.ShipTrackHistoryService;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
 import reactor.core.publisher.Mono;
 

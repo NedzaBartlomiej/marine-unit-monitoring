@@ -1,6 +1,7 @@
-package pl.bartlomiej.marineunitmonitoring.ais;
+package pl.bartlomiej.marineunitmonitoring.ais.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import pl.bartlomiej.marineunitmonitoring.ais.AisShip;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
