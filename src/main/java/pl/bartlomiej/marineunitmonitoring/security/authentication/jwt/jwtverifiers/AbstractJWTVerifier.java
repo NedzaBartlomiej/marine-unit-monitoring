@@ -20,8 +20,8 @@ public abstract class AbstractJWTVerifier {
         this.jwtService = jwtService;
     }
 
-    protected Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        if (this.shouldNotFilter(exchange)) {
+    protected Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain, boolean shouldNotFilter) {
+        if (shouldNotFilter) {
             return chain.filter(exchange);
         }
 

@@ -32,7 +32,7 @@ public class JWTBlacklistVerifier extends AbstractJWTVerifier implements WebFilt
     @NonNull
     @Override
     public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
-        return super.filter(exchange, chain);
+        return super.filter(exchange, chain, this.shouldNotFilter(exchange));
     }
 
 
@@ -41,6 +41,7 @@ public class JWTBlacklistVerifier extends AbstractJWTVerifier implements WebFilt
         return jwtService.isBlacklisted(claims.getId())
                 .flatMap(isBlacklisted -> {
                     if (isBlacklisted) {
+                        log.info("Invalid JWT.");
                         return Mono.error(new InvalidBearerTokenException("Invalid JWT."));
                     }
                     log.info("Valid JWT, forwarding to further flow.");

@@ -7,8 +7,6 @@ import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
@@ -38,10 +36,10 @@ public class JWTServiceImpl implements JWTService {
     private static final Logger log = LoggerFactory.getLogger(JWTServiceImpl.class);
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String APP_AUDIENCE_URI = "http://localhost:8080, http://localhost:3306";
-    @Value("${project-properties.security.jwt.issuer}")
-    public static String TOKEN_ISSUER;
     private final MongoJWTEntityRepository mongoJWTEntityRepository;
     private final UserService userService;
+    @Value("${project-properties.security.jwt.issuer}")
+    public String tokenIssuer;
     @Value("${project-properties.expiration-times.jwt.refresh-token}")
     private int refreshTokenExpirationTime;
     @Value("${project-properties.expiration-times.jwt.access-token}")
@@ -135,7 +133,6 @@ public class JWTServiceImpl implements JWTService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    @EventListener(ApplicationReadyEvent.class)
     @Scheduled(initialDelay = 0, fixedDelayString = "${project-properties.scheduling-delays.in-ms.jwt-blacklist.clearing}")
     public void clearJwtBlacklist() {
         log.info("Clearing the JWT blacklist of expired tokens.");
@@ -149,8 +146,8 @@ public class JWTServiceImpl implements JWTService {
     private String buildToken(String uid, Map<String, String> customClaims, int expirationTime) {
         return Jwts.builder()
                 .setClaims(customClaims)
+                .setIssuer(this.tokenIssuer)
                 .setId(UUID.randomUUID().toString())
-                .setIssuer(TOKEN_ISSUER)
                 .setSubject(uid)
                 .setAudience(APP_AUDIENCE_URI)
                 .setIssuedAt(new Date())

@@ -7,13 +7,13 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.JWTClaimsSetAwareJWSKeySelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.JWKsUrlNotFoundException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.JWSKeySelectorConfig;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.properties.MultiProvidersJWSKeySelectorProperties;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwskeyselector.config.properties.Provider;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl;
 
 import java.net.URL;
 import java.security.Key;
@@ -26,6 +26,8 @@ public class MultiProvidersJWSKeySelector implements JWTClaimsSetAwareJWSKeySele
     private final JWSKeySelectorConfig jwsKeySelectorConfig;
     private final MultiProvidersJWSKeySelectorProperties keySelectorProperties;
     private final JWTService jwtService;
+    @Value("${project-properties.security.jwt.issuer}")
+    public String tokenIssuer;
 
     public MultiProvidersJWSKeySelector(JWSKeySelectorConfig jwsKeySelectorConfig, MultiProvidersJWSKeySelectorProperties keySelectorProperties, JWTService jwtService) {
         this.jwsKeySelectorConfig = jwsKeySelectorConfig;
@@ -35,7 +37,7 @@ public class MultiProvidersJWSKeySelector implements JWTClaimsSetAwareJWSKeySele
 
     @Override
     public List<? extends Key> selectKeys(JWSHeader jwsHeader, JWTClaimsSet jwtClaimsSet, SecurityContext securityContext) throws KeySourceException {
-        if (jwtClaimsSet.getIssuer().equals(JWTServiceImpl.TOKEN_ISSUER)) {
+        if (jwtClaimsSet.getIssuer().equals(this.tokenIssuer)) {
             log.info("Returning secret key for registration authentication based token.");
             return List.of(jwtService.getSigningKey());
         }

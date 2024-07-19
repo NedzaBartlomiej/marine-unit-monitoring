@@ -8,6 +8,7 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.stereotype.Component;
@@ -41,6 +42,10 @@ public abstract class ResponseModelServerExceptionHandler {
             case BadCredentialsException ignoredBadCredentialsException -> {
                 return writeExchange(exchange,
                         buildErrorResponse(UNAUTHORIZED, SecurityError.UNAUTHORIZED_CREDENTIALS.getMessage()));
+            }
+            case DisabledException ignoredDisabledException -> {
+                return writeExchange(exchange,
+                        buildErrorResponse(UNAUTHORIZED, UnverifiedAccountException.MESSAGE));
             }
             case UnverifiedAccountException unverifiedAccountException -> {
                 return writeExchange(exchange,

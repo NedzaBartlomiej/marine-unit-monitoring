@@ -24,8 +24,8 @@ public class JWTTypeVerifier extends AbstractJWTVerifier implements WebFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JWTTypeVerifier.class);
     private final List<String> refreshTokenPaths = List.of(
-            "/authentication/refreshAccessToken",
-            "/authentication/invalidateToken"
+            "/authentication/refresh-access-token",
+            "/authentication/invalidate-token"
     );
 
     protected JWTTypeVerifier(JWTService jwtService) {
@@ -35,7 +35,7 @@ public class JWTTypeVerifier extends AbstractJWTVerifier implements WebFilter {
     @NonNull
     @Override
     public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
-        return super.filter(exchange, chain);
+        return super.filter(exchange, chain, this.shouldNotFilter(exchange));
     }
 
     @Override
@@ -44,6 +44,7 @@ public class JWTTypeVerifier extends AbstractJWTVerifier implements WebFilter {
                 .map(c -> c.get(TYPE.getClaim(), String.class))
                 .flatMap(type -> {
                     if (type.equals(REFRESH_TOKEN.getType())) {
+                        log.info("Invalid JWT.");
                         return Mono.error(new InvalidBearerTokenException("Invalid JWT."));
                     }
                     return chain.filter(exchange);
