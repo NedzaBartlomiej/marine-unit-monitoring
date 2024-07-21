@@ -37,7 +37,8 @@ project-properties:
       refresh-token: 86400000 # ms - 24h
       access-token: 3600000 # ms - 1h
     verification:
-      email-token: 24 # hours
+      email-token: 86400000 # 24h
+      reset-password: 86400000 # 24h
   security:
     token:
       bearer:

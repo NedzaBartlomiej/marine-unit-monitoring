@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.security.emailverification.service;
+package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.emailverification.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,9 +8,10 @@ import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.AccountAlreadyVerifiedException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
-import pl.bartlomiej.marineunitmonitoring.security.emailverification.EmailVerificationEntity;
-import pl.bartlomiej.marineunitmonitoring.security.emailverification.repository.CustomEmailVerificationEntityRepository;
-import pl.bartlomiej.marineunitmonitoring.security.emailverification.repository.MongoEmailVerificationEntityRepository;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationTokenType;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.CustomVerificationTokenRepository;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.MongoVerificationTokenRepository;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.emailverification.EmailVerificationToken;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
@@ -22,29 +23,29 @@ import static reactor.core.publisher.Mono.just;
 public class EmailVerificationServiceImpl implements EmailVerificationService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailVerificationServiceImpl.class);
-    private final MongoEmailVerificationEntityRepository mongoEmailVerificationEntityRepository;
-    private final CustomEmailVerificationEntityRepository customEmailVerificationEntityRepository;
     private final UserService userService;
     private final EmailService emailService;
     private final long emailTokenExpirationTime;
     private final String frontendUrl;
     private final String frontendEmailVerificationPath;
+    private final CustomVerificationTokenRepository customVerificationTokenRepository;
+    private final MongoVerificationTokenRepository mongoVerificationTokenRepository;
 
     public EmailVerificationServiceImpl(
-            MongoEmailVerificationEntityRepository mongoEmailVerificationEntityRepository,
-            CustomEmailVerificationEntityRepository customEmailVerificationEntityRepository,
             UserService userService,
             EmailService emailService,
             @Value("${project-properties.expiration-times.verification.email-token}") long emailTokenExpirationTime,
             @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
-            @Value("${project-properties.app.frontend-integration.endpoint-paths.email-verification}") String frontendEmailVerificationPath) {
-        this.mongoEmailVerificationEntityRepository = mongoEmailVerificationEntityRepository;
-        this.customEmailVerificationEntityRepository = customEmailVerificationEntityRepository;
+            @Value("${project-properties.app.frontend-integration.endpoint-paths.email-verification}") String frontendEmailVerificationPath,
+            CustomVerificationTokenRepository customVerificationTokenRepository,
+            MongoVerificationTokenRepository mongoVerificationTokenRepository) {
         this.userService = userService;
         this.emailService = emailService;
         this.emailTokenExpirationTime = emailTokenExpirationTime;
         this.frontendUrl = frontendUrl;
         this.frontendEmailVerificationPath = frontendEmailVerificationPath;
+        this.customVerificationTokenRepository = customVerificationTokenRepository;
+        this.mongoVerificationTokenRepository = mongoVerificationTokenRepository;
     }
 
     @Override
@@ -58,27 +59,27 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     @Override
     public Mono<Void> verify(String token) {
         log.info("Verifying email verification token.");
-        return mongoEmailVerificationEntityRepository.findById(token)
+        return mongoVerificationTokenRepository.findById(token)
                 .switchIfEmpty(error(NotFoundException::new))
-                .flatMap(emailVerificationEntity -> userService.getUser(emailVerificationEntity.getUid()))
+                .flatMap(verificationToken -> userService.getUser(verificationToken.getUid()))
                 .flatMap(user -> user.getVerified()
                         ? error(AccountAlreadyVerifiedException::new)
                         : just(user)
                 )
                 .flatMap(user -> userService.verifyUser(user.getId()))
-                .then(mongoEmailVerificationEntityRepository.deleteById(token));
+                .then(mongoVerificationTokenRepository.deleteById(token));
     }
 
     @Scheduled(initialDelay = 0, fixedDelayString = "${project-properties.scheduling-delays.in-ms.email-verification.clearing}")
     public void clearAbandonedVerificationIngredients() {
         log.info("Clearing abandoned email verification ingredients.");
-        customEmailVerificationEntityRepository.findExpiredTokens()
-                .flatMap(emailVerificationEntity -> {
+        customVerificationTokenRepository.findExpiredTokens(VerificationTokenType.EMAIL_VERIFICATION.name())
+                .flatMap(verificationToken -> {
                     log.info("Deleting an expired token.");
-                    return mongoEmailVerificationEntityRepository.delete(emailVerificationEntity)
-                            .then(just(emailVerificationEntity));
-                }).flatMap(emailVerificationEntity ->
-                        userService.getUser(emailVerificationEntity.getUid())
+                    return mongoVerificationTokenRepository.delete(verificationToken)
+                            .then(just(verificationToken));
+                }).flatMap(verificationToken ->
+                        userService.getUser(verificationToken.getUid())
                 ).flatMap(user -> {
                     log.info("Checking whether user with an expired verification token has been verified.");
                     if (!user.getVerified()) {
@@ -93,10 +94,17 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     }
 
     private Mono<Void> createAndSendVerificationToken(User user) {
-        return mongoEmailVerificationEntityRepository.save(new EmailVerificationEntity(user.getId(), this.emailTokenExpirationTime))
-                .flatMap(emailVerificationEntity -> {
+        return mongoVerificationTokenRepository.save(
+                        new EmailVerificationToken(
+                                user.getId(),
+                                this.emailTokenExpirationTime,
+                                VerificationTokenType.EMAIL_VERIFICATION.name(),
+                                null
+                        )
+                )
+                .flatMap(verificationToken -> {
                     log.info("Sending verification email.");
-                    return this.sendVerificationEmail(user.getEmail(), emailVerificationEntity.getId());
+                    return this.sendVerificationEmail(user.getEmail(), verificationToken.getId());
                 });
     }
 

@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.security.emailverification.service;
+package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.emailverification.service;
 
 import reactor.core.publisher.Mono;
 

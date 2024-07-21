@@ -1,30 +1,31 @@
-package pl.bartlomiej.marineunitmonitoring.security.emailverification.repository;
+package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository;
 
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
-import pl.bartlomiej.marineunitmonitoring.security.emailverification.EmailVerificationEntity;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationToken;
 import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
 
 @Repository
-public class CustomEmailVerificationEntityRepositoryImpl implements CustomEmailVerificationEntityRepository {
+public class CustomVerificationTokenRepositoryImpl implements CustomVerificationTokenRepository {
 
     private final ReactiveMongoTemplate reactiveMongoTemplate;
 
-    public CustomEmailVerificationEntityRepositoryImpl(ReactiveMongoTemplate reactiveMongoTemplate) {
+    public CustomVerificationTokenRepositoryImpl(ReactiveMongoTemplate reactiveMongoTemplate) {
         this.reactiveMongoTemplate = reactiveMongoTemplate;
     }
 
     @Override
-    public Flux<EmailVerificationEntity> findExpiredTokens() {
+    public Flux<VerificationToken> findExpiredTokens(String type) {
         return reactiveMongoTemplate.find(
                 new Query(
                         Criteria.where("expiration").lte(LocalDateTime.now())
+                                .and("type").is(type)
                 ),
-                EmailVerificationEntity.class
+                VerificationToken.class
         );
     }
 }
