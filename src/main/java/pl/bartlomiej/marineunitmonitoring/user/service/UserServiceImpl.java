@@ -29,13 +29,16 @@ public class UserServiceImpl implements UserService {
     private final CustomUserRepository customUserRepository;
     private final MongoUserRepository mongoUserRepository;
     private final BCryptPasswordEncoder passwordEncoder;
-    @Value("${project-properties.security.jwt.issuer}")
-    public String tokenIssuer;
+    private final String tokenIssuer;
 
-    public UserServiceImpl(CustomUserRepository customUserRepository, MongoUserRepository mongoUserRepository, BCryptPasswordEncoder passwordEncoder) {
+    public UserServiceImpl(CustomUserRepository customUserRepository,
+                           MongoUserRepository mongoUserRepository,
+                           BCryptPasswordEncoder passwordEncoder,
+                           @Value("${project-properties.security.jwt.issuer}") String tokenIssuer) {
         this.customUserRepository = customUserRepository;
         this.mongoUserRepository = mongoUserRepository;
         this.passwordEncoder = passwordEncoder;
+        this.tokenIssuer = tokenIssuer;
     }
 
     @Override
@@ -94,9 +97,9 @@ public class UserServiceImpl implements UserService {
         log.info("Processing authentication flow user.");
         return mongoUserRepository.findByEmail(email)
                 .flatMap(this::isUserVerified)
-                .flatMap(user -> this.processUserOpenIds(user, id))
-                .switchIfEmpty(this.processUserCreation(id, username, email, tokenIssuer));
-    }
+                .flatMap(user -> this.processUserOpenIds(user, id)) // 2 - its left to describe
+                .switchIfEmpty(this.processUserCreation(id, username, email, tokenIssuer)); // 1
+    } // INTEGRATION PART - ARTICLE
 
     private Mono<User> isUserVerified(User user) {
         return just(user)
@@ -113,16 +116,20 @@ public class UserServiceImpl implements UserService {
             log.info("Registration based user detected, no adding openid.");
             return Mono.just(user);
         }
+        return this.optionallyAddOpenId(user, id);
+    }
+
+    private Mono<User> optionallyAddOpenId(User user, String openId) {
         if (user.getOpenIds() == null) {
             user.setOpenIds(new ArrayList<>());
         }
-        if (!user.getOpenIds().contains(id)) {
+        if (!user.getOpenIds().contains(openId)) {
             log.info("Adding new openid for user.");
-            user.getOpenIds().add(id);
-            return mongoUserRepository.save(user);
+            user.getOpenIds().add(openId);
+        } else {
+            log.info("Existing openid, returning user.");
         }
-        log.info("Existing openid, returning user.");
-        return Mono.just(user);
+        return mongoUserRepository.save(user);
     }
 
     private Mono<User> processUserCreation(String id, String username, String email, String tokenIssuer) {

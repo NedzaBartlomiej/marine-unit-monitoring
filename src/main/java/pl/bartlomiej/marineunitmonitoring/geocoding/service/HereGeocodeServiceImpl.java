@@ -18,16 +18,17 @@ import static pl.bartlomiej.marineunitmonitoring.common.config.RedisCacheConfig.
 @Service
 public class HereGeocodeServiceImpl implements GeocodeService {
 
-    public static final String LAT = "lat";
-    public static final String LNG = "lng";
-    public static final int FIRST_GEOCODE_SUGGESTION = 0;
+    private static final String LAT = "lat";
+    private static final String LNG = "lng";
+    private static final int FIRST_GEOCODE_SUGGESTION = 0;
     private static final Logger log = LoggerFactory.getLogger(HereGeocodeServiceImpl.class);
     private final WebClient webClient;
-    @Value("${secrets.geocode-api.api-key}")
-    private String geocodeApiKey;
+    private final String geocodeApiKey;
 
-    public HereGeocodeServiceImpl(WebClient webClient) {
+    public HereGeocodeServiceImpl(WebClient webClient,
+                                  @Value("${secrets.geocode-api.api-key}") String geocodeApiKey) {
         this.webClient = webClient;
+        this.geocodeApiKey = geocodeApiKey;
     }
 
     @Cacheable(cacheNames = ADDRESS_COORDS_CACHE_NAME)

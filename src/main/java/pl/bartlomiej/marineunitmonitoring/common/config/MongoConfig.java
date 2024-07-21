@@ -16,9 +16,12 @@ public class MongoConfig {
 
     public static final String OPERATION_TYPE = "operationType";
     public static final String INSERT = "insert";
+    private final String mongoConnectionString;
 
-    @Value("${spring.data.mongodb.uri}")
-    private String mongoConnectionString;
+    public MongoConfig(@Value("${spring.data.mongodb.uri}") String mongoConnectionString
+    ) {
+        this.mongoConnectionString = mongoConnectionString;
+    }
 
     @Bean
     public ReactiveMongoDatabaseFactory reactiveMongoDatabaseFactory() {

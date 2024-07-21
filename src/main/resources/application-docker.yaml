@@ -9,7 +9,10 @@ spring:
 
 project-properties:
   app:
-    base-uri: http://localhost:8080
+    frontend-integration:
+      base-url: http://localhost:3306
+      endpoint-paths:
+        email-verification: /verify-email
   oauth2:
     resource-server:
       multi-providers-jws-key-selector:
@@ -36,5 +39,9 @@ project-properties:
     verification:
       email-token: 24 # hours
   security:
+    token:
+      bearer:
+        type: Bearer
+        regex: ^Bearer\s+(\S+)
     jwt:
       issuer: marine-unit-monitoring

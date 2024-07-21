@@ -13,11 +13,12 @@ import reactor.core.publisher.Mono;
 public abstract class AbstractJWTVerifier {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractJWTVerifier.class);
-    private static final String BEARER_REGEX = "^Bearer\\s+(\\S+)";
+    private final String bearerRegex;
     private final JWTService jwtService;
 
-    protected AbstractJWTVerifier(JWTService jwtService) {
+    protected AbstractJWTVerifier(JWTService jwtService, String bearerRegex) {
         this.jwtService = jwtService;
+        this.bearerRegex = bearerRegex;
     }
 
     protected Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain, boolean shouldNotFilter) {
@@ -49,7 +50,7 @@ public abstract class AbstractJWTVerifier {
             log.error("Authorization header doesn't exist, or is empty.");
             return true;
         }
-        if (!authHeader.matches(BEARER_REGEX)) {
+        if (!authHeader.matches(this.bearerRegex)) {
             log.error("Authorization header is not matching with bearer token requirements.");
             return true;
         }

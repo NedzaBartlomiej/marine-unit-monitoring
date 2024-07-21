@@ -15,8 +15,10 @@ public class User {
     private String email;
     private String password;
     private Boolean isVerified = false;
+    private Boolean isLocked = false;
     private List<TrackedShip> trackedShips;
     private List<Role> roles;
+    private List<String> trustedIpAddresses;
 
     public User() {
     }
@@ -77,6 +79,14 @@ public class User {
         isVerified = verified;
     }
 
+    public Boolean getLocked() {
+        return isLocked;
+    }
+
+    public void setLocked(Boolean locked) {
+        isLocked = locked;
+    }
+
     public List<TrackedShip> getTrackedShips() {
         return trackedShips;
     }
@@ -91,5 +101,13 @@ public class User {
 
     public void setRoles(List<Role> roles) {
         this.roles = roles;
+    }
+
+    public List<String> getTrustedIpAddresses() {
+        return trustedIpAddresses;
+    }
+
+    public void setTrustedIpAddresses(List<String> trustedIpAddresses) {
+        this.trustedIpAddresses = trustedIpAddresses;
     }
 }

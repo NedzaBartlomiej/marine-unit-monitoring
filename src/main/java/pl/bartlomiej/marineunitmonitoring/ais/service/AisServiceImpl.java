@@ -17,19 +17,25 @@ import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.MMSI
 @Service
 public class AisServiceImpl implements AisService {
 
-    private static final String BEARER = "Bearer ";
     private final AisApiAuthTokenProvider aisApiAuthTokenProvider;
     private final WebClient webClient;
-    @Value("${project-properties.external-apis.ais-api.result-limit}")
-    private long resultLimit;
-    @Value("${secrets.ais-api.latest-ais-url}")
-    private String apiFetchLatestUri;
-    @Value("${secrets.ais-api.latest-ais-bymmsi-url}")
-    private String apiFetchByMmsiUri;
+    private final long resultLimit;
+    private final String apiFetchLatestUri;
+    private final String apiFetchByMmsiUri;
+    private final String bearerPrefix;
 
-    public AisServiceImpl(AisApiAuthTokenProvider aisApiAuthTokenProvider, WebClient webClient) {
+    public AisServiceImpl(AisApiAuthTokenProvider aisApiAuthTokenProvider,
+                          WebClient webClient,
+                          @Value("${project-properties.external-apis.ais-api.result-limit}") long resultLimit,
+                          @Value("${secrets.ais-api.latest-ais-url}") String apiFetchLatestUri,
+                          @Value("${secrets.ais-api.latest-ais-bymmsi-url}") String apiFetchByMmsiUri,
+                          @Value("${project-properties.security.token.bearer.type}") String bearerType) {
         this.aisApiAuthTokenProvider = aisApiAuthTokenProvider;
         this.webClient = webClient;
+        this.resultLimit = resultLimit;
+        this.apiFetchLatestUri = apiFetchLatestUri;
+        this.apiFetchByMmsiUri = apiFetchByMmsiUri;
+        this.bearerPrefix = bearerType + " ";
     }
 
     @Override
@@ -38,7 +44,7 @@ public class AisServiceImpl implements AisService {
                 .flatMapMany(token -> webClient
                         .get()
                         .uri(apiFetchLatestUri)
-                        .header(AUTHORIZATION, BEARER + token)
+                        .header(AUTHORIZATION, this.bearerPrefix + token)
                         .retrieve()
                         .bodyToFlux(AisShip.class)
                         .take(resultLimit)
@@ -51,7 +57,7 @@ public class AisServiceImpl implements AisService {
                 .flatMapMany(token -> webClient
                         .post()
                         .uri(apiFetchByMmsiUri)
-                        .header(AUTHORIZATION, BEARER + token)
+                        .header(AUTHORIZATION, this.bearerPrefix + token)
                         .bodyValue(of(MMSI.fieldName, identifiers.toArray()))
                         .retrieve()
                         .bodyToFlux(JsonNode.class)

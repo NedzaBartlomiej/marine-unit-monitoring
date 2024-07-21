@@ -23,16 +23,19 @@ import java.util.List;
 public class MultiProvidersJWSKeySelector implements JWTClaimsSetAwareJWSKeySelector<SecurityContext> {
 
     private static final Logger log = LoggerFactory.getLogger(MultiProvidersJWSKeySelector.class);
+    public final String tokenIssuer;
     private final JWSKeySelectorConfig jwsKeySelectorConfig;
     private final MultiProvidersJWSKeySelectorProperties keySelectorProperties;
     private final JWTService jwtService;
-    @Value("${project-properties.security.jwt.issuer}")
-    public String tokenIssuer;
 
-    public MultiProvidersJWSKeySelector(JWSKeySelectorConfig jwsKeySelectorConfig, MultiProvidersJWSKeySelectorProperties keySelectorProperties, JWTService jwtService) {
+    public MultiProvidersJWSKeySelector(JWSKeySelectorConfig jwsKeySelectorConfig,
+                                        MultiProvidersJWSKeySelectorProperties keySelectorProperties,
+                                        JWTService jwtService,
+                                        @Value("${project-properties.security.jwt.issuer}") String tokenIssuer) {
         this.jwsKeySelectorConfig = jwsKeySelectorConfig;
         this.keySelectorProperties = keySelectorProperties;
         this.jwtService = jwtService;
+        this.tokenIssuer = tokenIssuer;
     }
 
     @Override

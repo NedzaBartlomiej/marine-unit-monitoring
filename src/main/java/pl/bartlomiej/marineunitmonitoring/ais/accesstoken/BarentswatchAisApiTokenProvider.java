@@ -21,19 +21,29 @@ public class BarentswatchAisApiTokenProvider implements AisApiAuthTokenProvider 
 
     private static final Logger log = LoggerFactory.getLogger(BarentswatchAisApiTokenProvider.class);
     private final WebClient webClient;
-    @Value("${secrets.ais-api.auth.client-id}")
-    private String clientId;
-    @Value("${secrets.ais-api.auth.scope}")
-    private String scope;
-    @Value("${secrets.ais-api.auth.client-secret}")
-    private String clientSecret;
-    @Value("${secrets.ais-api.auth.grant-type}")
-    private String grantType;
-    @Value("${secrets.ais-api.auth.url}")
-    private String accessTokenApiUrl;
 
-    public BarentswatchAisApiTokenProvider(WebClient webClient) {
+    private final String clientId;
+
+    private final String scope;
+
+    private final String clientSecret;
+
+    private final String grantType;
+
+    private final String accessTokenApiUrl;
+
+    public BarentswatchAisApiTokenProvider(WebClient webClient,
+                                           @Value("${secrets.ais-api.auth.client-id}") String clientId,
+                                           @Value("${secrets.ais-api.auth.scope}") String scope,
+                                           @Value("${secrets.ais-api.auth.client-secret}") String clientSecret,
+                                           @Value("${secrets.ais-api.auth.grant-type}") String grantType,
+                                           @Value("${secrets.ais-api.auth.url}") String accessTokenApiUrl) {
         this.webClient = webClient;
+        this.clientId = clientId;
+        this.scope = scope;
+        this.clientSecret = clientSecret;
+        this.grantType = grantType;
+        this.accessTokenApiUrl = accessTokenApiUrl;
     }
 
     private MultiValueMap<String, String> buildAuthBody() {

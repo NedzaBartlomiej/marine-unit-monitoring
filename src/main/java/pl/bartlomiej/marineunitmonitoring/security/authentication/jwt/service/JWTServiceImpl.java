@@ -34,22 +34,29 @@ import static reactor.core.publisher.Mono.just;
 public class JWTServiceImpl implements JWTService {
 
     private static final Logger log = LoggerFactory.getLogger(JWTServiceImpl.class);
-    private static final String BEARER_PREFIX = "Bearer ";
     private static final String APP_AUDIENCE_URI = "http://localhost:8080, http://localhost:3306";
+    public final String tokenIssuer;
+    private final String bearerPrefix;
     private final MongoJWTEntityRepository mongoJWTEntityRepository;
     private final UserService userService;
-    @Value("${project-properties.security.jwt.issuer}")
-    public String tokenIssuer;
-    @Value("${project-properties.expiration-times.jwt.refresh-token}")
-    private int refreshTokenExpirationTime;
-    @Value("${project-properties.expiration-times.jwt.access-token}")
-    private int accessTokenExpirationTime;
-    @Value("${secrets.jwt.secret-key}")
-    private String SECRET_KEY;
+    private final int refreshTokenExpirationTime;
+    private final int accessTokenExpirationTime;
+    private final String secretKey;
 
-    public JWTServiceImpl(MongoJWTEntityRepository mongoJWTEntityRepository, UserService userService) {
+    public JWTServiceImpl(MongoJWTEntityRepository mongoJWTEntityRepository,
+                          UserService userService,
+                          @Value("${project-properties.security.jwt.issuer}") String tokenIssuer,
+                          @Value("${project-properties.expiration-times.jwt.refresh-token}") int refreshTokenExpirationTime,
+                          @Value("${project-properties.expiration-times.jwt.access-token}") int accessTokenExpirationTime,
+                          @Value("${secrets.jwt.secret-key}") String secretKey,
+                          @Value("${project-properties.security.token.bearer.type}") String bearerType) {
+        this.bearerPrefix = bearerType + " ";
         this.mongoJWTEntityRepository = mongoJWTEntityRepository;
         this.userService = userService;
+        this.tokenIssuer = tokenIssuer;
+        this.refreshTokenExpirationTime = refreshTokenExpirationTime;
+        this.accessTokenExpirationTime = accessTokenExpirationTime;
+        this.secretKey = secretKey;
     }
 
     public String createAccessToken(String uid, String email) {
@@ -117,7 +124,7 @@ public class JWTServiceImpl implements JWTService {
         }
 
         return authorizationHeaderValue
-                .substring(BEARER_PREFIX.length());
+                .substring(this.bearerPrefix.length());
     }
 
     public Claims extractClaims(String token) {
@@ -129,7 +136,7 @@ public class JWTServiceImpl implements JWTService {
     }
 
     public Key getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

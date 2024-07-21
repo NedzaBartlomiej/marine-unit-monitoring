@@ -26,14 +26,25 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     private final CustomEmailVerificationEntityRepository customEmailVerificationEntityRepository;
     private final UserService userService;
     private final EmailService emailService;
-    @Value("${project-properties.app.base-uri}")
-    private String baseUri;
+    private final long emailTokenExpirationTime;
+    private final String frontendUrl;
+    private final String frontendEmailVerificationPath;
 
-    public EmailVerificationServiceImpl(MongoEmailVerificationEntityRepository mongoEmailVerificationEntityRepository, CustomEmailVerificationEntityRepository customEmailVerificationEntityRepository, UserService userService, EmailService emailService) {
+    public EmailVerificationServiceImpl(
+            MongoEmailVerificationEntityRepository mongoEmailVerificationEntityRepository,
+            CustomEmailVerificationEntityRepository customEmailVerificationEntityRepository,
+            UserService userService,
+            EmailService emailService,
+            @Value("${project-properties.expiration-times.verification.email-token}") long emailTokenExpirationTime,
+            @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
+            @Value("${project-properties.app.frontend-integration.endpoint-paths.email-verification}") String frontendEmailVerificationPath) {
         this.mongoEmailVerificationEntityRepository = mongoEmailVerificationEntityRepository;
         this.customEmailVerificationEntityRepository = customEmailVerificationEntityRepository;
         this.userService = userService;
         this.emailService = emailService;
+        this.emailTokenExpirationTime = emailTokenExpirationTime;
+        this.frontendUrl = frontendUrl;
+        this.frontendEmailVerificationPath = frontendEmailVerificationPath;
     }
 
     @Override
@@ -82,7 +93,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     }
 
     private Mono<Void> createAndSendVerificationToken(User user) {
-        return mongoEmailVerificationEntityRepository.save(new EmailVerificationEntity(user.getId()))
+        return mongoEmailVerificationEntityRepository.save(new EmailVerificationEntity(user.getId(), this.emailTokenExpirationTime))
                 .flatMap(emailVerificationEntity -> {
                     log.info("Sending verification email.");
                     return this.sendVerificationEmail(user.getEmail(), emailVerificationEntity.getId());
@@ -102,6 +113,6 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     }
 
     private String buildVerificationUrl(String token) {
-        return baseUri + "/v1/authentication/verify-email/" + token;
+        return this.frontendUrl + this.frontendEmailVerificationPath + "/" + token;
     }
 }

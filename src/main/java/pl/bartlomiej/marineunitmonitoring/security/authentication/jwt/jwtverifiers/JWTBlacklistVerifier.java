@@ -3,6 +3,7 @@ package pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifi
 import io.jsonwebtoken.Claims;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.security.web.server.WebFilterExchange;
@@ -23,8 +24,10 @@ public class JWTBlacklistVerifier extends AbstractJWTVerifier implements WebFilt
     private final JWTService jwtService;
     private final ServerAuthenticationFailureHandler serverAuthenticationFailureHandler;
 
-    public JWTBlacklistVerifier(JWTService jwtService, ResponseModelServerAuthenticationEntryPoint serverAuthenticationEntryPoint) {
-        super(jwtService);
+    public JWTBlacklistVerifier(JWTService jwtService,
+                                ResponseModelServerAuthenticationEntryPoint serverAuthenticationEntryPoint,
+                                @Value("${project-properties.security.token.bearer.regex}") String bearerRegex) {
+        super(jwtService, bearerRegex);
         this.jwtService = jwtService;
         this.serverAuthenticationFailureHandler = new ServerAuthenticationEntryPointFailureHandler(serverAuthenticationEntryPoint);
     }
