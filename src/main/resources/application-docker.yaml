@@ -13,6 +13,7 @@ project-properties:
       base-url: http://localhost:3306
       endpoint-paths:
         email-verification: /verify-email
+        reset-password: /reset-password
   oauth2:
     resource-server:
       multi-providers-jws-key-selector:

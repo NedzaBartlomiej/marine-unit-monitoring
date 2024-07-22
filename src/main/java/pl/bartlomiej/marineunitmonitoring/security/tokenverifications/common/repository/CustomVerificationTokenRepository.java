@@ -4,5 +4,5 @@ import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.Ver
 import reactor.core.publisher.Flux;
 
 public interface CustomVerificationTokenRepository {
-    Flux<VerificationToken> findExpiredTokens(String type);
+    Flux<VerificationToken> findExpiredTokens();
 }

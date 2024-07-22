@@ -1,6 +1,7 @@
 package pl.bartlomiej.marineunitmonitoring.security.authentication;
 
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -9,7 +10,8 @@ import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.service.AuthenticationService;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.emailverification.service.EmailVerificationService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationTokenService;
+import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserAuthDto;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
@@ -28,13 +30,19 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final UserService userService;
     private final JWTService jwtService;
-    private final EmailVerificationService emailVerificationService;
+    private final VerificationTokenService<User, String> resetPasswordService;
+    private final VerificationTokenService<Void, String> emailVerificationService;
 
-    public AuthenticationController(AuthenticationService authenticationService, UserService userService, JWTService jwtService, EmailVerificationService emailVerificationService) {
+    public AuthenticationController(AuthenticationService authenticationService,
+                                    UserService userService,
+                                    JWTService jwtService,
+                                    @Qualifier("resetPasswordService") VerificationTokenService<User, String> resetPasswordService,
+                                    @Qualifier("emailVerificationService") VerificationTokenService<Void, String> emailVerificationService1) {
         this.authenticationService = authenticationService;
         this.userService = userService;
         this.jwtService = jwtService;
-        this.emailVerificationService = emailVerificationService;
+        this.resetPasswordService = resetPasswordService;
+        this.emailVerificationService = emailVerificationService1;
     }
 
     @GetMapping("/authenticate")
@@ -101,6 +109,21 @@ public class AuthenticationController {
                                 OK,
                                 buildResponseModel(
                                         "Email has been verified successfully.",
+                                        OK,
+                                        null,
+                                        null
+                                )
+                        )
+                ));
+    }
+
+    @GetMapping("/reset-password")
+    public Mono<ResponseEntity<ResponseModel<Void>>> resetPassword(@RequestBody String email) {
+        return resetPasswordService.issue(email)
+                .then(just(
+                        buildResponse(OK,
+                                buildResponseModel(
+                                        "EMAIL_SENT",
                                         OK,
                                         null,
                                         null

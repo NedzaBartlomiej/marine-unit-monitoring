@@ -7,7 +7,7 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.emailverification.service.EmailVerificationService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationTokenService;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserDtoMapper;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserReadDto;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserSaveDto;
@@ -33,10 +33,14 @@ public class UserController {
     private final TrackedShipService userTrackedShipService;
     private final UserService userService;
     private final UserDtoMapper userDtoMapper;
-    private final EmailVerificationService emailVerificationService;
+    private final VerificationTokenService<Void, String> emailVerificationService;
     private final TransactionalOperator transactionalOperator;
 
-    public UserController(TrackedShipService userTrackedShipService, UserService userService, UserDtoMapper userDtoMapper, EmailVerificationService emailVerificationService, TransactionalOperator transactionalOperator) {
+    public UserController(TrackedShipService userTrackedShipService,
+                          UserService userService,
+                          UserDtoMapper userDtoMapper,
+                          VerificationTokenService<Void, String> emailVerificationService,
+                          TransactionalOperator transactionalOperator) {
         this.userTrackedShipService = userTrackedShipService;
         this.userService = userService;
         this.userDtoMapper = userDtoMapper;
@@ -83,7 +87,7 @@ public class UserController {
         return transactionalOperator.transactional(
                 userService.createUser(userDtoMapper.mapFrom(userSaveDto))
                         .flatMap(user ->
-                                emailVerificationService.issueVerificationToken(user.getId())
+                                emailVerificationService.issue(user.getId())
                                         .then(just(user))
                         )
         );

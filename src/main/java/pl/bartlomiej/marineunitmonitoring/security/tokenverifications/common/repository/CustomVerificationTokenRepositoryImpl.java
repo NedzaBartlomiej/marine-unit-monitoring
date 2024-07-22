@@ -19,11 +19,10 @@ public class CustomVerificationTokenRepositoryImpl implements CustomVerification
     }
 
     @Override
-    public Flux<VerificationToken> findExpiredTokens(String type) {
+    public Flux<VerificationToken> findExpiredTokens() {
         return reactiveMongoTemplate.find(
                 new Query(
                         Criteria.where("expiration").lte(LocalDateTime.now())
-                                .and("type").is(type)
                 ),
                 VerificationToken.class
         );
