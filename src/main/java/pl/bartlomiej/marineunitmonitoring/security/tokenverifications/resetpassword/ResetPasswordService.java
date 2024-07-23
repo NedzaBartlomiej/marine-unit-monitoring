@@ -11,14 +11,15 @@ import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.Ver
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationTokenType;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.CustomVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.MongoVerificationTokenRepository;
-import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
 
 import static reactor.core.publisher.Mono.error;
+import static reactor.core.publisher.Mono.just;
 
+// todo - test
 @Service
-public class ResetPasswordService extends AbstractVerificationTokenService implements VerificationTokenService<User, String> {
+public class ResetPasswordService extends AbstractVerificationTokenService implements VerificationTokenService {
 
     private static final Logger log = LoggerFactory.getLogger(ResetPasswordService.class);
     private final UserService userService;
@@ -26,6 +27,7 @@ public class ResetPasswordService extends AbstractVerificationTokenService imple
     private final String frontendUrl;
     private final String frontendResetPasswordVerificationPath;
     private final MongoVerificationTokenRepository mongoVerificationTokenRepository;
+    private final CustomVerificationTokenRepository customVerificationTokenRepository;
 
     public ResetPasswordService(UserService userService,
                                 CustomVerificationTokenRepository customVerificationTokenRepository,
@@ -33,44 +35,49 @@ public class ResetPasswordService extends AbstractVerificationTokenService imple
                                 EmailService emailService,
                                 @Value("${project-properties.expiration-times.verification.reset-password}") long resetPasswordTokenExpirationTime,
                                 @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
-                                @Value("${project-properties.app.frontend-integration.endpoint-paths.reset-password}") String frontendResetPasswordVerificationPath, MongoVerificationTokenRepository mongoVerificationTokenRepository1) {
+                                @Value("${project-properties.app.frontend-integration.endpoint-paths.reset-password}") String frontendResetPasswordVerificationPath) {
         super(emailService, mongoVerificationTokenRepository, customVerificationTokenRepository, userService);
         this.userService = userService;
         this.resetPasswordTokenExpirationTime = resetPasswordTokenExpirationTime;
         this.frontendUrl = frontendUrl;
         this.frontendResetPasswordVerificationPath = frontendResetPasswordVerificationPath;
-        this.mongoVerificationTokenRepository = mongoVerificationTokenRepository1;
+        this.mongoVerificationTokenRepository = mongoVerificationTokenRepository;
+        this.customVerificationTokenRepository = customVerificationTokenRepository;
     }
 
+    /**
+     * @throws NotFoundException when the user is based only on OAuth2 data (when the user isn't created by registration)
+     */
     @Override
     public Mono<Void> issue(String email) {
-        log.info("Issuing reset password verification token.");
         return userService.getUserByEmail(email)
-                .switchIfEmpty(error(NotFoundException::new))
-                .flatMap(user -> super.saveVerificationToken(
+                .flatMap(user -> {
+                    if (user.getPassword() == null) {
+                        return error(NotFoundException::new);
+                    }
+                    return just(user);
+                })
+                .flatMap(user -> super.issue(
+                        user,
                         new ResetPasswordVerificationToken(
                                 user.getId(),
                                 this.resetPasswordTokenExpirationTime,
-                                VerificationTokenType.RESET_PASSWORD_VERIFICATION.name(),
-                                null
-                        )
-                ))
-                .flatMap(verificationToken -> super.sendVerificationToken(
-                        verificationToken.getUid(),
-                        verificationToken.getId(),
+                                VerificationTokenType.RESET_PASSWORD_VERIFICATION.name()
+                        ),
                         "Marine Unit Monitoring - reset password message."
                 ));
     }
 
     @Override
-    public Mono<User> verify(String token) {
+    public Mono<Void> verify(String token) {
         log.info("Verifying reset password token.");
         return mongoVerificationTokenRepository.findById(token)
-                .switchIfEmpty(error()) // todo think about exception here (smth common)
-                .flatMap(verificationToken -> userService.getUser(verificationToken.getUid())
-                        .flatMap(user -> mongoVerificationTokenRepository.deleteById(token)
-                                .thenReturn(user)
-                        )
+                .flatMap(super::validateVerificationToken)
+                .flatMap(verificationToken -> userService.isUserExists(verificationToken.getUid())
+                        .then(just(verificationToken))
+                )
+                .flatMap(verificationToken -> customVerificationTokenRepository
+                        .updateIsVerified(verificationToken.getId(), true)
                 );
     }
 

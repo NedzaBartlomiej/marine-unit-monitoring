@@ -1,10 +1,12 @@
 package pl.bartlomiej.marineunitmonitoring.user;
 
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.bind.annotation.*;
+import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidVerificationTokenException;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationTokenService;
@@ -24,6 +26,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.ResponseEntity.ok;
 import static pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil.buildResponse;
 import static pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil.buildResponseModel;
+import static reactor.core.publisher.Mono.error;
 import static reactor.core.publisher.Mono.just;
 
 @RestController
@@ -32,18 +35,21 @@ public class UserController {
 
     private final TrackedShipService userTrackedShipService;
     private final UserService userService;
+    private final VerificationTokenService resetPasswordService;
     private final UserDtoMapper userDtoMapper;
-    private final VerificationTokenService<Void, String> emailVerificationService;
+    private final VerificationTokenService emailVerificationService;
     private final TransactionalOperator transactionalOperator;
 
     public UserController(TrackedShipService userTrackedShipService,
                           UserService userService,
                           UserDtoMapper userDtoMapper,
-                          VerificationTokenService<Void, String> emailVerificationService,
+                          @Qualifier("resetPasswordService") VerificationTokenService resetPasswordService,
+                          @Qualifier("emailVerificationService") VerificationTokenService emailVerificationService,
                           TransactionalOperator transactionalOperator) {
         this.userTrackedShipService = userTrackedShipService;
         this.userService = userService;
         this.userDtoMapper = userDtoMapper;
+        this.resetPasswordService = resetPasswordService;
         this.emailVerificationService = emailVerificationService;
         this.transactionalOperator = transactionalOperator;
     }
@@ -74,7 +80,7 @@ public class UserController {
                         buildResponse(
                                 CREATED,
                                 buildResponseModel(
-                                        "Your account is currently unavailable, you need to verify your email address, the message has been sent to your mailbox.",
+                                        "CREATED,EMAIL_SENT",
                                         CREATED,
                                         userDtoMapper.mapToReadDto(user),
                                         "user"
@@ -93,6 +99,27 @@ public class UserController {
         );
     }
 
+    @PatchMapping("/password/{verificationToken}")
+    public Mono<ResponseEntity<ResponseModel<Void>>> changePassword(@PathVariable String verificationToken, @RequestBody String newPassword) {
+        return resetPasswordService.getVerificationToken(verificationToken)
+                .flatMap(vt -> vt.getVerified()
+                        ? just(vt)
+                        : error(InvalidVerificationTokenException::new)
+                )
+                .flatMap(vt -> userService.getUser(vt.getUid()))
+                .flatMap(user -> userService.updatePassword(user, newPassword))
+                .then(just(
+                        buildResponse(
+                                OK,
+                                buildResponseModel(
+                                        "CHANGED",
+                                        OK,
+                                        null,
+                                        null
+                                )
+                        )
+                ));
+    }
 
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).ADMIN.name())")
     @DeleteMapping("/{id}")
@@ -102,7 +129,7 @@ public class UserController {
                         buildResponse(
                                 OK,
                                 buildResponseModel(
-                                        "User has been deleted successfully.",
+                                        "DELETED",
                                         OK,
                                         null,
                                         null
@@ -139,7 +166,7 @@ public class UserController {
             "T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).ADMIN.name()" +
             ")"
     )
-    @PostMapping("/tracked-ships/{mmsi}")
+    @PatchMapping("/tracked-ships/{mmsi}")
     public Mono<ResponseEntity<ResponseModel<TrackedShip>>> addTrackedShip(Principal principal, @PathVariable String mmsi) {
         return userService.identifyUser(principal.getName())
                 .flatMap(id -> userTrackedShipService.addTrackedShip(id, mmsi)
@@ -147,7 +174,7 @@ public class UserController {
                                 buildResponse(
                                         CREATED,
                                         buildResponseModel(
-                                                "Successfully added ship into tracking list.",
+                                                "ADDED_TO_LIST",
                                                 CREATED,
                                                 trackedShip,
                                                 "trackedShip"
@@ -171,7 +198,7 @@ public class UserController {
                                 buildResponse(
                                         OK,
                                         buildResponseModel(
-                                                "Successfully removed ship from tracking list.",
+                                                "REMOVED_FROM_LIST",
                                                 OK,
                                                 null,
                                                 null

@@ -58,14 +58,7 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(of(SIGNED));
         return mongoUserRepository.save(user)
-                .onErrorResume(throwable -> {
-                    if (throwable instanceof DuplicateKeyException) {
-                        log.error(UniqueEmailException.MESSAGE);
-                        return error(UniqueEmailException::new);
-                    } else {
-                        return error(throwable);
-                    }
-                });
+                .onErrorResume(DuplicateKeyException.class, e -> error(UniqueEmailException::new));
     }
 
     @Override
@@ -93,13 +86,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Mono<Void> updatePassword(User user, String newPassword) {
+        return customUserRepository.updatePassword(user.getId(), passwordEncoder.encode(newPassword));
+    }
+
+    @Override
     public Mono<User> processAuthenticationFlowUser(String id, String username, String email, String tokenIssuer) {
         log.info("Processing authentication flow user.");
         return mongoUserRepository.findByEmail(email)
                 .flatMap(this::isUserVerified)
-                .flatMap(user -> this.processUserOpenIds(user, id)) // 2 - its left to describe
-                .switchIfEmpty(this.processUserCreation(id, username, email, tokenIssuer)); // 1
-    } // INTEGRATION PART - ARTICLE
+                .flatMap(user -> this.processUserOpenIds(user, id))
+                .switchIfEmpty(this.processUserCreation(id, username, email, tokenIssuer));
+    }
 
     private Mono<User> isUserVerified(User user) {
         return just(user)

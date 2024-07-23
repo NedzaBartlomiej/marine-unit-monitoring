@@ -5,12 +5,11 @@ import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.Ver
 import java.time.LocalDateTime;
 
 public class ResetPasswordVerificationToken extends VerificationToken {
-    public ResetPasswordVerificationToken(String uid, long expirationTime, String type, Object carrierData) {
+    public ResetPasswordVerificationToken(String uid, long expirationTime, String type) {
         super(
                 uid,
                 LocalDateTime.now().plusHours(expirationTime),
-                type,
-                carrierData
+                type
         );
     }
 }

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.AbstractVerificationTokenService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationTokenService;
@@ -14,13 +13,8 @@ import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.rep
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
-
-import static reactor.core.publisher.Mono.error;
-import static reactor.core.publisher.Mono.just;
-
 @Service
-public class EmailVerificationService extends AbstractVerificationTokenService implements VerificationTokenService<Void, String> {
+public class EmailVerificationService extends AbstractVerificationTokenService implements VerificationTokenService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailVerificationService.class);
     private final UserService userService;
@@ -47,20 +41,14 @@ public class EmailVerificationService extends AbstractVerificationTokenService i
 
     @Override
     public Mono<Void> issue(String uid) {
-        log.info("Issuing email verification token.");
         return userService.getUser(uid)
-                .switchIfEmpty(error(NotFoundException::new))
-                .flatMap(user -> super.saveVerificationToken(
+                .flatMap(user -> super.issue(
+                        user,
                         new EmailVerificationToken(
                                 user.getId(),
                                 this.emailTokenExpirationTime,
-                                VerificationTokenType.EMAIL_VERIFICATION.name(),
-                                null
-                        )
-                ))
-                .flatMap(verificationToken -> super.sendVerificationToken(
-                        verificationToken.getUid(),
-                        verificationToken.getId(),
+                                VerificationTokenType.EMAIL_VERIFICATION.name()
+                        ),
                         "Marine Unit Monitoring - verification email message."
                 ));
     }
@@ -69,12 +57,8 @@ public class EmailVerificationService extends AbstractVerificationTokenService i
     public Mono<Void> verify(String token) {
         log.info("Verifying email verification token.");
         return mongoVerificationTokenRepository.findById(token)
-                .switchIfEmpty(error()) // todo think about exception here (smth common)
-                .flatMap(verificationToken -> verificationToken.getExpiration().isBefore(LocalDateTime.now())
-                        ? error(ExpiredVerificationTokenException::new) // todo or resend or smth - to think about
-                        : just(verificationToken)
-                )
-                .flatMap(verificationToken -> userService.getUser(verificationToken.getUid()))
+                .flatMap(super::validateVerificationToken)
+                .flatMap(verificationToken -> userService.getUser(verificationToken.getUid())) // user may not exist -> NotFoundEx then
                 .flatMap(user -> userService.verifyUser(user.getId()))
                 .then(mongoVerificationTokenRepository.deleteById(token));
     }

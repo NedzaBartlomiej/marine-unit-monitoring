@@ -72,4 +72,9 @@ public class RestControllerGlobalErrorHandler {
         log.error("Invalid JWT: {}", e.getMessage());
         return buildErrorResponse(SecurityError.INVALID_TOKEN.getMessage(), UNAUTHORIZED);
     }
+
+    @ExceptionHandler(InvalidVerificationTokenException.class)
+    public ResponseEntity<ResponseModel<Void>> handleInvalidVerificationTokenException(Exception e) {
+        return buildErrorResponse(e.getMessage(), BAD_REQUEST);
+    }
 }

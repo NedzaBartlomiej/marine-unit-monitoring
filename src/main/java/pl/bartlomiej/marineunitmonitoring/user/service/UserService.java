@@ -20,4 +20,6 @@ public interface UserService {
     Mono<Boolean> isUserExists(String id);
 
     Mono<String> identifyUser(String subjectId);
+
+    Mono<Void> updatePassword(User user, String newPassword);
 }

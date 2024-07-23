@@ -20,4 +20,6 @@ public interface CustomUserRepository {
     Mono<User> findByOpenId(String openId);
 
     Mono<Void> updateIsVerified(String id, boolean isVerified);
+
+    Mono<Void> updatePassword(String id, String password);
 }

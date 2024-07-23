@@ -5,11 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 
 
 public class UserAuthDto {
-    @NotBlank(message = "Email required.")
-    @Email
+    @NotBlank(message = "EMPTY_EMAIL")
+    @Email(message = "INVALID_EMAIL")
     private String email;
 
-    @NotBlank(message = "Password required.")
+    @NotBlank(message = "EMPTY_PASSWORD")
     private String password;
 
     public UserAuthDto() {

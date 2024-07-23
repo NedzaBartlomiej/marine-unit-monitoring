@@ -12,6 +12,7 @@ public abstract class VerificationToken {
     private LocalDateTime expiration;
     private String type;
     private Object carrierData;
+    private Boolean isVerified;
 
     public VerificationToken() {
     }
@@ -22,6 +23,14 @@ public abstract class VerificationToken {
         this.expiration = expiration;
         this.type = type;
         this.carrierData = carrierData;
+    }
+
+    public VerificationToken(String uid, LocalDateTime expiration, String type) {
+        this.id = UUID.randomUUID().toString();
+        this.uid = uid;
+        this.expiration = expiration;
+        this.type = type;
+        this.carrierData = null;
     }
 
     public String getId() {
@@ -62,5 +71,13 @@ public abstract class VerificationToken {
 
     public void setCarrierData(Object carrierData) {
         this.carrierData = carrierData;
+    }
+
+    public Boolean getVerified() {
+        return isVerified;
+    }
+
+    public void setVerified(Boolean verified) {
+        isVerified = verified;
     }
 }

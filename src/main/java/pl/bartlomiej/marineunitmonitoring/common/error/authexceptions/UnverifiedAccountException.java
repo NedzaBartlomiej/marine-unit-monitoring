@@ -4,7 +4,7 @@ import org.springframework.security.core.AuthenticationException;
 
 public class UnverifiedAccountException extends AuthenticationException {
 
-    public static final String MESSAGE = "Unverified user account. Verify email and try again.";
+    public static final String MESSAGE = "UNVERIFIED_ACCOUNT";
 
     public UnverifiedAccountException() {
         super(MESSAGE);

@@ -5,14 +5,14 @@ import jakarta.validation.constraints.NotBlank;
 
 public class UserSaveDto {
 
-    @NotBlank(message = "Username required.")
+    @NotBlank(message = "EMPTY_USERNAME")
     private String username;
 
-    @NotBlank(message = "Email required.")
-    @Email
+    @NotBlank(message = "EMPTY_EMAIL")
+    @Email(message = "INVALID_EMAIL")
     private String email;
 
-    @NotBlank(message = "Password required.")
+    @NotBlank(message = "EMPTY_PASSWORD")
     private String password;
 
     public UserSaveDto() {

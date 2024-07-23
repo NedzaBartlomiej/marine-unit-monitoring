@@ -87,7 +87,16 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     public Mono<Void> updateIsVerified(String id, boolean isVerified) {
         return reactiveMongoTemplate.updateFirst(
                 this.getIdValidQuery(id),
-                new Update().set("isVerified", true),
+                new Update().set("isVerified", isVerified),
+                User.class
+        ).then();
+    }
+
+    @Override
+    public Mono<Void> updatePassword(String id, String password) {
+        return reactiveMongoTemplate.updateFirst(
+                this.getIdValidQuery(id),
+                new Update().set("password", password),
                 User.class
         ).then();
     }

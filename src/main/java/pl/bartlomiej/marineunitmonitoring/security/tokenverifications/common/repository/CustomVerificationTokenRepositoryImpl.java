@@ -3,9 +3,11 @@ package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.re
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationToken;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 
@@ -26,5 +28,14 @@ public class CustomVerificationTokenRepositoryImpl implements CustomVerification
                 ),
                 VerificationToken.class
         );
+    }
+
+    @Override
+    public Mono<Void> updateIsVerified(String id, boolean isVerified) {
+        return reactiveMongoTemplate.updateFirst(
+                new Query(Criteria.where("_id").is(id)),
+                new Update().set("isVerified", isVerified),
+                VerificationToken.class
+        ).then();
     }
 }

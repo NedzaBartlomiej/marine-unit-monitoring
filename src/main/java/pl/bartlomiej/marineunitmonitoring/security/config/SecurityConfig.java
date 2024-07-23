@@ -19,8 +19,7 @@ import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifie
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAccessDeniedHandler;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAuthenticationEntryPoint;
 
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.*;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -48,9 +47,12 @@ public class SecurityConfig {
                 .authorizeExchange(auth ->
                         auth
                                 .pathMatchers(POST, "*/users").permitAll()
+                                .pathMatchers(PATCH, "*/users/password/*").permitAll()
                                 .pathMatchers(GET, "*/points").permitAll()
                                 .pathMatchers(GET, "*/authentication/authenticate").permitAll()
                                 .pathMatchers(GET, "*/authentication/verify-email/*").permitAll()
+                                .pathMatchers(GET, "*/authentication/initiate-reset-password").permitAll()
+                                .pathMatchers(GET, "*/authentication/verify-reset-password/*").permitAll()
                                 .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oAuth2ResourceServerSpec ->

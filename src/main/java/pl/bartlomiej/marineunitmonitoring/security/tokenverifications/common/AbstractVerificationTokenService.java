@@ -3,15 +3,20 @@ package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
+import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidVerificationTokenException;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.CustomVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.MongoVerificationTokenRepository;
+import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+
+import static reactor.core.publisher.Mono.error;
 import static reactor.core.publisher.Mono.just;
 
-public abstract class AbstractVerificationTokenService {
+public abstract class AbstractVerificationTokenService implements VerificationTokenService {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractVerificationTokenService.class);
     private final EmailService emailService;
@@ -24,6 +29,23 @@ public abstract class AbstractVerificationTokenService {
         this.mongoVerificationTokenRepository = mongoVerificationTokenRepository;
         this.customVerificationTokenRepository = customVerificationTokenRepository;
         this.userService = userService;
+    }
+
+    @Override
+    public Mono<VerificationToken> getVerificationToken(String id) {
+        return mongoVerificationTokenRepository.findById(id)
+                .switchIfEmpty(error(InvalidVerificationTokenException::new));
+    }
+
+    protected Mono<Void> issue(User user, VerificationToken verificationToken, String emailTitle) {
+        log.info("Issuing {} token.", verificationToken.getType().toLowerCase());
+        return just(user)
+                .flatMap(u -> this.saveVerificationToken(verificationToken))
+                .flatMap(vt -> this.sendVerificationToken(
+                        verificationToken.getUid(),
+                        verificationToken.getId(),
+                        emailTitle
+                ));
     }
 
     protected Mono<VerificationToken> saveVerificationToken(VerificationToken verificationToken) {
@@ -43,6 +65,16 @@ public abstract class AbstractVerificationTokenService {
     protected abstract String buildVerificationMessage(String verificationUrl);
 
     protected abstract String buildVerificationUrl(String token);
+
+    protected Mono<VerificationToken> validateVerificationToken(VerificationToken token) {
+        log.info("Validating {} token.", token.getType().toLowerCase());
+        return just(token)
+                .switchIfEmpty(error(InvalidVerificationTokenException::new))
+                .flatMap(verificationToken -> verificationToken.getExpiration().isBefore(LocalDateTime.now())
+                        ? error(InvalidVerificationTokenException::new)
+                        : just(verificationToken)
+                );
+    }
 
     @Scheduled(initialDelay = 0, fixedDelayString = "${project-properties.scheduling-delays.in-ms.email-verification.clearing}")
     private void clearAbandonedVerificationIngredients() {

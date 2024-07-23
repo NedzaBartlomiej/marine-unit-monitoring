@@ -6,12 +6,11 @@ import java.time.LocalDateTime;
 
 public class EmailVerificationToken extends VerificationToken {
 
-    public EmailVerificationToken(String uid, long expirationTime, String type, Object carrierData) {
+    public EmailVerificationToken(String uid, long expirationTime, String type) {
         super(
                 uid,
                 LocalDateTime.now().plusHours(expirationTime),
-                type,
-                carrierData
+                type
         );
     }
 }
