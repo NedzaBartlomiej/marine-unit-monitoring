@@ -2,15 +2,12 @@ package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.emailveri
 
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationToken;
 
-import java.time.LocalDateTime;
-
 public class EmailVerificationToken extends VerificationToken {
 
+    public EmailVerificationToken() {
+    }
+
     public EmailVerificationToken(String uid, long expirationTime, String type) {
-        super(
-                uid,
-                LocalDateTime.now().plusHours(expirationTime),
-                type
-        );
+        super(uid, expirationTime, type);
     }
 }

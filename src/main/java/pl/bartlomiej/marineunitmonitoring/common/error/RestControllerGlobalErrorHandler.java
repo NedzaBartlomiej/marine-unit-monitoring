@@ -62,8 +62,8 @@ public class RestControllerGlobalErrorHandler {
         return buildErrorResponse(e.getMessage(), INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(AccountAlreadyVerifiedException.class)
-    public ResponseEntity<ResponseModel<Void>> handleAccountAlreadyVerifiedException(AccountAlreadyVerifiedException e) {
+    @ExceptionHandler(AlreadyVerifiedException.class)
+    public ResponseEntity<ResponseModel<Void>> handleAccountAlreadyVerifiedException(AlreadyVerifiedException e) {
         return buildErrorResponse(e.getMessage(), CONFLICT);
     }
 

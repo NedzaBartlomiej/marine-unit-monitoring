@@ -1,7 +1,6 @@
 package pl.bartlomiej.marineunitmonitoring.security.authentication;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -10,7 +9,8 @@ import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.service.AuthenticationService;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationTokenService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.emailverification.EmailVerificationService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.resetpassword.ResetPasswordService;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserAuthDto;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
@@ -29,14 +29,14 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final UserService userService;
     private final JWTService jwtService;
-    private final VerificationTokenService resetPasswordService;
-    private final VerificationTokenService emailVerificationService;
+    private final ResetPasswordService resetPasswordService;
+    private final EmailVerificationService emailVerificationService;
 
     public AuthenticationController(AuthenticationService authenticationService,
                                     UserService userService,
                                     JWTService jwtService,
-                                    @Qualifier("resetPasswordService") VerificationTokenService resetPasswordService,
-                                    @Qualifier("emailVerificationService") VerificationTokenService emailVerificationService) {
+                                    ResetPasswordService resetPasswordService,
+                                    EmailVerificationService emailVerificationService) {
         this.authenticationService = authenticationService;
         this.userService = userService;
         this.jwtService = jwtService;

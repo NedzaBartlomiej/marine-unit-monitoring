@@ -13,6 +13,8 @@ public interface UserService {
 
     Mono<Void> verifyUser(String id);
 
+    Mono<Void> unlockUser(String id);
+
     Mono<User> processAuthenticationFlowUser(String id, String username, String email, String tokenIssuer);
 
     Mono<Void> deleteUser(String id);
@@ -21,5 +23,5 @@ public interface UserService {
 
     Mono<String> identifyUser(String subjectId);
 
-    Mono<Void> updatePassword(User user, String newPassword);
+    Mono<Void> updatePassword(String id, String newPassword);
 }

@@ -1,15 +1,14 @@
 package pl.bartlomiej.marineunitmonitoring.user;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.bind.annotation.*;
-import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidVerificationTokenException;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationTokenService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.emailverification.EmailVerificationService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.resetpassword.ResetPasswordService;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserDtoMapper;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserReadDto;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserSaveDto;
@@ -26,7 +25,6 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.ResponseEntity.ok;
 import static pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil.buildResponse;
 import static pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil.buildResponseModel;
-import static reactor.core.publisher.Mono.error;
 import static reactor.core.publisher.Mono.just;
 
 @RestController
@@ -35,16 +33,16 @@ public class UserController {
 
     private final TrackedShipService userTrackedShipService;
     private final UserService userService;
-    private final VerificationTokenService resetPasswordService;
     private final UserDtoMapper userDtoMapper;
-    private final VerificationTokenService emailVerificationService;
+    private final ResetPasswordService resetPasswordService;
+    private final EmailVerificationService emailVerificationService;
     private final TransactionalOperator transactionalOperator;
 
     public UserController(TrackedShipService userTrackedShipService,
                           UserService userService,
                           UserDtoMapper userDtoMapper,
-                          @Qualifier("resetPasswordService") VerificationTokenService resetPasswordService,
-                          @Qualifier("emailVerificationService") VerificationTokenService emailVerificationService,
+                          ResetPasswordService resetPasswordService,
+                          EmailVerificationService emailVerificationService,
                           TransactionalOperator transactionalOperator) {
         this.userTrackedShipService = userTrackedShipService;
         this.userService = userService;
@@ -75,7 +73,7 @@ public class UserController {
 
     @PostMapping
     public Mono<ResponseEntity<ResponseModel<UserReadDto>>> createUser(@RequestBody @Valid UserSaveDto userSaveDto) {
-        return this.transactionalUserCreationProcess(userSaveDto)
+        return this.processTransactionalUserCreation(userSaveDto)
                 .map(user ->
                         buildResponse(
                                 CREATED,
@@ -89,7 +87,7 @@ public class UserController {
                 );
     }
 
-    private Mono<User> transactionalUserCreationProcess(UserSaveDto userSaveDto) {
+    private Mono<User> processTransactionalUserCreation(UserSaveDto userSaveDto) {
         return transactionalOperator.transactional(
                 userService.createUser(userDtoMapper.mapFrom(userSaveDto))
                         .flatMap(user ->
@@ -101,13 +99,7 @@ public class UserController {
 
     @PatchMapping("/password/{verificationToken}")
     public Mono<ResponseEntity<ResponseModel<Void>>> changePassword(@PathVariable String verificationToken, @RequestBody String newPassword) {
-        return resetPasswordService.getVerificationToken(verificationToken)
-                .flatMap(vt -> vt.getVerified()
-                        ? just(vt)
-                        : error(InvalidVerificationTokenException::new)
-                )
-                .flatMap(vt -> userService.getUser(vt.getUid()))
-                .flatMap(user -> userService.updatePassword(user, newPassword))
+        return resetPasswordService.processResetPassword(verificationToken, newPassword)
                 .then(just(
                         buildResponse(
                                 OK,

@@ -8,4 +8,6 @@ public interface VerificationTokenService {
     Mono<Void> verify(String token);
 
     Mono<VerificationToken> getVerificationToken(String id);
+
+    Mono<Void> deleteVerificationToken(String id);
 }

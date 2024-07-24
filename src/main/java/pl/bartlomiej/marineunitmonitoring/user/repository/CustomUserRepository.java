@@ -21,5 +21,7 @@ public interface CustomUserRepository {
 
     Mono<Void> updateIsVerified(String id, boolean isVerified);
 
+    Mono<Void> updateIsLocked(String id, boolean isLocked);
+
     Mono<Void> updatePassword(String id, String password);
 }

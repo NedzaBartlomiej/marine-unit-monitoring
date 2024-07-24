@@ -93,6 +93,15 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     }
 
     @Override
+    public Mono<Void> updateIsLocked(String id, boolean isLocked) {
+        return reactiveMongoTemplate.updateFirst(
+                this.getIdValidQuery(id),
+                new Update().set("isLocked", isLocked),
+                User.class
+        ).then();
+    }
+
+    @Override
     public Mono<Void> updatePassword(String id, String password) {
         return reactiveMongoTemplate.updateFirst(
                 this.getIdValidQuery(id),

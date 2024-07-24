@@ -37,13 +37,18 @@ public abstract class AbstractVerificationTokenService implements VerificationTo
                 .switchIfEmpty(error(InvalidVerificationTokenException::new));
     }
 
+    @Override
+    public Mono<Void> deleteVerificationToken(String id) {
+        return mongoVerificationTokenRepository.deleteById(id);
+    }
+
     protected Mono<Void> issue(User user, VerificationToken verificationToken, String emailTitle) {
         log.info("Issuing {} token.", verificationToken.getType().toLowerCase());
         return just(user)
                 .flatMap(u -> this.saveVerificationToken(verificationToken))
                 .flatMap(vt -> this.sendVerificationToken(
-                        verificationToken.getUid(),
-                        verificationToken.getId(),
+                        user.getEmail(),
+                        vt.getId(),
                         emailTitle
                 ));
     }
@@ -66,9 +71,9 @@ public abstract class AbstractVerificationTokenService implements VerificationTo
 
     protected abstract String buildVerificationUrl(String token);
 
-    protected Mono<VerificationToken> validateVerificationToken(VerificationToken token) {
-        log.info("Validating {} token.", token.getType().toLowerCase());
-        return just(token)
+    protected Mono<VerificationToken> validateVerificationToken(Mono<VerificationToken> token) {
+        return token
+                .doOnNext(verificationToken -> log.info("Validating {} token.", verificationToken.getType().toLowerCase()))
                 .switchIfEmpty(error(InvalidVerificationTokenException::new))
                 .flatMap(verificationToken -> verificationToken.getExpiration().isBefore(LocalDateTime.now())
                         ? error(InvalidVerificationTokenException::new)
@@ -77,7 +82,7 @@ public abstract class AbstractVerificationTokenService implements VerificationTo
     }
 
     @Scheduled(initialDelay = 0, fixedDelayString = "${project-properties.scheduling-delays.in-ms.email-verification.clearing}")
-    private void clearAbandonedVerificationIngredients() {
+    protected void clearAbandonedVerificationIngredients() {
         log.info("Clearing abandoned verification tokens.");
         customVerificationTokenRepository.findExpiredTokens()
                 .flatMap(verificationToken -> {

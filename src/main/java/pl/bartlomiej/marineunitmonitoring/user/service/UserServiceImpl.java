@@ -67,6 +67,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Mono<Void> unlockUser(String id) {
+        return customUserRepository.updateIsLocked(id, false);
+    }
+
+    @Override
     public Mono<Void> deleteUser(String id) {
         return this.isUserExists(id)
                 .flatMap(exists -> mongoUserRepository.deleteById(id));
@@ -86,8 +91,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<Void> updatePassword(User user, String newPassword) {
-        return customUserRepository.updatePassword(user.getId(), passwordEncoder.encode(newPassword));
+    public Mono<Void> updatePassword(String id, String newPassword) {
+        return customUserRepository.updatePassword(id, passwordEncoder.encode(newPassword));
     }
 
     @Override

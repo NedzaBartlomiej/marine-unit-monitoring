@@ -3,6 +3,7 @@ package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Document(collection = "verification_tokens")
@@ -17,20 +18,22 @@ public abstract class VerificationToken {
     public VerificationToken() {
     }
 
-    public VerificationToken(String uid, LocalDateTime expiration, String type, Object carrierData) {
+    public VerificationToken(String uid, long expirationTime, String type, Object carrierData) {
         this.id = UUID.randomUUID().toString();
         this.uid = uid;
-        this.expiration = expiration;
+        this.expiration = LocalDateTime.now().plus(expirationTime, ChronoUnit.MILLIS);
         this.type = type;
         this.carrierData = carrierData;
+        this.isVerified = false;
     }
 
-    public VerificationToken(String uid, LocalDateTime expiration, String type) {
+    public VerificationToken(String uid, long expirationTime, String type) {
         this.id = UUID.randomUUID().toString();
         this.uid = uid;
-        this.expiration = expiration;
+        this.expiration = LocalDateTime.now().plus(expirationTime, ChronoUnit.MILLIS);
         this.type = type;
         this.carrierData = null;
+        this.isVerified = false;
     }
 
     public String getId() {
@@ -74,10 +77,10 @@ public abstract class VerificationToken {
     }
 
     public Boolean getVerified() {
-        return isVerified;
+        return this.isVerified;
     }
 
     public void setVerified(Boolean verified) {
-        isVerified = verified;
+        this.isVerified = verified;
     }
 }
