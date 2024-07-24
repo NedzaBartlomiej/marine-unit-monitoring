@@ -1,14 +1,15 @@
-package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.emailverification;
+package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.emailverification.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.AbstractVerificationTokenService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationTokenType;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.CustomVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.MongoVerificationTokenRepository;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.service.AbstractVerificationTokenService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.emailverification.EmailVerificationToken;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
 

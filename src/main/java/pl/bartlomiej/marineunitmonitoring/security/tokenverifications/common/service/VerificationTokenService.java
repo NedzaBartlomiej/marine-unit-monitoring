@@ -1,5 +1,6 @@
-package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common;
+package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.service;
 
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationToken;
 import reactor.core.publisher.Mono;
 
 public interface VerificationTokenService {

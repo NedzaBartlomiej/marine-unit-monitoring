@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.resetpassword;
+package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.resetpassword.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,10 +9,11 @@ import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.AlreadyVeri
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidVerificationTokenException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.AbstractVerificationTokenService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationTokenType;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.CustomVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.MongoVerificationTokenRepository;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.service.AbstractVerificationTokenService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.resetpassword.ResetPasswordVerificationToken;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
 
@@ -99,7 +100,7 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService i
 
     @Transactional(transactionManager = "reactiveTransactionManager")
     @Override
-    public Mono<Void> processResetPassword(String verificationToken, String newPassword) { // todo set isLocked to false
+    public Mono<Void> processResetPassword(String verificationToken, String newPassword) {
         return super.getVerificationToken(verificationToken)
                 .flatMap(vt -> vt.getVerified()
                         ? just(vt)

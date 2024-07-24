@@ -1,10 +1,11 @@
-package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common;
+package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidVerificationTokenException;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationToken;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.CustomVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.MongoVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.user.User;
