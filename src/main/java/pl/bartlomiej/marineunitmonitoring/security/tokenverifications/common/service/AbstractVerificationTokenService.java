@@ -45,8 +45,9 @@ public abstract class AbstractVerificationTokenService implements VerificationTo
 
     @Transactional(transactionManager = "reactiveTransactionManager")
     @Override
-    public Mono<Void> doVerifiedTokenAction(VerificationToken verificationToken) {
-        return empty(); // todo log
+    public Mono<Void> performVerifiedTokenAction(VerificationToken verificationToken) {
+        log.info("No default action to perform, with verified token.");
+        return empty();
     }
 
     protected Mono<Void> processIssue(User user, VerificationToken verificationToken, String emailTitle) {

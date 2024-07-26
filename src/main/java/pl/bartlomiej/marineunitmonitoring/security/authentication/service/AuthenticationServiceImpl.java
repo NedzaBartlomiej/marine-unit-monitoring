@@ -30,7 +30,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public Mono<Map<String, String>> authenticate(String id, String email, String password, String ipAddress) {
         var authenticationToken = new UsernamePasswordAuthenticationToken(id, password);
         return authenticationManager.authenticate(authenticationToken)
-                .flatMap(ignoredAuthentication -> trustedIpAddressService.issue(id, ipAddress))// todo check and send only when isnt trusted ip
+                .flatMap(ignoredAuthentication -> trustedIpAddressService.processTrustedIpProtection(id, ipAddress))
                 .then(Mono.just(
                         Map.of(
                                 REFRESH_TOKEN.getType(), jwtService.createRefreshToken(id, email),

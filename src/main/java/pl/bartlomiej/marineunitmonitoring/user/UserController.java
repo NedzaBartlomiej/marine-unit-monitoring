@@ -72,8 +72,10 @@ public class UserController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<ResponseModel<UserReadDto>>> createUser(@RequestBody @Valid UserSaveDto userSaveDto) {
-        return this.processTransactionalUserCreation(userSaveDto)
+    public Mono<ResponseEntity<ResponseModel<UserReadDto>>> createUser(
+            @RequestBody @Valid UserSaveDto userSaveDto,
+            @RequestHeader(name = "X-Forwarded-For") String xForwardedFor) {
+        return this.processTransactionalUserCreation(userSaveDto, xForwardedFor)
                 .map(user ->
                         buildResponse(
                                 CREATED,
@@ -87,11 +89,15 @@ public class UserController {
                 );
     }
 
-    private Mono<User> processTransactionalUserCreation(UserSaveDto userSaveDto) {
+    private Mono<User> processTransactionalUserCreation(UserSaveDto userSaveDto, String ipAddress) {
         return transactionalOperator.transactional(
                 userService.createUser(userDtoMapper.mapFrom(userSaveDto))
                         .flatMap(user ->
                                 emailVerificationService.issue(user.getId(), null)
+                                        .then(just(user))
+                        )
+                        .flatMap(user ->
+                                userService.trustIpAddress(user.getId(), ipAddress)
                                         .then(just(user))
                         )
         );

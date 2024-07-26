@@ -9,4 +9,6 @@ public interface TrustedIpAddressService extends VerificationTokenService {
     Mono<Void> trustIpAddress(VerificationToken verificationToken);
 
     Mono<Void> blockAccount(VerificationToken verificationToken);
+
+    Mono<Void> processTrustedIpProtection(String uid, String ipAddress);
 }

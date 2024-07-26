@@ -4,11 +4,12 @@ import lombok.Getter;
 
 @Getter
 public enum SecurityError {
-    FORBIDDEN("You don't have the required permissions."),
-    UNAUTHORIZED_CREDENTIALS("Bad authentication credentials."),
-    UNAUTHORIZED_AUTHENTICATION("You need to authenticate to access this resource."),
-    INVALID_TOKEN("Invalid token."),
-    INTERNAL_ERROR("An error occurred, try again.");
+    LOCKED("ACCOUNT_LOCKED"),
+    FORBIDDEN("INSUFFICIENT_PERMISSIONS"),
+    UNAUTHORIZED_CREDENTIALS("BAD_CREDENTIALS"),
+    UNAUTHORIZED_AUTHENTICATION("UNAUTHENTICATED"),
+    INVALID_TOKEN("INVALID_TOKEN"),
+    INTERNAL_ERROR("SERVER_ERROR");
 
     private final String message;
 

@@ -11,7 +11,9 @@ import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.rep
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.MongoVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.service.AbstractVerificationTokenService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.ipauthprotection.IpAddressVerificationToken;
+import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 
@@ -84,5 +86,22 @@ public class TrustedIpAddressServiceImpl extends AbstractVerificationTokenServic
         log.info("Blocking user account after untrusted activity confirmation.");
         return userService.blockUser(verificationToken.getUid())
                 .then(mongoVerificationTokenRepository.delete(verificationToken));
+    }
+
+    @Override
+    public Mono<Void> processTrustedIpProtection(String uid, String ipAddress) { // todo - test and maybe refactor somehow
+        log.info("Processing trusted IP authentication protection.");
+        return userService.getUser(uid)
+                .map(User::getTrustedIpAddresses)
+                .flatMapMany(Flux::fromIterable)
+                .hasElement(ipAddress)
+                .flatMap(isTrusted -> {
+                    if (isTrusted) {
+                        log.info("Trusted IP, continues the flow.");
+                        return Mono.empty();
+                    }
+                    log.info("Untrusted IP, performing untrusted IP action.");
+                    return this.issue(uid, ipAddress);
+                });
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.stereotype.Component;
@@ -34,7 +35,6 @@ public abstract class ResponseModelServerExceptionHandler {
     }
 
 
-    // todo - handling for lockedexception
     protected Mono<Void> processException(final Exception exception, ServerWebExchange exchange) {
         switch (exception) {
             case AccessDeniedException ignoredAccessDeniedException -> {
@@ -44,6 +44,10 @@ public abstract class ResponseModelServerExceptionHandler {
             case BadCredentialsException ignoredBadCredentialsException -> {
                 return writeExchange(exchange,
                         buildErrorResponse(UNAUTHORIZED, SecurityError.UNAUTHORIZED_CREDENTIALS.getMessage()));
+            }
+            case LockedException ignoredLockedException -> {
+                return writeExchange(exchange,
+                        buildErrorResponse(LOCKED, SecurityError.LOCKED.getMessage()));
             }
             case DisabledException ignoredDisabledException -> {
                 return writeExchange(exchange,

@@ -109,7 +109,7 @@ public class AuthenticationController {
     @GetMapping("/verify-email/{token}")
     public Mono<ResponseEntity<ResponseModel<Void>>> verifyEmail(@PathVariable String token) {
         return emailVerificationService.verify(token)
-                .flatMap(emailVerificationService::doVerifiedTokenAction)
+                .flatMap(emailVerificationService::performVerifiedTokenAction)
                 .then(just(
                         buildResponse(
                                 OK,
@@ -141,7 +141,7 @@ public class AuthenticationController {
     @GetMapping("/verify-reset-password/{verificationToken}")
     public Mono<ResponseEntity<ResponseModel<Void>>> verifyResetPassword(@PathVariable String verificationToken) {
         return resetPasswordService.verify(verificationToken)
-                .flatMap(resetPasswordService::doVerifiedTokenAction)
+                .flatMap(resetPasswordService::performVerifiedTokenAction)
                 .then(just(
                         buildResponse(OK,
                                 buildResponseModel(

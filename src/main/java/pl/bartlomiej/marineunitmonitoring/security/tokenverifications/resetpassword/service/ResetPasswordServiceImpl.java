@@ -87,8 +87,9 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService i
     }
 
     @Override
-    public Mono<Void> doVerifiedTokenAction(VerificationToken verificationToken) {
-        return just(verificationToken) // todo log here and wherever that method is implemented
+    public Mono<Void> performVerifiedTokenAction(VerificationToken verificationToken) {
+        log.info("Performing reset password verified token action:");
+        return just(verificationToken)
                 .flatMap(vt -> customVerificationTokenRepository
                         .updateIsVerified(vt.getId(), true)
                 );

@@ -9,7 +9,7 @@ public interface VerificationTokenService {
 
     Mono<VerificationToken> verify(String token);
 
-    Mono<Void> doVerifiedTokenAction(VerificationToken verificationToken);
+    Mono<Void> performVerifiedTokenAction(VerificationToken verificationToken);
 
     Mono<VerificationToken> getVerificationToken(String id);
 
