@@ -91,7 +91,7 @@ public class UserController {
         return transactionalOperator.transactional(
                 userService.createUser(userDtoMapper.mapFrom(userSaveDto))
                         .flatMap(user ->
-                                emailVerificationService.issue(user.getId())
+                                emailVerificationService.issue(user.getId(), null)
                                         .then(just(user))
                         )
         );

@@ -3,6 +3,7 @@ package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.se
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidVerificationTokenException;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationToken;
@@ -14,8 +15,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 
-import static reactor.core.publisher.Mono.error;
-import static reactor.core.publisher.Mono.just;
+import static reactor.core.publisher.Mono.*;
 
 public abstract class AbstractVerificationTokenService implements VerificationTokenService {
 
@@ -43,7 +43,13 @@ public abstract class AbstractVerificationTokenService implements VerificationTo
         return mongoVerificationTokenRepository.deleteById(id);
     }
 
-    protected Mono<Void> issue(User user, VerificationToken verificationToken, String emailTitle) {
+    @Transactional(transactionManager = "reactiveTransactionManager")
+    @Override
+    public Mono<Void> doVerifiedTokenAction(VerificationToken verificationToken) {
+        return empty(); // todo log
+    }
+
+    protected Mono<Void> processIssue(User user, VerificationToken verificationToken, String emailTitle) {
         log.info("Issuing {} token.", verificationToken.getType().toLowerCase());
         return just(user)
                 .flatMap(u -> this.saveVerificationToken(verificationToken))
@@ -72,8 +78,8 @@ public abstract class AbstractVerificationTokenService implements VerificationTo
 
     protected abstract String buildVerificationUrl(String token);
 
-    protected Mono<VerificationToken> validateVerificationToken(Mono<VerificationToken> token) {
-        return token
+    protected Mono<VerificationToken> validateVerificationToken(Mono<VerificationToken> tokenMono) {
+        return tokenMono
                 .doOnNext(verificationToken -> log.info("Validating {} token.", verificationToken.getType().toLowerCase()))
                 .switchIfEmpty(error(InvalidVerificationTokenException::new))
                 .flatMap(verificationToken -> verificationToken.getExpiration().isBefore(LocalDateTime.now())

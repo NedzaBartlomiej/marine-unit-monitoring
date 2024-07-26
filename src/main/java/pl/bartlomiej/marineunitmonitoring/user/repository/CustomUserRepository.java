@@ -24,4 +24,6 @@ public interface CustomUserRepository {
     Mono<Void> updateIsLocked(String id, boolean isLocked);
 
     Mono<Void> updatePassword(String id, String password);
+
+    Mono<Void> pushTrustedIpAddress(String id, String ipAddress);
 }

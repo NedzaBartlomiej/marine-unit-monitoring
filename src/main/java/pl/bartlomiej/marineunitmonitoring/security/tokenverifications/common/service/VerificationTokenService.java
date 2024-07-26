@@ -4,9 +4,12 @@ import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.Ver
 import reactor.core.publisher.Mono;
 
 public interface VerificationTokenService {
-    Mono<Void> issue(String userIdentifier);
 
-    Mono<Void> verify(String token);
+    Mono<Void> issue(String identifier, Object carrierObject);
+
+    Mono<VerificationToken> verify(String token);
+
+    Mono<Void> doVerifiedTokenAction(VerificationToken verificationToken);
 
     Mono<VerificationToken> getVerificationToken(String id);
 

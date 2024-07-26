@@ -53,6 +53,8 @@ public class SecurityConfig {
                                 .pathMatchers(GET, "*/authentication/verify-email/*").permitAll()
                                 .pathMatchers(GET, "*/authentication/initiate-reset-password").permitAll()
                                 .pathMatchers(GET, "*/authentication/verify-reset-password/*").permitAll()
+                                .pathMatchers(PATCH, "*/authentication/block-account/*").permitAll()
+                                .pathMatchers(PATCH, "*/authentication/trust-ip-address/*").permitAll()
                                 .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oAuth2ResourceServerSpec ->

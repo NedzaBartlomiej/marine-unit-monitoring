@@ -33,6 +33,8 @@ public abstract class ResponseModelServerExceptionHandler {
         this.objectMapper = objectMapper;
     }
 
+
+    // todo - handling for lockedexception
     protected Mono<Void> processException(final Exception exception, ServerWebExchange exchange) {
         switch (exception) {
             case AccessDeniedException ignoredAccessDeniedException -> {

@@ -14,6 +14,7 @@ project-properties:
       endpoint-paths:
         email-verification: /verify-email
         reset-password: /reset-password
+        untrusted-activity-log: /untrusted-activity-log
   oauth2:
     resource-server:
       multi-providers-jws-key-selector:
@@ -40,6 +41,7 @@ project-properties:
     verification:
       email-token: 86400000 # 24h
       reset-password: 86400000 # 24h
+      ip-address-token: 86400000 # 24h
   security:
     token:
       bearer:

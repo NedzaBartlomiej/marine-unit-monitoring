@@ -65,7 +65,7 @@ public class InactivePointFilter {
 
                     return empty();
                 })
-                .doOnError(err -> log.warn("Something issue when filtering - {}", err.getMessage()))
+                .doOnError(err -> log.warn("Something processIssue when filtering - {}", err.getMessage()))
                 .then();
     }
 }

@@ -9,6 +9,7 @@ import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.AlreadyVeri
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidVerificationTokenException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationToken;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationTokenType;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.CustomVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.MongoVerificationTokenRepository;
@@ -51,7 +52,7 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService i
      * @throws NotFoundException when the user is based only on OAuth2 data (when the user isn't created by registration)
      */
     @Override
-    public Mono<Void> issue(String email) {
+    public Mono<Void> issue(String email, Object carrierObject) {
         return userService.getUserByEmail(email)
                 .flatMap(user -> {
                     if (user.getPassword() == null) {
@@ -61,7 +62,7 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService i
                 })
                 .flatMap(user -> mongoVerificationTokenRepository.deleteByUid(user.getId())
                         .then(just(user)))
-                .flatMap(user -> super.issue(
+                .flatMap(user -> super.processIssue(
                         user,
                         new ResetPasswordVerificationToken(
                                 user.getId(),
@@ -73,7 +74,7 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService i
     }
 
     @Override
-    public Mono<Void> verify(String token) {
+    public Mono<VerificationToken> verify(String token) {
         log.info("Verifying reset password token.");
         return super.validateVerificationToken(mongoVerificationTokenRepository.findById(token))
                 .flatMap(verificationToken -> verificationToken.getVerified()
@@ -82,9 +83,14 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService i
                 )
                 .flatMap(verificationToken -> userService.isUserExists(verificationToken.getUid())
                         .then(just(verificationToken))
-                )
-                .flatMap(verificationToken -> customVerificationTokenRepository
-                        .updateIsVerified(verificationToken.getId(), true)
+                );
+    }
+
+    @Override
+    public Mono<Void> doVerifiedTokenAction(VerificationToken verificationToken) {
+        return just(verificationToken) // todo log here and wherever that method is implemented
+                .flatMap(vt -> customVerificationTokenRepository
+                        .updateIsVerified(vt.getId(), true)
                 );
     }
 

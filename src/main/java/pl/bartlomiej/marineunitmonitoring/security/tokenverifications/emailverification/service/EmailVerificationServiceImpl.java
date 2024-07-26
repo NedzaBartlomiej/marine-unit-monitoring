@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationToken;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationTokenType;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.CustomVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.MongoVerificationTokenRepository;
@@ -40,9 +41,9 @@ public class EmailVerificationServiceImpl extends AbstractVerificationTokenServi
     }
 
     @Override
-    public Mono<Void> issue(String uid) {
+    public Mono<Void> issue(String uid, Object carrierObject) {
         return userService.getUser(uid)
-                .flatMap(user -> super.issue(
+                .flatMap(user -> super.processIssue(
                         user,
                         new EmailVerificationToken(
                                 user.getId(),
@@ -54,12 +55,19 @@ public class EmailVerificationServiceImpl extends AbstractVerificationTokenServi
     }
 
     @Override
-    public Mono<Void> verify(String token) {
+    public Mono<VerificationToken> verify(String token) {
         log.info("Verifying email verification token.");
         return super.validateVerificationToken(mongoVerificationTokenRepository.findById(token))
-                .flatMap(verificationToken -> userService.getUser(verificationToken.getUid())) // user may not exist -> NotFoundEx then
+                .flatMap(verificationToken -> userService.getUser(verificationToken.getUid())
+                        .then(Mono.just(verificationToken))
+                );
+    }
+
+    @Override
+    public Mono<Void> doVerifiedTokenAction(VerificationToken verificationToken) {
+        return Mono.just(verificationToken)
                 .flatMap(user -> userService.verifyUser(user.getId()))
-                .then(mongoVerificationTokenRepository.deleteById(token));
+                .then(mongoVerificationTokenRepository.deleteById(verificationToken.getId()));
     }
 
     protected String buildVerificationMessage(String verificationUrl) {

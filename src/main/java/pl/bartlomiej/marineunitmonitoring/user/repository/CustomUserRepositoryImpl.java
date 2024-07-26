@@ -109,4 +109,14 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
                 User.class
         ).then();
     }
+
+    @Override
+    public Mono<Void> pushTrustedIpAddress(String id, String ipAddress) {
+        return reactiveMongoTemplate
+                .updateFirst(
+                        this.getIdValidQuery(id),
+                        new Update().push("trustedIpAddresses", ipAddress),
+                        User.class
+                ).then();
+    }
 }

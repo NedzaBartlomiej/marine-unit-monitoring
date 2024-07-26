@@ -33,7 +33,6 @@ public class PointController {
 
     @GetMapping
     public ResponseEntity<Flux<ResponseModel<Point>>> getPoints() {
-
         // ACTIVE LIST FILTRATION
         pointService.getPoints()
                 .map(Point::mmsi)
