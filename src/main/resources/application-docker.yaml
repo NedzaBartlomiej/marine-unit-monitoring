@@ -14,7 +14,7 @@ project-properties:
       endpoint-paths:
         email-verification: /verify-email
         reset-password: /reset-password
-        untrusted-activity-log: /untrusted-activity-log
+        untrusted-authentication: /untrusted-authentication
   oauth2:
     resource-server:
       multi-providers-jws-key-selector:

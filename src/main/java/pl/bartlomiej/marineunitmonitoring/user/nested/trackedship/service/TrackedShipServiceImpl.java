@@ -1,4 +1,4 @@
-package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship;
+package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.MmsiConflictException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
+import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShip;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Flux;

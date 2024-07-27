@@ -5,7 +5,7 @@ import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.ipauthprotection.service.TrustedIpAddressService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.ipauthprotection.service.IpAuthProtectionService;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
@@ -16,12 +16,12 @@ import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.ser
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private final TrustedIpAddressService trustedIpAddressService;
+    private final IpAuthProtectionService ipAuthProtectionService;
     private final ReactiveAuthenticationManager authenticationManager;
     private final JWTService jwtService;
 
-    public AuthenticationServiceImpl(TrustedIpAddressService trustedIpAddressService, @Qualifier("userDetailsReactiveAuthenticationManager") ReactiveAuthenticationManager authenticationManager, JWTService jwtService) {
-        this.trustedIpAddressService = trustedIpAddressService;
+    public AuthenticationServiceImpl(IpAuthProtectionService ipAuthProtectionService, @Qualifier("userDetailsReactiveAuthenticationManager") ReactiveAuthenticationManager authenticationManager, JWTService jwtService) {
+        this.ipAuthProtectionService = ipAuthProtectionService;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
     }
@@ -30,7 +30,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public Mono<Map<String, String>> authenticate(String id, String email, String password, String ipAddress) {
         var authenticationToken = new UsernamePasswordAuthenticationToken(id, password);
         return authenticationManager.authenticate(authenticationToken)
-                .flatMap(ignoredAuthentication -> trustedIpAddressService.processTrustedIpProtection(id, ipAddress))
+                .flatMap(ignoredAuthentication -> ipAuthProtectionService.processProtection(id, ipAddress))
                 .then(Mono.just(
                         Map.of(
                                 REFRESH_TOKEN.getType(), jwtService.createRefreshToken(id, email),

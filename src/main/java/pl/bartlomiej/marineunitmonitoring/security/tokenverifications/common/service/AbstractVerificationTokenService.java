@@ -67,7 +67,7 @@ public abstract class AbstractVerificationTokenService implements VerificationTo
     }
 
     protected Mono<Void> sendVerificationToken(String email, String token, String title) {
-        log.info("Sending verification token.");
+        log.info("Sending verification email.");
         return emailService.sendEmail(
                 email,
                 title,

@@ -1,5 +1,6 @@
-package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship;
+package pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.service;
 
+import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShip;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

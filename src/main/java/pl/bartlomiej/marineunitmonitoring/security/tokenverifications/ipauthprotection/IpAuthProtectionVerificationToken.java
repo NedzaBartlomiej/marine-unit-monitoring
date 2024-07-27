@@ -2,11 +2,11 @@ package pl.bartlomiej.marineunitmonitoring.security.tokenverifications.ipauthpro
 
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.VerificationToken;
 
-public class IpAddressVerificationToken extends VerificationToken {
-    public IpAddressVerificationToken() {
+public class IpAuthProtectionVerificationToken extends VerificationToken {
+    public IpAuthProtectionVerificationToken() {
     }
 
-    public IpAddressVerificationToken(String uid, long expirationTime, String type, Object carrierData) {
+    public IpAuthProtectionVerificationToken(String uid, long expirationTime, String type, Object carrierData) {
         super(uid, expirationTime, type, carrierData);
     }
 }

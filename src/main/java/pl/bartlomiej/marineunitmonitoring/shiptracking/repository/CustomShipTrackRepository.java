@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface CustomShipTrackHistoryRepository {
+public interface CustomShipTrackRepository {
     Flux<ShipTrack> findByMmsiInAndReadingTimeBetween(List<String> mmsis, LocalDateTime from, LocalDateTime to);
 
     Mono<ShipTrack> getLatest(String mmsi);

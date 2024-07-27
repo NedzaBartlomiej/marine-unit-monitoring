@@ -10,7 +10,7 @@ import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.Ver
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.CustomVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.repository.MongoVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.common.service.AbstractVerificationTokenService;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.ipauthprotection.IpAddressVerificationToken;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.ipauthprotection.IpAuthProtectionVerificationToken;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Flux;
@@ -18,40 +18,42 @@ import reactor.core.publisher.Mono;
 
 
 @Service
-public class TrustedIpAddressServiceImpl extends AbstractVerificationTokenService implements TrustedIpAddressService {
+public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenService implements IpAuthProtectionService {
 
-    private static final Logger log = LoggerFactory.getLogger(TrustedIpAddressServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(IpAuthProtectionServiceImpl.class);
     private final String frontendUrl;
     private final long ipAddressTokenExpirationTime;
     private final UserService userService;
     private final MongoVerificationTokenRepository mongoVerificationTokenRepository;
+    private final String frontendUntrustedAuthenticationPath;
 
-    public TrustedIpAddressServiceImpl(EmailService emailService,
+    public IpAuthProtectionServiceImpl(EmailService emailService,
                                        MongoVerificationTokenRepository mongoVerificationTokenRepository,
                                        CustomVerificationTokenRepository customVerificationTokenRepository,
                                        UserService userService,
                                        @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
-                                       @Value("${project-properties.expiration-times.verification.ip-address-token}") long ipAddressTokenExpirationTime) {
+                                       @Value("${project-properties.expiration-times.verification.ip-address-token}") long ipAddressTokenExpirationTime,
+                                       @Value("${project-properties.app.frontend-integration.endpoint-paths.untrusted-authentication}") String frontendUntrustedAuthenticationPath) {
         super(emailService, mongoVerificationTokenRepository, customVerificationTokenRepository, userService);
         this.frontendUrl = frontendUrl;
         this.userService = userService;
         this.mongoVerificationTokenRepository = mongoVerificationTokenRepository;
         this.ipAddressTokenExpirationTime = ipAddressTokenExpirationTime;
+        this.frontendUntrustedAuthenticationPath = frontendUntrustedAuthenticationPath;
     }
 
     @Override
     public Mono<Void> issue(String uid, Object ipAddress) {
-        log.info("ipAddress: {}", ipAddress);
         return userService.getUser(uid)
                 .flatMap(user -> super.processIssue(
                         user,
-                        new IpAddressVerificationToken(
+                        new IpAuthProtectionVerificationToken(
                                 user.getId(),
                                 this.ipAddressTokenExpirationTime,
                                 VerificationTokenType.TRUSTED_IP_ADDRESS_VERIFICATION.name(),
                                 ipAddress
                         ),
-                        "Marine Unit Monitoring - New untrusted account activity report."
+                        "Marine Unit Monitoring - New untrusted account authentication detected."
                 ));
     }
 
@@ -66,12 +68,12 @@ public class TrustedIpAddressServiceImpl extends AbstractVerificationTokenServic
 
     @Override
     protected String buildVerificationMessage(String verificationUrl) {
-        return "We have detected untrusted authentication activity on your account, please take a look at, and confirm it: " + verificationUrl;
+        return "We have detected untrusted authentication activity on your account, please check it: " + verificationUrl;
     }
 
     @Override
-    protected String buildVerificationUrl(String token) { // todo - implement an activity log and then return the untrusted-activity-log path
-        return "IpAddressVerificationToken: " + token;
+    protected String buildVerificationUrl(String token) {
+        return frontendUrl + frontendUntrustedAuthenticationPath + "/" + token;
     }
 
     @Override
@@ -89,11 +91,12 @@ public class TrustedIpAddressServiceImpl extends AbstractVerificationTokenServic
     }
 
     @Override
-    public Mono<Void> processTrustedIpProtection(String uid, String ipAddress) { // todo - test and maybe refactor somehow
+    public Mono<Void> processProtection(String uid, String ipAddress) {
         log.info("Processing trusted IP authentication protection.");
         return userService.getUser(uid)
                 .map(User::getTrustedIpAddresses)
                 .flatMapMany(Flux::fromIterable)
+                .filter(ip -> ip.equals(ipAddress))
                 .hasElement(ipAddress)
                 .flatMap(isTrusted -> {
                     if (isTrusted) {

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
-import pl.bartlomiej.marineunitmonitoring.shiptracking.service.ShipTrackHistoryService;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.service.ShipTrackService;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Flux;
 
@@ -19,13 +19,13 @@ import static org.springframework.http.HttpStatus.OK;
 
 @RestController
 @RequestMapping("/v1/ship-track-history")
-public class ShipTrackHistoryController {
+public class ShipTrackController {
 
-    private final ShipTrackHistoryService shipTrackHistoryService;
+    private final ShipTrackService shipTrackService;
     private final UserService userService;
 
-    public ShipTrackHistoryController(ShipTrackHistoryService shipTrackHistoryService, UserService userService) {
-        this.shipTrackHistoryService = shipTrackHistoryService;
+    public ShipTrackController(ShipTrackService shipTrackService, UserService userService) {
+        this.shipTrackService = shipTrackService;
         this.userService = userService;
     }
 
@@ -41,7 +41,7 @@ public class ShipTrackHistoryController {
             @RequestParam(required = false) LocalDateTime to) {
 
         return userService.identifyUser(principal.getName())
-                .flatMapMany(id -> shipTrackHistoryService.getShipTrackHistory(id, from, to)
+                .flatMapMany(id -> shipTrackService.getShipTrackHistory(id, from, to)
                         .map(response ->
                                 ServerSentEvent.<ResponseModel<ShipTrack>>builder()
                                         .id(response.getMmsi())

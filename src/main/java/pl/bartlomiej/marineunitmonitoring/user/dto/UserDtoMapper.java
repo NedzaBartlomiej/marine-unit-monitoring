@@ -1,18 +1,17 @@
 package pl.bartlomiej.marineunitmonitoring.user.dto;
 
 import org.springframework.stereotype.Component;
+import pl.bartlomiej.marineunitmonitoring.common.util.MapperUtil;
 import pl.bartlomiej.marineunitmonitoring.user.User;
-
-import static pl.bartlomiej.marineunitmonitoring.common.util.MapperUtil.copyProperties;
 
 @Component
 public class UserDtoMapper {
 
     public User mapFrom(UserSaveDto userSaveDto) {
-        return copyProperties(userSaveDto, User.class);
+        return MapperUtil.copyProperties(userSaveDto, User.class);
     }
 
     public UserReadDto mapToReadDto(User user) {
-        return copyProperties(user, UserReadDto.class);
+        return MapperUtil.copyProperties(user, UserReadDto.class);
     }
 }

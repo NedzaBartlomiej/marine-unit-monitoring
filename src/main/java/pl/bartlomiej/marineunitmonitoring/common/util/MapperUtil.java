@@ -1,16 +1,22 @@
 package pl.bartlomiej.marineunitmonitoring.common.util;
 
-import lombok.SneakyThrows;
 import org.springframework.beans.BeanUtils;
+
+import java.lang.reflect.InvocationTargetException;
 
 final public class MapperUtil {
 
-    private MapperUtil() {
+    private MapperUtil() { // todo replace with ModelMapper library
     }
 
-    @SneakyThrows
     public static <T> T copyProperties(Object source, Class<T> targetClass) {
-        T target = targetClass.getDeclaredConstructor().newInstance();
+        T target;
+        try {
+            target = targetClass.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | InvocationTargetException | NoSuchMethodException |
+                 IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
         BeanUtils.copyProperties(source, target);
         return target;
     }

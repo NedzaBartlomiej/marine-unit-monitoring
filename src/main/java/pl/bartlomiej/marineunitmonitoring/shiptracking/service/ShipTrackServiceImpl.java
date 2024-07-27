@@ -3,7 +3,6 @@ package pl.bartlomiej.marineunitmonitoring.shiptracking.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.ChangeStreamEvent;
 import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -17,11 +16,12 @@ import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NoContentEx
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.point.activepoint.service.ActivePointService;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrack;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.ShipTrackConstants;
 import pl.bartlomiej.marineunitmonitoring.shiptracking.helper.DateRangeHelper;
-import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.CustomShipTrackHistoryRepository;
-import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.MongoShipTrackHistoryRepository;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.CustomShipTrackRepository;
+import pl.bartlomiej.marineunitmonitoring.shiptracking.repository.MongoShipTrackRepository;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShip;
-import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShipService;
+import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.service.TrackedShipService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -33,34 +33,31 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.matc
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.INSERT;
 import static pl.bartlomiej.marineunitmonitoring.common.config.MongoConfig.OPERATION_TYPE;
-import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.MMSI;
-import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.READING_TIME;
 import static reactor.core.publisher.Flux.just;
 import static reactor.core.publisher.Mono.empty;
 import static reactor.core.publisher.Mono.error;
 
 @Service
-public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
+public class ShipTrackServiceImpl implements ShipTrackService {
 
-    private static final Logger log = LoggerFactory.getLogger(ShipTrackHistoryServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(ShipTrackServiceImpl.class);
     private final AisService aisService;
     private final TrackedShipService trackedShipService;
-    private final MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository;
-    private final CustomShipTrackHistoryRepository customShipTrackHistoryRepository;
+    private final MongoShipTrackRepository mongoShipTrackRepository;
+    private final CustomShipTrackRepository customShipTrackRepository;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
     private final ActivePointService activePointService;
-    private final String SHIP_TRACK_HISTORY_COLL_NAME = "ship_track_history";
 
-    public ShipTrackHistoryServiceImpl(
+    public ShipTrackServiceImpl(
             AisService aisService, TrackedShipService trackedShipService,
-            MongoShipTrackHistoryRepository mongoShipTrackHistoryRepository,
-            CustomShipTrackHistoryRepository customShipTrackHistoryRepository,
+            MongoShipTrackRepository mongoShipTrackRepository,
+            CustomShipTrackRepository customShipTrackRepository,
             ReactiveMongoTemplate reactiveMongoTemplate,
-            @Qualifier("activePointServiceImpl") ActivePointService activePointService) {
+            ActivePointService activePointService) {
         this.aisService = aisService;
         this.trackedShipService = trackedShipService;
-        this.mongoShipTrackHistoryRepository = mongoShipTrackHistoryRepository;
-        this.customShipTrackHistoryRepository = customShipTrackHistoryRepository;
+        this.mongoShipTrackRepository = mongoShipTrackRepository;
+        this.customShipTrackRepository = customShipTrackRepository;
         this.reactiveMongoTemplate = reactiveMongoTemplate;
         this.activePointService = activePointService;
     }
@@ -79,7 +76,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                     DateRangeHelper dateRangeHelper = new DateRangeHelper(from, to);
 
                     // DB RESULT STREAM
-                    Flux<ShipTrack> dbStream = customShipTrackHistoryRepository
+                    Flux<ShipTrack> dbStream = customShipTrackRepository
                             .findByMmsiInAndReadingTimeBetween(mmsis, dateRangeHelper.from(), dateRangeHelper.to())
                             .switchIfEmpty(error(NoContentException::new));
 
@@ -90,19 +87,19 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
                         if (to == null) {
                             match = match(
                                     Criteria.where(OPERATION_TYPE).is(INSERT)
-                                            .and(MMSI.fieldName).in(mmsis)
+                                            .and(ShipTrackConstants.MMSI).in(mmsis)
                             );
                         } else {
                             match = match(
                                     Criteria.where(OPERATION_TYPE).is(INSERT)
-                                            .and(MMSI.fieldName).in(mmsis)
-                                            .and(READING_TIME.fieldName).lte(dateRangeHelper.to())
+                                            .and(ShipTrackConstants.MMSI).in(mmsis)
+                                            .and(ShipTrackConstants.READING_TIME).lte(dateRangeHelper.to())
                             );
                         }
                         Aggregation pipeline = newAggregation(match);
 
                         Flux<ChangeStreamEvent<ShipTrack>> changeStream = reactiveMongoTemplate.changeStream(
-                                SHIP_TRACK_HISTORY_COLL_NAME,
+                                ShipTrackConstants.SHIP_TRACKS_COLLECTION,
                                 ChangeStreamOptions.builder()
                                         .filter(pipeline)
                                         .build(),
@@ -131,25 +128,25 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
     }
 
     private Mono<Void> saveNoStationaryTrack(ShipTrack shipTrack) {
-        return customShipTrackHistoryRepository.getLatest(shipTrack.getMmsi())
+        return customShipTrackRepository.getLatest(shipTrack.getMmsi())
                 .flatMap(lst -> {
                     if ((lst.getX().equals(shipTrack.getX()) && lst.getY().equals(shipTrack.getY()))) {
                         log.warn("The ship did not change its position - saving canceled");
                         return empty();
                     } else {
-                        return mongoShipTrackHistoryRepository.save(shipTrack).then();
+                        return mongoShipTrackRepository.save(shipTrack).then();
                     }
                 })
-                .onErrorResume(t -> mongoShipTrackHistoryRepository.save(shipTrack).then());
+                .onErrorResume(t -> mongoShipTrackRepository.save(shipTrack).then());
     }
 
     public Mono<Void> clearShipHistory(String mmsi) {
-        return mongoShipTrackHistoryRepository.existsById(mmsi)
+        return mongoShipTrackRepository.existsById(mmsi)
                 .flatMap(exists -> {
                     if (!exists) {
                         return error(new NotFoundException());
                     }
-                    return mongoShipTrackHistoryRepository.deleteById(mmsi);
+                    return mongoShipTrackRepository.deleteById(mmsi);
                 });
     }
 
@@ -178,7 +175,7 @@ public class ShipTrackHistoryServiceImpl implements ShipTrackHistoryService {
 
         return just(
                 new ShipTrack(
-                        ship.get(MMSI.fieldName).asText(),
+                        ship.get(ShipTrackConstants.MMSI).asText(),
                         ship.get(LONGITUDE).asDouble(),
                         ship.get(LATITUDE).asDouble()
                 )

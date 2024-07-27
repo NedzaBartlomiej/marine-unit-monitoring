@@ -5,19 +5,19 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
+import pl.bartlomiej.marineunitmonitoring.common.util.CommonShipFields;
 import pl.bartlomiej.marineunitmonitoring.user.User;
+import pl.bartlomiej.marineunitmonitoring.user.UserConstants;
 import pl.bartlomiej.marineunitmonitoring.user.nested.trackedship.TrackedShip;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
-import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.MMSI;
 
 @Repository
 public class CustomUserRepositoryImpl implements CustomUserRepository {
 
-    public final String TRACKED_SHIPS_EMBEDDED_LIST_NAME = "trackedShips";
     private final ReactiveMongoTemplate reactiveMongoTemplate;
 
     public CustomUserRepositoryImpl(ReactiveMongoTemplate reactiveMongoTemplate) {
@@ -25,8 +25,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     }
 
     private Query getIdValidQuery(String id) {
-        String ID_FIELD_NAME = "_id";
-        return new Query(where(ID_FIELD_NAME).is(id));
+        return new Query(where(UserConstants.ID).is(id));
     }
 
     @Override
@@ -34,7 +33,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         return reactiveMongoTemplate
                 .updateFirst(
                         this.getIdValidQuery(id),
-                        new Update().push(TRACKED_SHIPS_EMBEDDED_LIST_NAME, trackedShip),
+                        new Update().push(UserConstants.TRACKED_SHIPS, trackedShip),
                         User.class
                 ).map(updateResult -> trackedShip);
     }
@@ -44,7 +43,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         return reactiveMongoTemplate
                 .updateFirst(
                         this.getIdValidQuery(id),
-                        new Update().pull(TRACKED_SHIPS_EMBEDDED_LIST_NAME, query(where(MMSI.fieldName).is(mmsi))),
+                        new Update().pull(UserConstants.TRACKED_SHIPS, query(where(CommonShipFields.MMSI).is(mmsi))),
                         User.class
                 ).then();
     }
@@ -54,7 +53,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         return reactiveMongoTemplate
                 .updateMulti(
                         new Query(),
-                        new Update().pull(TRACKED_SHIPS_EMBEDDED_LIST_NAME, query(where(MMSI.fieldName).is(mmsi))),
+                        new Update().pull(UserConstants.TRACKED_SHIPS, query(where(CommonShipFields.MMSI).is(mmsi))),
                         User.class
                 ).then();
     }

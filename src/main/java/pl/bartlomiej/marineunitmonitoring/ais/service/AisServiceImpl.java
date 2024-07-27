@@ -6,13 +6,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import pl.bartlomiej.marineunitmonitoring.ais.AisShip;
 import pl.bartlomiej.marineunitmonitoring.ais.accesstoken.AisApiAuthTokenProvider;
+import pl.bartlomiej.marineunitmonitoring.common.util.CommonShipFields;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
 
 import static java.util.Map.of;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static pl.bartlomiej.marineunitmonitoring.common.util.AppEntityField.MMSI;
 
 @Service
 public class AisServiceImpl implements AisService {
@@ -58,7 +58,7 @@ public class AisServiceImpl implements AisService {
                         .post()
                         .uri(apiFetchByMmsiUri)
                         .header(AUTHORIZATION, this.bearerPrefix + token)
-                        .bodyValue(of(MMSI.fieldName, identifiers.toArray()))
+                        .bodyValue(of(CommonShipFields.MMSI, identifiers.toArray()))
                         .retrieve()
                         .bodyToFlux(JsonNode.class)
                 );

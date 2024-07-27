@@ -28,7 +28,7 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService i
     private final UserService userService;
     private final long resetPasswordTokenExpirationTime;
     private final String frontendUrl;
-    private final String frontendResetPasswordVerificationPath;
+    private final String frontendResetPasswordPath;
     private final MongoVerificationTokenRepository mongoVerificationTokenRepository;
     private final CustomVerificationTokenRepository customVerificationTokenRepository;
 
@@ -38,12 +38,12 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService i
                                     EmailService emailService,
                                     @Value("${project-properties.expiration-times.verification.reset-password}") long resetPasswordTokenExpirationTime,
                                     @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
-                                    @Value("${project-properties.app.frontend-integration.endpoint-paths.reset-password}") String frontendResetPasswordVerificationPath) {
+                                    @Value("${project-properties.app.frontend-integration.endpoint-paths.reset-password}") String frontendResetPasswordPath) {
         super(emailService, mongoVerificationTokenRepository, customVerificationTokenRepository, userService);
         this.userService = userService;
         this.resetPasswordTokenExpirationTime = resetPasswordTokenExpirationTime;
         this.frontendUrl = frontendUrl;
-        this.frontendResetPasswordVerificationPath = frontendResetPasswordVerificationPath;
+        this.frontendResetPasswordPath = frontendResetPasswordPath;
         this.mongoVerificationTokenRepository = mongoVerificationTokenRepository;
         this.customVerificationTokenRepository = customVerificationTokenRepository;
     }
@@ -102,7 +102,7 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService i
 
     @Override
     protected String buildVerificationUrl(String token) {
-        return this.frontendUrl + this.frontendResetPasswordVerificationPath + "/" + token;
+        return this.frontendUrl + this.frontendResetPasswordPath + "/" + token;
     }
 
     @Transactional(transactionManager = "reactiveTransactionManager")

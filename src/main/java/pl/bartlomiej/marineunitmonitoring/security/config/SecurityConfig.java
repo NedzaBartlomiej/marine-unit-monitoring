@@ -19,6 +19,8 @@ import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifie
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAccessDeniedHandler;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAuthenticationEntryPoint;
 
+import java.util.List;
+
 import static org.springframework.http.HttpMethod.*;
 
 @Configuration
@@ -27,6 +29,22 @@ import static org.springframework.http.HttpMethod.*;
 public class SecurityConfig {
 
     private final CustomReactiveJwtGrantedAuthoritiesConverter grantedAuthoritiesConverter;
+    private final List<String> postEndpoints = List.of(
+            "*/users"
+    );
+    private final List<String> getEndpoints = List.of(
+            "*/points",
+            "*/authentication/authenticate",
+            "*/email-verification/verify/*",
+            "*/reset-password/initiate",
+            "*/reset-password/verify/*",
+            "*/ip-auth-protection/untrusted-authentication/*"
+    );
+    private final List<String> patchEndpoints = List.of(
+            "*/reset-password/reset/*",
+            "*/ip-auth-protection/block-account/*",
+            "*/ip-auth-protection/trust-ip-address/*"
+    );
 
     public SecurityConfig(CustomReactiveJwtGrantedAuthoritiesConverter grantedAuthoritiesConverter) {
         this.grantedAuthoritiesConverter = grantedAuthoritiesConverter;
@@ -44,19 +62,12 @@ public class SecurityConfig {
                 .logout(LogoutSpec::disable)
                 .csrf(CsrfSpec::disable)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
-                .authorizeExchange(auth ->
-                        auth
-                                .pathMatchers(POST, "*/users").permitAll()
-                                .pathMatchers(PATCH, "*/users/password/*").permitAll()
-                                .pathMatchers(GET, "*/points").permitAll()
-                                .pathMatchers(GET, "*/authentication/authenticate").permitAll()
-                                .pathMatchers(GET, "*/authentication/verify-email/*").permitAll()
-                                .pathMatchers(GET, "*/authentication/initiate-reset-password").permitAll()
-                                .pathMatchers(GET, "*/authentication/verify-reset-password/*").permitAll()
-                                .pathMatchers(PATCH, "*/authentication/block-account/*").permitAll()
-                                .pathMatchers(PATCH, "*/authentication/trust-ip-address/*").permitAll()
-                                .anyExchange().authenticated()
-                )
+                .authorizeExchange(auth -> {
+                    postEndpoints.forEach(e -> auth.pathMatchers(POST, e).permitAll());
+                    getEndpoints.forEach(e -> auth.pathMatchers(GET, e).permitAll());
+                    patchEndpoints.forEach(e -> auth.pathMatchers(PATCH, e).permitAll());
+                    auth.anyExchange().authenticated();
+                })
                 .oauth2ResourceServer(oAuth2ResourceServerSpec ->
                         oAuth2ResourceServerSpec
                                 .jwt(jwtSpec -> jwtSpec.jwtAuthenticationConverter(jwtAuthenticationConverter()))
