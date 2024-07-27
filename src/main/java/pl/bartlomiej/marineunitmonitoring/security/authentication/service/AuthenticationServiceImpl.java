@@ -5,7 +5,7 @@ import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverifications.ipauthprotection.service.IpAuthProtectionService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverification.ipauthprotection.service.IpAuthProtectionService;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
