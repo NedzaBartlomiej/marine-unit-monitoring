@@ -32,6 +32,12 @@ public abstract class AbstractVerificationTokenService implements VerificationTo
         this.userService = userService;
     }
 
+    protected abstract Mono<Void> sendVerificationToken(String target, String title, String token);
+
+    protected abstract String buildVerificationMessage(String verificationUrl);
+
+    protected abstract String buildVerificationUrl(String token);
+
     @Override
     public Mono<VerificationToken> getVerificationToken(String id) {
         return mongoVerificationTokenRepository.findById(id)
@@ -66,7 +72,7 @@ public abstract class AbstractVerificationTokenService implements VerificationTo
         return mongoVerificationTokenRepository.save(verificationToken);
     }
 
-    protected Mono<Void> sendVerificationToken(String email, String token, String title) {
+    protected Mono<Void> sendVerificationEmail(String email, String title, String token) {
         log.info("Sending verification email.");
         return emailService.sendEmail(
                 email,
@@ -74,10 +80,6 @@ public abstract class AbstractVerificationTokenService implements VerificationTo
                 this.buildVerificationMessage(this.buildVerificationUrl(token))
         );
     }
-
-    protected abstract String buildVerificationMessage(String verificationUrl);
-
-    protected abstract String buildVerificationUrl(String token);
 
     protected Mono<VerificationToken> validateVerificationToken(Mono<VerificationToken> tokenMono) {
         return tokenMono

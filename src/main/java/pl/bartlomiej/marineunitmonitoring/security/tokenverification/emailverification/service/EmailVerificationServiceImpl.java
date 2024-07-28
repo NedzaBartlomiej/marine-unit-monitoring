@@ -71,6 +71,11 @@ public class EmailVerificationServiceImpl extends AbstractVerificationTokenServi
                 .then(mongoVerificationTokenRepository.deleteById(verificationToken.getId()));
     }
 
+    @Override
+    protected Mono<Void> sendVerificationToken(String target, String title, String token) {
+        return super.sendVerificationEmail(target, title, token);
+    }
+
     protected String buildVerificationMessage(String verificationUrl) {
         return "To verify your email click this link: " + verificationUrl;
     }

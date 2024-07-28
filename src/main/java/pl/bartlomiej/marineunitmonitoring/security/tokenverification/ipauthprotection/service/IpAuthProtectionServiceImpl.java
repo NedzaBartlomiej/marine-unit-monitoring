@@ -67,6 +67,11 @@ public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenServic
     }
 
     @Override
+    protected Mono<Void> sendVerificationToken(String target, String title, String token) {
+        return super.sendVerificationEmail(target, title, token);
+    }
+
+    @Override
     protected String buildVerificationMessage(String verificationUrl) {
         return "We have detected untrusted authentication activity on your account, please check it: " + verificationUrl;
     }

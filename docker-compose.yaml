@@ -18,13 +18,13 @@ services:
       - bin/sh
       - -c
       - |
-        /usr/docker-entrypoint-init.d/mongo-keyfile-init.sh
+        /usr/db-init/mongo-keyfile-init.sh
         mongod --replSet marine-unit-monitoring-db-rs --bind_ip_all
     ports:
       - "27017:27017"
     volumes:
       - db-volume1:/usr/db
-      - mongo-init:/usr/docker-entrypoint-init.d/
+      - mongo-init:/usr/db-init/
     networks:
       - marine-unit-monitoring-network
     depends_on:
@@ -38,13 +38,13 @@ services:
       - bin/sh
       - -c
       - |
-        /usr/docker-entrypoint-init.d/mongo-keyfile-init.sh
+        /usr/db-init/mongo-keyfile-init.sh
         mongod --replSet marine-unit-monitoring-db-rs --bind_ip_all
     ports:
       - "27027:27017"
     volumes:
       - db-volume2:/usr/db
-      - mongo-init:/usr/docker-entrypoint-init.d/
+      - mongo-init:/usr/db-init/
     networks:
       - marine-unit-monitoring-network
   mongodb3:
@@ -55,13 +55,13 @@ services:
       - bin/sh
       - -c
       - |
-        /usr/docker-entrypoint-init.d/mongo-keyfile-init.sh
+        /usr/db-init/mongo-keyfile-init.sh
         mongod --replSet marine-unit-monitoring-db-rs --bind_ip_all
     ports:
       - "27037:27017"
     volumes:
       - db-volume3:/usr/db
-      - mongo-init:/usr/docker-entrypoint-init.d/
+      - mongo-init:/usr/db-init/
     networks:
       - marine-unit-monitoring-network
   marine-unit-monitoring:
@@ -94,6 +94,6 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ./docker-entrypoint-init.d/
+      device: ./docker-deploy/db-init/
 networks:
   marine-unit-monitoring-network:
