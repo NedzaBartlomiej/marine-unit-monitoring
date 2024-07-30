@@ -1,10 +1,12 @@
 package pl.bartlomiej.marineunitmonitoring.user.repository;
 
+import com.mongodb.client.result.UpdateResult;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
+import pl.bartlomiej.marineunitmonitoring.common.helper.repository.CustomRepository;
 import pl.bartlomiej.marineunitmonitoring.common.util.CommonShipFields;
 import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.UserConstants;
@@ -19,30 +21,24 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 public class CustomUserRepositoryImpl implements CustomUserRepository {
 
     private final ReactiveMongoTemplate reactiveMongoTemplate;
+    private final CustomRepository customRepository;
 
-    public CustomUserRepositoryImpl(ReactiveMongoTemplate reactiveMongoTemplate) {
+    public CustomUserRepositoryImpl(ReactiveMongoTemplate reactiveMongoTemplate, CustomRepository customRepository) {
         this.reactiveMongoTemplate = reactiveMongoTemplate;
-    }
-
-    private Query getIdValidQuery(String id) {
-        return new Query(where(UserConstants.ID).is(id));
+        this.customRepository = customRepository;
     }
 
     @Override
     public Mono<TrackedShip> pushTrackedShip(String id, TrackedShip trackedShip) {
-        return reactiveMongoTemplate
-                .updateFirst(
-                        this.getIdValidQuery(id),
-                        new Update().push(UserConstants.TRACKED_SHIPS, trackedShip),
-                        User.class
-                ).map(updateResult -> trackedShip);
+        return this.push(id, UserConstants.TRACKED_SHIPS, trackedShip)
+                .then(Mono.just(trackedShip));
     }
 
     @Override
     public Mono<Void> pullTrackedShip(String id, String mmsi) {
         return reactiveMongoTemplate
                 .updateFirst(
-                        this.getIdValidQuery(id),
+                        customRepository.getIdValidQuery(id),
                         new Update().pull(UserConstants.TRACKED_SHIPS, query(where(CommonShipFields.MMSI).is(mmsi))),
                         User.class
                 ).then();
@@ -84,38 +80,34 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
 
     @Override
     public Mono<Void> updateIsVerified(String id, boolean isVerified) {
-        return reactiveMongoTemplate.updateFirst(
-                this.getIdValidQuery(id),
-                new Update().set(UserConstants.IS_VERIFIED, isVerified),
-                User.class
-        ).then();
+        return customRepository.updateOne(id, UserConstants.IS_VERIFIED, isVerified, User.class)
+                .then();
     }
 
     @Override
     public Mono<Void> updateIsLocked(String id, boolean isLocked) {
-        return reactiveMongoTemplate.updateFirst(
-                this.getIdValidQuery(id),
-                new Update().set(UserConstants.IS_LOCKED, isLocked),
-                User.class
-        ).then();
+        return customRepository.updateOne(id, UserConstants.IS_LOCKED, isLocked, User.class)
+                .then();
     }
 
     @Override
     public Mono<Void> updatePassword(String id, String password) {
-        return reactiveMongoTemplate.updateFirst(
-                this.getIdValidQuery(id),
-                new Update().set(UserConstants.PASSWORD, password),
-                User.class
-        ).then();
+        return customRepository.updateOne(id, UserConstants.PASSWORD, password, User.class)
+                .then();
     }
 
     @Override
     public Mono<Void> pushTrustedIpAddress(String id, String ipAddress) {
+        return this.push(id, UserConstants.TRUSTED_IP_ADDRESSES, ipAddress)
+                .then();
+    }
+
+    private Mono<UpdateResult> push(String id, String updatedFieldName, Object pushedValue) {
         return reactiveMongoTemplate
                 .updateFirst(
-                        this.getIdValidQuery(id),
-                        new Update().push(UserConstants.TRUSTED_IP_ADDRESSES, ipAddress),
+                        customRepository.getIdValidQuery(id),
+                        new Update().push(updatedFieldName, pushedValue),
                         User.class
-                ).then();
+                );
     }
 }

@@ -3,8 +3,8 @@ package pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.rep
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
+import pl.bartlomiej.marineunitmonitoring.common.helper.repository.CustomRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationToken;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenConstants;
 import reactor.core.publisher.Flux;
@@ -16,9 +16,11 @@ import java.time.LocalDateTime;
 public class CustomVerificationTokenRepositoryImpl implements CustomVerificationTokenRepository {
 
     private final ReactiveMongoTemplate reactiveMongoTemplate;
+    private final CustomRepository customRepository;
 
-    public CustomVerificationTokenRepositoryImpl(ReactiveMongoTemplate reactiveMongoTemplate) {
+    public CustomVerificationTokenRepositoryImpl(ReactiveMongoTemplate reactiveMongoTemplate, CustomRepository customRepository) {
         this.reactiveMongoTemplate = reactiveMongoTemplate;
+        this.customRepository = customRepository;
     }
 
     @Override
@@ -33,10 +35,7 @@ public class CustomVerificationTokenRepositoryImpl implements CustomVerification
 
     @Override
     public Mono<Void> updateIsVerified(String id, boolean isVerified) {
-        return reactiveMongoTemplate.updateFirst(
-                new Query(Criteria.where(VerificationTokenConstants.ID).is(id)),
-                new Update().set(VerificationTokenConstants.IS_VERIFIED, isVerified),
-                VerificationToken.class
-        ).then();
+        return customRepository.updateOne(id, VerificationTokenConstants.IS_VERIFIED, isVerified, VerificationToken.class)
+                .then();
     }
 }

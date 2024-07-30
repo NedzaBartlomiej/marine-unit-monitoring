@@ -19,7 +19,7 @@ spring:
     username: ${secrets.mail.username}
     password: ${secrets.mail.password}
     properties:
-      mail: # todo get knowledge about that properties
+      mail:
         smtp:
           writetimeout: 5000
           connectiontimeout: 5000
