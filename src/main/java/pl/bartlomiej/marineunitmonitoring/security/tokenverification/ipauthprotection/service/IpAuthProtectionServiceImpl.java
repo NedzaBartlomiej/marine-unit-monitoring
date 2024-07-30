@@ -4,7 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationToken;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenType;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.repository.CustomVerificationTokenRepository;
@@ -26,6 +28,7 @@ public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenServic
     private final UserService userService;
     private final MongoVerificationTokenRepository mongoVerificationTokenRepository;
     private final String frontendUntrustedAuthenticationPath;
+    private final JWTService jwtService;
 
     public IpAuthProtectionServiceImpl(EmailService emailService,
                                        MongoVerificationTokenRepository mongoVerificationTokenRepository,
@@ -33,13 +36,14 @@ public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenServic
                                        UserService userService,
                                        @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
                                        @Value("${project-properties.expiration-times.verification.ip-address-token}") long ipAddressTokenExpirationTime,
-                                       @Value("${project-properties.app.frontend-integration.endpoint-paths.untrusted-authentication}") String frontendUntrustedAuthenticationPath) {
+                                       @Value("${project-properties.app.frontend-integration.endpoint-paths.untrusted-authentication}") String frontendUntrustedAuthenticationPath, JWTService jwtService) {
         super(emailService, mongoVerificationTokenRepository, customVerificationTokenRepository, userService);
         this.frontendUrl = frontendUrl;
         this.userService = userService;
         this.mongoVerificationTokenRepository = mongoVerificationTokenRepository;
         this.ipAddressTokenExpirationTime = ipAddressTokenExpirationTime;
         this.frontendUntrustedAuthenticationPath = frontendUntrustedAuthenticationPath;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -81,6 +85,7 @@ public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenServic
         return frontendUrl + frontendUntrustedAuthenticationPath + "/" + token;
     }
 
+    @Transactional(transactionManager = "reactiveTransactionManager")
     @Override
     public Mono<Void> trustIpAddress(VerificationToken verificationToken) {
         log.info("Adding new trusted ip address for user.");
@@ -88,10 +93,12 @@ public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenServic
                 .then(mongoVerificationTokenRepository.delete(verificationToken));
     }
 
+    @Transactional(transactionManager = "reactiveTransactionManager")
     @Override
     public Mono<Void> blockAccount(VerificationToken verificationToken) {
         log.info("Blocking user account after untrusted activity confirmation.");
         return userService.blockUser(verificationToken.getUid())
+                .then(jwtService.invalidateAll(verificationToken.getUid()))
                 .then(mongoVerificationTokenRepository.delete(verificationToken));
     }
 

@@ -18,15 +18,15 @@ import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseMod
 import reactor.core.publisher.Mono;
 
 @Component
-public class JWTBlacklistVerifier extends AbstractJWTVerifier implements WebFilter {
+public class JWTValidityVerifier extends AbstractJWTVerifier implements WebFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(JWTBlacklistVerifier.class);
+    private static final Logger log = LoggerFactory.getLogger(JWTValidityVerifier.class);
     private final JWTService jwtService;
     private final ServerAuthenticationFailureHandler serverAuthenticationFailureHandler;
 
-    public JWTBlacklistVerifier(JWTService jwtService,
-                                ResponseModelServerAuthenticationEntryPoint serverAuthenticationEntryPoint,
-                                @Value("${project-properties.security.token.bearer.regex}") String bearerRegex) {
+    public JWTValidityVerifier(JWTService jwtService,
+                               ResponseModelServerAuthenticationEntryPoint serverAuthenticationEntryPoint,
+                               @Value("${project-properties.security.token.bearer.regex}") String bearerRegex) {
         super(jwtService, bearerRegex);
         this.jwtService = jwtService;
         this.serverAuthenticationFailureHandler = new ServerAuthenticationEntryPointFailureHandler(serverAuthenticationEntryPoint);
@@ -41,9 +41,10 @@ public class JWTBlacklistVerifier extends AbstractJWTVerifier implements WebFilt
 
     @Override
     protected Mono<Void> verifyToken(ServerWebExchange exchange, WebFilterChain chain, Claims claims) {
-        return jwtService.isBlacklisted(claims.getId())
-                .flatMap(isBlacklisted -> {
-                    if (isBlacklisted) {
+        log.info("Verifying JWT.");
+        return jwtService.isValid(claims.getId())
+                .flatMap(isValid -> {
+                    if (!isValid) {
                         log.info("Invalid JWT.");
                         return Mono.error(new InvalidBearerTokenException("Invalid JWT."));
                     }

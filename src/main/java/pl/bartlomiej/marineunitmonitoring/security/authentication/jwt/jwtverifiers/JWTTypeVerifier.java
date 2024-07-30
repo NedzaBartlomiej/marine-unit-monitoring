@@ -14,15 +14,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTConstants;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAuthenticationEntryPoint;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.CommonCustomTokenClaim.TYPE;
-import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.JWTType.REFRESH_TOKEN;
 
 @Component
 public class JWTTypeVerifier extends AbstractJWTVerifier implements WebFilter {
@@ -49,10 +47,11 @@ public class JWTTypeVerifier extends AbstractJWTVerifier implements WebFilter {
 
     @Override
     protected Mono<Void> verifyToken(ServerWebExchange exchange, WebFilterChain chain, Claims claims) {
+        log.info("Verifying JWT.");
         return Mono.just(claims)
-                .map(c -> c.get(TYPE.getClaim(), String.class))
+                .map(c -> c.get(JWTConstants.TYPE_CLAIM, String.class))
                 .flatMap(type -> {
-                    if (type.equals(REFRESH_TOKEN.getType())) {
+                    if (type.equals(JWTConstants.REFRESH_TOKEN_TYPE)) {
                         log.info("Invalid JWT.");
                         return Mono.error(new InvalidBearerTokenException("Invalid JWT."));
                     }

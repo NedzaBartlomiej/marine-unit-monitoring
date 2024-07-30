@@ -76,7 +76,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     public Mono<User> findByOpenId(String openId) {
         return reactiveMongoTemplate.findOne(
                 new Query().addCriteria(
-                        Criteria.where("openIds").is(openId)
+                        Criteria.where(UserConstants.OPEN_IDS).is(openId)
                 ),
                 User.class
         );
@@ -86,7 +86,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     public Mono<Void> updateIsVerified(String id, boolean isVerified) {
         return reactiveMongoTemplate.updateFirst(
                 this.getIdValidQuery(id),
-                new Update().set("isVerified", isVerified),
+                new Update().set(UserConstants.IS_VERIFIED, isVerified),
                 User.class
         ).then();
     }
@@ -95,7 +95,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     public Mono<Void> updateIsLocked(String id, boolean isLocked) {
         return reactiveMongoTemplate.updateFirst(
                 this.getIdValidQuery(id),
-                new Update().set("isLocked", isLocked),
+                new Update().set(UserConstants.IS_LOCKED, isLocked),
                 User.class
         ).then();
     }
@@ -104,7 +104,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     public Mono<Void> updatePassword(String id, String password) {
         return reactiveMongoTemplate.updateFirst(
                 this.getIdValidQuery(id),
-                new Update().set("password", password),
+                new Update().set(UserConstants.PASSWORD, password),
                 User.class
         ).then();
     }
@@ -114,7 +114,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         return reactiveMongoTemplate
                 .updateFirst(
                         this.getIdValidQuery(id),
-                        new Update().push("trustedIpAddresses", ipAddress),
+                        new Update().push(UserConstants.TRUSTED_IP_ADDRESSES, ipAddress),
                         User.class
                 ).then();
     }

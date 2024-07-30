@@ -4,14 +4,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTConstants;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.ipauthprotection.service.IpAuthProtectionService;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
-
-import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.JWTType.ACCESS_TOKEN;
-import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.JWTType.REFRESH_TOKEN;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -33,8 +31,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .flatMap(ignoredAuthentication -> ipAuthProtectionService.processProtection(id, ipAddress))
                 .then(Mono.just(
                         Map.of(
-                                REFRESH_TOKEN.getType(), jwtService.createRefreshToken(id, email),
-                                ACCESS_TOKEN.getType(), jwtService.createAccessToken(id, email))
+                                JWTConstants.REFRESH_TOKEN_TYPE, jwtService.createRefreshToken(id, email),
+                                JWTConstants.ACCESS_TOKEN_TYPE, jwtService.createAccessToken(id, email))
                 ));
     }
 }

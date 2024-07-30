@@ -9,7 +9,7 @@ public interface UserService {
 
     Mono<User> getUserByEmail(String email);
 
-    Mono<User> createUser(User user);
+    Mono<User> createUser(User user, String ipAddress);
 
     Mono<Void> verifyUser(String id);
 

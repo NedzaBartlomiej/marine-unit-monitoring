@@ -65,9 +65,9 @@ public class EmailVerificationServiceImpl extends AbstractVerificationTokenServi
 
     @Override
     public Mono<Void> performVerifiedTokenAction(VerificationToken verificationToken) {
-        log.info("Performing email verification verified token action:");
+        log.info("Performing email verification verified token action.");
         return Mono.just(verificationToken)
-                .flatMap(user -> userService.verifyUser(user.getId()))
+                .flatMap(vt -> userService.verifyUser(vt.getUid()))
                 .then(mongoVerificationTokenRepository.deleteById(verificationToken.getId()));
     }
 

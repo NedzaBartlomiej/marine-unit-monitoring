@@ -14,7 +14,7 @@ import org.springframework.security.oauth2.server.resource.authentication.Reacti
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.grantedauthorities.CustomReactiveJwtGrantedAuthoritiesConverter;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifiers.JWTBlacklistVerifier;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifiers.JWTValidityVerifier;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifiers.JWTTypeVerifier;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAccessDeniedHandler;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAuthenticationEntryPoint;
@@ -54,7 +54,7 @@ public class SecurityConfig {
     SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http,
                                                   ResponseModelServerAuthenticationEntryPoint authenticationEntryPoint,
                                                   ResponseModelServerAccessDeniedHandler accessDeniedHandler,
-                                                  JWTBlacklistVerifier jwtBlacklistVerifier,
+                                                  JWTValidityVerifier jwtValidityVerifier,
                                                   JWTTypeVerifier jwtTypeVerifier) {
         return http
                 .httpBasic(HttpBasicSpec::disable)
@@ -79,7 +79,7 @@ public class SecurityConfig {
                                 .accessDeniedHandler(accessDeniedHandler)
                                 .authenticationEntryPoint(authenticationEntryPoint)
                 )
-                .addFilterBefore(jwtBlacklistVerifier, SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterBefore(jwtValidityVerifier, SecurityWebFiltersOrder.AUTHENTICATION)
                 .addFilterBefore(jwtTypeVerifier, SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();
     }

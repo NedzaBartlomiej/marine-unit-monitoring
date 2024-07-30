@@ -15,9 +15,11 @@ public interface JWTService {
 
     Mono<Map<String, String>> refreshAccessToken(String refreshToken);
 
+    Mono<Boolean> isValid(String token);
+
     Mono<Void> invalidate(String token);
 
-    Mono<Boolean> isBlacklisted(String jti);
+    Mono<Void> invalidateAll(String uid);
 
     String extract(ServerWebExchange exchange);
 

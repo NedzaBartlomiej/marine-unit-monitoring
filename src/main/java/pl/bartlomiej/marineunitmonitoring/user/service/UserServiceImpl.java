@@ -54,9 +54,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<User> createUser(User user) {
+    public Mono<User> createUser(User user, String ipAddress) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(of(SIGNED));
+        user.setTrustedIpAddresses(of(ipAddress));
         return mongoUserRepository.save(user)
                 .onErrorResume(DuplicateKeyException.class, e -> error(UniqueEmailException::new));
     }

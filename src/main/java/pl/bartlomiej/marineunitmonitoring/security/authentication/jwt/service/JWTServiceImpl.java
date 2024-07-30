@@ -12,8 +12,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTConstants;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTEntity;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.MongoJWTEntityRepository;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.repository.CustomJWTEntityRepository;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.repository.MongoJWTEntityRepository;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
 
@@ -24,10 +26,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
-import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.CommonCustomTokenClaim.EMAIL;
-import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.CommonCustomTokenClaim.TYPE;
-import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.JWTType.ACCESS_TOKEN;
-import static pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTServiceImpl.JWTType.REFRESH_TOKEN;
 import static reactor.core.publisher.Mono.just;
 
 @Service
@@ -38,6 +36,7 @@ public class JWTServiceImpl implements JWTService {
     public final String tokenIssuer;
     private final String bearerPrefix;
     private final MongoJWTEntityRepository mongoJWTEntityRepository;
+    private final CustomJWTEntityRepository customJWTEntityRepository;
     private final UserService userService;
     private final int refreshTokenExpirationTime;
     private final int accessTokenExpirationTime;
@@ -49,7 +48,7 @@ public class JWTServiceImpl implements JWTService {
                           @Value("${project-properties.expiration-times.jwt.refresh-token}") int refreshTokenExpirationTime,
                           @Value("${project-properties.expiration-times.jwt.access-token}") int accessTokenExpirationTime,
                           @Value("${secrets.jwt.secret-key}") String secretKey,
-                          @Value("${project-properties.security.token.bearer.type}") String bearerType) {
+                          @Value("${project-properties.security.token.bearer.type}") String bearerType, CustomJWTEntityRepository customJWTEntityRepository) {
         this.bearerPrefix = bearerType + " ";
         this.mongoJWTEntityRepository = mongoJWTEntityRepository;
         this.userService = userService;
@@ -57,20 +56,21 @@ public class JWTServiceImpl implements JWTService {
         this.refreshTokenExpirationTime = refreshTokenExpirationTime;
         this.accessTokenExpirationTime = accessTokenExpirationTime;
         this.secretKey = secretKey;
+        this.customJWTEntityRepository = customJWTEntityRepository;
     }
 
     public String createAccessToken(String uid, String email) {
         final Map<String, String> accessTokenCustomClaims = Map.of(
-                EMAIL.getClaim(), email,
-                TYPE.getClaim(), ACCESS_TOKEN.getType()
+                JWTConstants.EMAIL_CLAIM, email,
+                JWTConstants.TYPE_CLAIM, JWTConstants.ACCESS_TOKEN_TYPE
         );
         return this.buildToken(uid, accessTokenCustomClaims, accessTokenExpirationTime);
     }
 
     public String createRefreshToken(String uid, String email) {
         final Map<String, String> refreshTokenCustomClaims = Map.of(
-                EMAIL.getClaim(), email,
-                TYPE.getClaim(), REFRESH_TOKEN.getType()
+                JWTConstants.EMAIL_CLAIM, email,
+                JWTConstants.TYPE_CLAIM, JWTConstants.REFRESH_TOKEN_TYPE
         );
         return this.buildToken(uid, refreshTokenCustomClaims, refreshTokenExpirationTime);
     }
@@ -78,39 +78,40 @@ public class JWTServiceImpl implements JWTService {
     @Override
     public Mono<Map<String, String>> refreshAccessToken(String refreshToken) {
         Claims claims = this.extractClaims(refreshToken);
-        String tokenType = (String) claims.get(TYPE.getClaim());
+        String tokenType = (String) claims.get(JWTConstants.TYPE_CLAIM);
         String subject = claims.getSubject();
 
-        if (!tokenType.equals(REFRESH_TOKEN.getType())) throw new InvalidBearerTokenException("Invalid JWT.");
+        if (!tokenType.equals(JWTConstants.REFRESH_TOKEN_TYPE)) throw new InvalidBearerTokenException("Invalid JWT.");
 
         return userService.getUser(subject)
                 .flatMap(user -> this.invalidate(refreshToken)
                         .then(just(
                                 Map.of(
-                                        ACCESS_TOKEN.getType(), this.createAccessToken(user.getId(), user.getEmail()),
-                                        REFRESH_TOKEN.getType(), this.createRefreshToken(user.getId(), user.getEmail())
+                                        JWTConstants.ACCESS_TOKEN_TYPE, this.createAccessToken(user.getId(), user.getEmail()),
+                                        JWTConstants.REFRESH_TOKEN_TYPE, this.createRefreshToken(user.getId(), user.getEmail())
                                 ))
                         )
                 );
     }
 
     @Override
-    public Mono<Void> invalidate(String token) {
+    public Mono<Boolean> isValid(String token) {
         Claims claims = this.extractClaims(token);
-        // here there is no checking isExist, because it will be checked in the JWTBlacklistVerifier
-        return mongoJWTEntityRepository.save(
-                new JWTEntity(claims.getId(),
-                        LocalDateTime.ofInstant(
-                                claims.getExpiration().toInstant(),
-                                ZoneId.systemDefault()
-                        )
-                )
-        ).then();
+        return mongoJWTEntityRepository.findById(claims.getId())
+                .map(JWTEntity::getValid);
     }
 
     @Override
-    public Mono<Boolean> isBlacklisted(String jti) {
-        return mongoJWTEntityRepository.existsById(jti);
+    public Mono<Void> invalidate(String token) {
+        Claims claims = this.extractClaims(token);
+        log.info("Invalidating JWT.");
+        return customJWTEntityRepository.updateIsValid(claims.getId(), false);
+    }
+
+    @Override
+    public Mono<Void> invalidateAll(String uid) {
+        log.info("Invalidation of all user's JWTs.");
+        return customJWTEntityRepository.updateIsValidByUid(uid, false);
     }
 
     public String extract(ServerWebExchange exchange) {
@@ -151,44 +152,23 @@ public class JWTServiceImpl implements JWTService {
     }
 
     private String buildToken(String uid, Map<String, String> customClaims, int expirationTime) {
+
+        final String jti = UUID.randomUUID().toString();
+        final Date expiration = new Date(System.currentTimeMillis() + expirationTime);
+
+        mongoJWTEntityRepository.save(
+                new JWTEntity(jti, uid, LocalDateTime.ofInstant(expiration.toInstant(), ZoneId.systemDefault()))
+        ).subscribe();
+
         return Jwts.builder()
                 .setClaims(customClaims)
                 .setIssuer(this.tokenIssuer)
-                .setId(UUID.randomUUID().toString())
+                .setId(jti)
                 .setSubject(uid)
                 .setAudience(APP_AUDIENCE_URI)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .setExpiration(expiration)
                 .signWith(this.getSigningKey())
                 .compact();
-    }
-
-
-    public enum CommonCustomTokenClaim {
-        EMAIL("email"), TYPE("type");
-
-        private final String claim;
-
-        CommonCustomTokenClaim(String claim) {
-            this.claim = claim;
-        }
-
-        public String getClaim() {
-            return claim;
-        }
-    }
-
-    public enum JWTType {
-        REFRESH_TOKEN("refreshToken"), ACCESS_TOKEN("accessToken");
-
-        private final String type;
-
-        JWTType(String type) {
-            this.type = type;
-        }
-
-        public String getType() {
-            return type;
-        }
     }
 }

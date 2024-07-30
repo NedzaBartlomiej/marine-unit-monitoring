@@ -80,13 +80,9 @@ public class UserController {
 
     private Mono<User> processTransactionalUserCreation(UserSaveDto userSaveDto, String ipAddress) {
         return transactionalOperator.transactional(
-                userService.createUser(userDtoMapper.mapFrom(userSaveDto))
+                userService.createUser(userDtoMapper.mapFrom(userSaveDto), ipAddress)
                         .flatMap(user ->
                                 emailVerificationService.issue(user.getId(), null)
-                                        .then(just(user))
-                        )
-                        .flatMap(user ->
-                                userService.trustIpAddress(user.getId(), ipAddress)
                                         .then(just(user))
                         )
         );

@@ -62,8 +62,8 @@ public abstract class AbstractVerificationTokenService implements VerificationTo
                 .flatMap(u -> this.saveVerificationToken(verificationToken))
                 .flatMap(vt -> this.sendVerificationToken(
                         user.getEmail(),
-                        vt.getId(),
-                        emailTitle
+                        emailTitle,
+                        vt.getId()
                 ));
     }
 
