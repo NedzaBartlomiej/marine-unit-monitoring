@@ -1,25 +1,30 @@
-#!/bin/bash
-echo "---- es-init.sh ----"
+#!/bin/sh
+echo "#### RS.INIT.SH ####"
 
-echo "#### RS.INITIATE() ####"
 mongosh <<BLOCK
+print("Initializing replica set.");
 rs.initiate({
-    _id: 'marine-unit-monitoring-db-rs',
-    version: 1,
-    members: [
-        {_id: 0, host: 'mongodb-primary:27017'},
-        {_id: 1, host: 'mongodb2:27017'},
-        {_id: 2, host: 'mongodb3:27017'}
+    "_id": "marine-unit-monitoring-db-rs",
+    "members": [
+        {
+          "_id": 0,
+          "host": "mongodb-primary:27017"
+        },
+        {
+          "_id": 1,
+          "host": "mongodb2:27017"
+        },
+        {
+          "_id": 2,
+          "host": "mongodb3:27017"
+        }
     ]
-})
+});
+
+print("Reconfiguring to set mongodb-primary as PRIMARY member.");
+cfg = rs.conf();
+cfg.members[0].priority = 2;
+cfg.members[1].priority = 0;
+cfg.members[2].priority = 0;
+rs.reconfig(cfg, {force: true});
 BLOCK
-
-# add config file to container and if the file exists, then run rs-init fro mongo container
-
-#todo automate it - maybe i should add the config file and it will be work and reconfig
-# add it to readme in installation info
-#cfg = rs.conf()
-#cfg.members[0].priority = 100
-#cfg.members[1].priority = 1
-#cfg.members[2].priority = 1
-#rs.reconfig(cfg)
