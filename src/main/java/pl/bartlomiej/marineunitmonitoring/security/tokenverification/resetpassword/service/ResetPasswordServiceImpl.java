@@ -9,12 +9,11 @@ import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.AlreadyVeri
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidVerificationTokenException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationToken;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenType;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.repository.CustomVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.repository.MongoVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.service.AbstractVerificationTokenService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.resetpassword.ResetPasswordVerificationToken;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverification.resetpassword.repository.CustomResetPasswordVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
 
@@ -22,37 +21,37 @@ import static reactor.core.publisher.Mono.error;
 import static reactor.core.publisher.Mono.just;
 
 @Service
-public class ResetPasswordServiceImpl extends AbstractVerificationTokenService implements ResetPasswordService {
+public class ResetPasswordServiceImpl extends AbstractVerificationTokenService<ResetPasswordVerificationToken, Void> implements ResetPasswordService {
 
     private static final Logger log = LoggerFactory.getLogger(ResetPasswordServiceImpl.class);
     private final UserService userService;
     private final long resetPasswordTokenExpirationTime;
     private final String frontendUrl;
     private final String frontendResetPasswordPath;
-    private final MongoVerificationTokenRepository mongoVerificationTokenRepository;
-    private final CustomVerificationTokenRepository customVerificationTokenRepository;
+    private final MongoVerificationTokenRepository<ResetPasswordVerificationToken> mongoVerificationTokenRepository;
+    private final CustomResetPasswordVerificationTokenRepository customVerificationTokenRepository;
 
     public ResetPasswordServiceImpl(UserService userService,
-                                    CustomVerificationTokenRepository customVerificationTokenRepository,
-                                    MongoVerificationTokenRepository mongoVerificationTokenRepository,
+                                    CustomResetPasswordVerificationTokenRepository customResetPasswordVerificationTokenRepository,
+                                    MongoVerificationTokenRepository<ResetPasswordVerificationToken> mongoVerificationTokenRepository,
                                     EmailService emailService,
                                     @Value("${project-properties.expiration-times.verification.reset-password}") long resetPasswordTokenExpirationTime,
                                     @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
                                     @Value("${project-properties.app.frontend-integration.endpoint-paths.reset-password}") String frontendResetPasswordPath) {
-        super(emailService, mongoVerificationTokenRepository, customVerificationTokenRepository, userService);
+        super(emailService, mongoVerificationTokenRepository);
         this.userService = userService;
         this.resetPasswordTokenExpirationTime = resetPasswordTokenExpirationTime;
         this.frontendUrl = frontendUrl;
         this.frontendResetPasswordPath = frontendResetPasswordPath;
         this.mongoVerificationTokenRepository = mongoVerificationTokenRepository;
-        this.customVerificationTokenRepository = customVerificationTokenRepository;
+        this.customVerificationTokenRepository = customResetPasswordVerificationTokenRepository;
     }
 
     /**
      * @throws NotFoundException when the user is based only on OAuth2 data (when the user isn't created by registration)
      */
     @Override
-    public Mono<Void> issue(String email, Object carrierObject) {
+    public Mono<Void> issue(String email, Void carrierObject) {
         return userService.getUserByEmail(email)
                 .flatMap(user -> {
                     if (user.getPassword() == null) {
@@ -69,12 +68,12 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService i
                                 this.resetPasswordTokenExpirationTime,
                                 VerificationTokenType.RESET_PASSWORD_VERIFICATION.name()
                         ),
-                        "Marine Unit Monitoring - reset password message."
+                        "Marine Unit Monitoring - Reset password message."
                 ));
     }
 
     @Override
-    public Mono<VerificationToken> verify(String token) {
+    public Mono<ResetPasswordVerificationToken> verify(String token) {
         log.info("Verifying reset password token.");
         return super.validateVerificationToken(mongoVerificationTokenRepository.findById(token))
                 .flatMap(verificationToken -> verificationToken.getVerified()
@@ -87,7 +86,7 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService i
     }
 
     @Override
-    public Mono<Void> performVerifiedTokenAction(VerificationToken verificationToken) {
+    public Mono<Void> performVerifiedTokenAction(ResetPasswordVerificationToken verificationToken) {
         log.info("Performing reset password verified token action:");
         return just(verificationToken)
                 .flatMap(vt -> customVerificationTokenRepository

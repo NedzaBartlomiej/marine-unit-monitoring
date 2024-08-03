@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.dto.VerificationTokenDtoMapper;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.dto.VerificationTokenReadDto;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverification.ipauthprotection.dto.IpAuthProtectionVTReadDto;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.ipauthprotection.service.IpAuthProtectionService;
 import reactor.core.publisher.Mono;
 
@@ -26,7 +26,7 @@ public class IpAuthProtectionController {
     }
 
     @GetMapping("/untrusted-authentication/{verificationToken}")
-    public Mono<ResponseEntity<ResponseModel<VerificationTokenReadDto>>> getUntrustedAuthenticationInfo(@PathVariable String verificationToken) {
+    public Mono<ResponseEntity<ResponseModel<IpAuthProtectionVTReadDto>>> getUntrustedAuthenticationInfo(@PathVariable String verificationToken) {
         return ipAuthProtectionService.getVerificationToken(verificationToken)
                 .map(vt ->
                         buildResponse(
@@ -34,7 +34,7 @@ public class IpAuthProtectionController {
                                 buildResponseModel(
                                         null,
                                         OK,
-                                        verificationTokenDtoMapper.mapToReadDto(vt),
+                                        verificationTokenDtoMapper.map(vt, IpAuthProtectionVTReadDto.class),
                                         "verificationToken"
                                 )
                         )

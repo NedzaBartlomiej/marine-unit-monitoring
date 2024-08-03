@@ -13,7 +13,11 @@ public class VerificationTokenDtoMapper {
         this.modelMapper = modelMapper;
     }
 
-    public VerificationTokenReadDto mapToReadDto(VerificationToken verificationToken) {
-        return modelMapper.map(verificationToken, VerificationTokenReadDto.class);
+    public <T extends VerificationTokenDto> T map(VerificationToken verificationToken, Class<T> dtoClass) {
+        return modelMapper.map(verificationToken, dtoClass);
+    }
+
+    public <T extends VerificationToken> T map(VerificationTokenDto verificationTokenDto, Class<T> verificationTokenClass) {
+        return modelMapper.map(verificationTokenDto, verificationTokenClass);
     }
 }

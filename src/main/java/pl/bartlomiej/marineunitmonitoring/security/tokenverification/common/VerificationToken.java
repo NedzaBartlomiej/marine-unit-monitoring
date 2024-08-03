@@ -13,20 +13,8 @@ public abstract class VerificationToken {
     private LocalDateTime expiration;
     private LocalDateTime iat;
     private String type;
-    private Object carrierData;
-    private Boolean isVerified;
 
     public VerificationToken() {
-    }
-
-    public VerificationToken(String uid, long expirationTime, String type, Object carrierData) {
-        this.id = UUID.randomUUID().toString();
-        this.uid = uid;
-        this.expiration = LocalDateTime.now().plus(expirationTime, ChronoUnit.MILLIS);
-        this.iat = LocalDateTime.now();
-        this.type = type;
-        this.carrierData = carrierData;
-        this.isVerified = false;
     }
 
     public VerificationToken(String uid, long expirationTime, String type) {
@@ -35,8 +23,6 @@ public abstract class VerificationToken {
         this.expiration = LocalDateTime.now().plus(expirationTime, ChronoUnit.MILLIS);
         this.iat = LocalDateTime.now();
         this.type = type;
-        this.carrierData = null;
-        this.isVerified = false;
     }
 
     public String getId() {
@@ -69,22 +55,6 @@ public abstract class VerificationToken {
 
     public void setType(String type) {
         this.type = type;
-    }
-
-    public Object getCarrierData() {
-        return carrierData;
-    }
-
-    public void setCarrierData(Object carrierData) {
-        this.carrierData = carrierData;
-    }
-
-    public Boolean getVerified() {
-        return this.isVerified;
-    }
-
-    public void setVerified(Boolean verified) {
-        this.isVerified = verified;
     }
 
     public LocalDateTime getIat() {

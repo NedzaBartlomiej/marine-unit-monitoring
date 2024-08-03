@@ -36,7 +36,7 @@ echo -e "${YELLOW}STOPPING APPLICATION CONTAINER:${NC}"
 docker stop $app_container_name
 
 
-echo -e "${YELLOW}UPDATING APPLICATION IMAGE:$app_img_name' ####${NC}"
+echo -e "${YELLOW}UPDATING APPLICATION IMAGE: '$app_img_name' ####${NC}"
 echo "-- Deleting app container --"
 docker rm $app_container_name
 echo "-- Deleting app image --"

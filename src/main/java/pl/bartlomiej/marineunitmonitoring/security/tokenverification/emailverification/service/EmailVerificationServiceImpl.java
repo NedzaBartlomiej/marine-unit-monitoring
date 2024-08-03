@@ -5,9 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationToken;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenType;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.repository.CustomVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.repository.MongoVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.service.AbstractVerificationTokenService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.emailverification.EmailVerificationToken;
@@ -15,14 +13,14 @@ import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
 
 @Service
-public class EmailVerificationServiceImpl extends AbstractVerificationTokenService implements EmailVerificationService {
+public class EmailVerificationServiceImpl extends AbstractVerificationTokenService<EmailVerificationToken, Void> implements EmailVerificationService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailVerificationServiceImpl.class);
     private final UserService userService;
     private final long emailTokenExpirationTime;
     private final String frontendUrl;
     private final String frontendEmailVerificationPath;
-    private final MongoVerificationTokenRepository mongoVerificationTokenRepository;
+    private final MongoVerificationTokenRepository<EmailVerificationToken> mongoVerificationTokenRepository;
 
     public EmailVerificationServiceImpl(
             UserService userService,
@@ -30,9 +28,8 @@ public class EmailVerificationServiceImpl extends AbstractVerificationTokenServi
             @Value("${project-properties.expiration-times.verification.email-token}") long emailTokenExpirationTime,
             @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
             @Value("${project-properties.app.frontend-integration.endpoint-paths.email-verification}") String frontendEmailVerificationPath,
-            CustomVerificationTokenRepository customVerificationTokenRepository,
-            MongoVerificationTokenRepository mongoVerificationTokenRepository) {
-        super(emailService, mongoVerificationTokenRepository, customVerificationTokenRepository, userService);
+            MongoVerificationTokenRepository<EmailVerificationToken> mongoVerificationTokenRepository) {
+        super(emailService, mongoVerificationTokenRepository);
         this.userService = userService;
         this.emailTokenExpirationTime = emailTokenExpirationTime;
         this.frontendUrl = frontendUrl;
@@ -41,7 +38,7 @@ public class EmailVerificationServiceImpl extends AbstractVerificationTokenServi
     }
 
     @Override
-    public Mono<Void> issue(String uid, Object carrierObject) {
+    public Mono<Void> issue(String uid, Void carrierObject) {
         return userService.getUser(uid)
                 .flatMap(user -> super.processIssue(
                         user,
@@ -50,12 +47,12 @@ public class EmailVerificationServiceImpl extends AbstractVerificationTokenServi
                                 this.emailTokenExpirationTime,
                                 VerificationTokenType.EMAIL_VERIFICATION.name()
                         ),
-                        "Marine Unit Monitoring - verification email message."
+                        "Marine Unit Monitoring - Email verification message."
                 ));
     }
 
     @Override
-    public Mono<VerificationToken> verify(String token) {
+    public Mono<EmailVerificationToken> verify(String token) {
         log.info("Verifying email verification token.");
         return super.validateVerificationToken(mongoVerificationTokenRepository.findById(token))
                 .flatMap(verificationToken -> userService.getUser(verificationToken.getUid())
@@ -64,7 +61,7 @@ public class EmailVerificationServiceImpl extends AbstractVerificationTokenServi
     }
 
     @Override
-    public Mono<Void> performVerifiedTokenAction(VerificationToken verificationToken) {
+    public Mono<Void> performVerifiedTokenAction(EmailVerificationToken verificationToken) {
         log.info("Performing email verification verified token action.");
         return Mono.just(verificationToken)
                 .flatMap(vt -> userService.verifyUser(vt.getUid()))

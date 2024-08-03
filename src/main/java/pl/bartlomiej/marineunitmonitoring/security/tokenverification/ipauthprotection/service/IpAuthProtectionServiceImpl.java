@@ -7,9 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationToken;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenType;
-import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.repository.CustomVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.repository.MongoVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.service.AbstractVerificationTokenService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.ipauthprotection.IpAuthProtectionVerificationToken;
@@ -20,24 +18,23 @@ import reactor.core.publisher.Mono;
 
 
 @Service
-public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenService implements IpAuthProtectionService {
+public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenService<IpAuthProtectionVerificationToken, String> implements IpAuthProtectionService {
 
     private static final Logger log = LoggerFactory.getLogger(IpAuthProtectionServiceImpl.class);
     private final String frontendUrl;
     private final long ipAddressTokenExpirationTime;
     private final UserService userService;
-    private final MongoVerificationTokenRepository mongoVerificationTokenRepository;
+    private final MongoVerificationTokenRepository<IpAuthProtectionVerificationToken> mongoVerificationTokenRepository;
     private final String frontendUntrustedAuthenticationPath;
     private final JWTService jwtService;
 
     public IpAuthProtectionServiceImpl(EmailService emailService,
-                                       MongoVerificationTokenRepository mongoVerificationTokenRepository,
-                                       CustomVerificationTokenRepository customVerificationTokenRepository,
+                                       MongoVerificationTokenRepository<IpAuthProtectionVerificationToken> mongoVerificationTokenRepository,
                                        UserService userService,
                                        @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
                                        @Value("${project-properties.expiration-times.verification.ip-address-token}") long ipAddressTokenExpirationTime,
                                        @Value("${project-properties.app.frontend-integration.endpoint-paths.untrusted-authentication}") String frontendUntrustedAuthenticationPath, JWTService jwtService) {
-        super(emailService, mongoVerificationTokenRepository, customVerificationTokenRepository, userService);
+        super(emailService, mongoVerificationTokenRepository);
         this.frontendUrl = frontendUrl;
         this.userService = userService;
         this.mongoVerificationTokenRepository = mongoVerificationTokenRepository;
@@ -47,7 +44,7 @@ public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenServic
     }
 
     @Override
-    public Mono<Void> issue(String uid, Object ipAddress) {
+    public Mono<Void> issue(String uid, String ipAddress) {
         return userService.getUser(uid)
                 .flatMap(user -> super.processIssue(
                         user,
@@ -62,7 +59,7 @@ public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenServic
     }
 
     @Override
-    public Mono<VerificationToken> verify(String token) {
+    public Mono<IpAuthProtectionVerificationToken> verify(String token) {
         log.info("Verifying IP address verification token.");
         return super.validateVerificationToken(mongoVerificationTokenRepository.findById(token))
                 .flatMap(verificationToken -> userService.isUserExists(verificationToken.getUid())
@@ -87,15 +84,15 @@ public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenServic
 
     @Transactional(transactionManager = "reactiveTransactionManager")
     @Override
-    public Mono<Void> trustIpAddress(VerificationToken verificationToken) {
+    public Mono<Void> trustIpAddress(IpAuthProtectionVerificationToken verificationToken) {
         log.info("Adding new trusted ip address for user.");
-        return userService.trustIpAddress(verificationToken.getUid(), (String) verificationToken.getCarrierData())
+        return userService.trustIpAddress(verificationToken.getUid(), verificationToken.getIpAddress())
                 .then(mongoVerificationTokenRepository.delete(verificationToken));
     }
 
     @Transactional(transactionManager = "reactiveTransactionManager")
     @Override
-    public Mono<Void> blockAccount(VerificationToken verificationToken) {
+    public Mono<Void> blockAccount(IpAuthProtectionVerificationToken verificationToken) {
         log.info("Blocking user account after untrusted activity confirmation.");
         return userService.blockUser(verificationToken.getUid())
                 .then(jwtService.invalidateAll(verificationToken.getUid()))
