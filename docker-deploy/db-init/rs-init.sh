@@ -2,7 +2,7 @@
 echo "#### RS.INIT.SH ####"
 
 mongosh <<BLOCK
-print("Initializing replica set.");
+print("-- Initializing replica set. --");
 rs.initiate({
     "_id": "marine-unit-monitoring-db-rs",
     "members": [
@@ -21,7 +21,7 @@ rs.initiate({
     ]
 });
 
-print("Reconfiguring to set mongodb-primary as PRIMARY member.");
+print("-- Reconfiguring to set mongodb-primary as PRIMARY member. --");
 cfg = rs.conf();
 cfg.members[0].priority = 2;
 cfg.members[1].priority = 0;
