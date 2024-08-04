@@ -73,12 +73,12 @@ public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenServic
     }
 
     @Override
-    protected String buildVerificationMessage(String verificationUrl) {
-        return "We have detected untrusted authentication activity on your account, please check it: " + verificationUrl;
+    protected String buildVerificationMessage(String verificationItem) {
+        return "We have detected untrusted authentication activity on your account, please check it: " + verificationItem;
     }
 
     @Override
-    protected String buildVerificationUrl(String token) {
+    protected String buildVerificationItem(String token) {
         return frontendUrl + frontendUntrustedAuthenticationPath + "/" + token;
     }
 

@@ -100,12 +100,12 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService<R
     }
 
     @Override
-    protected String buildVerificationMessage(String verificationUrl) {
-        return "To reset password click this link: " + verificationUrl;
+    protected String buildVerificationMessage(String verificationItem) {
+        return "To reset password click this link: " + verificationItem;
     }
 
     @Override
-    protected String buildVerificationUrl(String token) {
+    protected String buildVerificationItem(String token) {
         return this.frontendUrl + this.frontendResetPasswordPath + "/" + token;
     }
 

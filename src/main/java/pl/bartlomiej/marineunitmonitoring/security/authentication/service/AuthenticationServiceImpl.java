@@ -18,12 +18,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final ReactiveAuthenticationManager authenticationManager;
     private final JWTService jwtService;
 
-    public AuthenticationServiceImpl(IpAuthProtectionService ipAuthProtectionService, @Qualifier("userDetailsReactiveAuthenticationManager") ReactiveAuthenticationManager authenticationManager, JWTService jwtService) {
+    public AuthenticationServiceImpl(IpAuthProtectionService ipAuthProtectionService,
+                                     @Qualifier("userDetailsReactiveAuthenticationManager") ReactiveAuthenticationManager authenticationManager,
+                                     JWTService jwtService) {
         this.ipAuthProtectionService = ipAuthProtectionService;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
     }
 
+    // todo solve it with AuthenticationResponse object additional object fields depending on 2FA on/off
     @Override
     public Mono<Map<String, String>> authenticate(String id, String email, String password, String ipAddress) {
         var authenticationToken = new UsernamePasswordAuthenticationToken(id, password);

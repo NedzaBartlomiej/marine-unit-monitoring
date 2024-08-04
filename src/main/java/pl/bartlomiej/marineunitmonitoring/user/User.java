@@ -16,6 +16,7 @@ public class User {
     private String password;
     private Boolean isVerified = false;
     private Boolean isLocked = false;
+    private Boolean isTwoFactorAuthEnabled = false;
     private List<TrackedShip> trackedShips;
     private List<Role> roles;
     private List<String> trustedIpAddresses;
@@ -109,5 +110,13 @@ public class User {
 
     public void setTrustedIpAddresses(List<String> trustedIpAddresses) {
         this.trustedIpAddresses = trustedIpAddresses;
+    }
+
+    public Boolean getTwoFactorAuthEnabled() {
+        return isTwoFactorAuthEnabled;
+    }
+
+    public void setTwoFactorAuthEnabled(Boolean twoFactorAuthEnabled) {
+        isTwoFactorAuthEnabled = twoFactorAuthEnabled;
     }
 }

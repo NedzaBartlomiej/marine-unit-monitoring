@@ -73,11 +73,11 @@ public class EmailVerificationServiceImpl extends AbstractVerificationTokenServi
         return super.sendVerificationEmail(target, title, token);
     }
 
-    protected String buildVerificationMessage(String verificationUrl) {
-        return "To verify your email click this link: " + verificationUrl;
+    protected String buildVerificationMessage(String verificationItem) {
+        return "To verify your email click this link: " + verificationItem;
     }
 
-    protected String buildVerificationUrl(String token) {
+    protected String buildVerificationItem(String token) {
         return this.frontendUrl + this.frontendEmailVerificationPath + "/" + token;
     }
 }

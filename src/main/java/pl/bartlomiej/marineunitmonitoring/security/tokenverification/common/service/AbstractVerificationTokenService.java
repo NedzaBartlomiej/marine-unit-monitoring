@@ -30,9 +30,9 @@ public abstract class AbstractVerificationTokenService<T extends VerificationTok
 
     protected abstract Mono<Void> sendVerificationToken(String target, String title, String token);
 
-    protected abstract String buildVerificationMessage(String verificationUrl);
+    protected abstract String buildVerificationMessage(String verificationItem);
 
-    protected abstract String buildVerificationUrl(String token);
+    protected abstract String buildVerificationItem(String token);
 
     @Override
     public Mono<T> getVerificationToken(String id) {
@@ -73,7 +73,7 @@ public abstract class AbstractVerificationTokenService<T extends VerificationTok
         return emailService.sendEmail(
                 email,
                 title,
-                this.buildVerificationMessage(this.buildVerificationUrl(token))
+                this.buildVerificationMessage(this.buildVerificationItem(token))
         );
     }
 
