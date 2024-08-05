@@ -4,6 +4,6 @@ import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.serv
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.resetpassword.ResetPasswordVerificationToken;
 import reactor.core.publisher.Mono;
 
-public interface ResetPasswordService extends VerificationTokenService<ResetPasswordVerificationToken, Void> {
+public interface ResetPasswordService extends VerificationTokenService<ResetPasswordVerificationToken, Void, Void> {
     Mono<Void> processResetPassword(String verificationToken, String newPassword);
 }

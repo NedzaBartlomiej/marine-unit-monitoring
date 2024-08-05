@@ -27,5 +27,7 @@ public interface UserService {
 
     Mono<Void> updatePassword(String id, String newPassword);
 
+    Mono<Void> updateIsTwoFactorAuthEnabled(String id, Boolean isTwoFactorAuthEnabled);
+
     Mono<Void> trustIpAddress(String id, String ipAddress);
 }

@@ -11,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.server.ServerWebExchange;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTConstants;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTEntity;
@@ -26,8 +27,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
-import static reactor.core.publisher.Mono.just;
-
 @Service
 public class JWTServiceImpl implements JWTService {
 
@@ -41,6 +40,7 @@ public class JWTServiceImpl implements JWTService {
     private final int refreshTokenExpirationTime;
     private final int accessTokenExpirationTime;
     private final String secretKey;
+    private final TransactionalOperator transactionalOperator;
 
     public JWTServiceImpl(MongoJWTEntityRepository mongoJWTEntityRepository,
                           UserService userService,
@@ -48,7 +48,8 @@ public class JWTServiceImpl implements JWTService {
                           @Value("${project-properties.expiration-times.jwt.refresh-token}") int refreshTokenExpirationTime,
                           @Value("${project-properties.expiration-times.jwt.access-token}") int accessTokenExpirationTime,
                           @Value("${secrets.jwt.secret-key}") String secretKey,
-                          @Value("${project-properties.security.token.bearer.type}") String bearerType, CustomJWTEntityRepository customJWTEntityRepository) {
+                          @Value("${project-properties.security.token.bearer.type}") String bearerType,
+                          CustomJWTEntityRepository customJWTEntityRepository, TransactionalOperator transactionalOperator) {
         this.bearerPrefix = bearerType + " ";
         this.mongoJWTEntityRepository = mongoJWTEntityRepository;
         this.userService = userService;
@@ -57,22 +58,36 @@ public class JWTServiceImpl implements JWTService {
         this.accessTokenExpirationTime = accessTokenExpirationTime;
         this.secretKey = secretKey;
         this.customJWTEntityRepository = customJWTEntityRepository;
+        this.transactionalOperator = transactionalOperator;
     }
 
-    public String createAccessToken(String uid, String email) {
+    @Override
+    public Mono<Map<String, String>> createTokenPacket(String uid, String email) {
+        return Mono.zip(this.createRefreshToken(uid, email), this.createAccessToken(uid, email),
+                (refreshToken, accessToken) ->
+                        Map.of(
+                                JWTConstants.REFRESH_TOKEN_TYPE, refreshToken,
+                                JWTConstants.ACCESS_TOKEN_TYPE, accessToken
+                        )
+        );
+    }
+
+    @Override
+    public Mono<String> createAccessToken(String uid, String email) {
         final Map<String, String> accessTokenCustomClaims = Map.of(
                 JWTConstants.EMAIL_CLAIM, email,
                 JWTConstants.TYPE_CLAIM, JWTConstants.ACCESS_TOKEN_TYPE
         );
-        return this.buildToken(uid, accessTokenCustomClaims, accessTokenExpirationTime);
+        return this.issueToken(uid, accessTokenCustomClaims, accessTokenExpirationTime);
     }
 
-    public String createRefreshToken(String uid, String email) {
+    @Override
+    public Mono<String> createRefreshToken(String uid, String email) {
         final Map<String, String> refreshTokenCustomClaims = Map.of(
                 JWTConstants.EMAIL_CLAIM, email,
                 JWTConstants.TYPE_CLAIM, JWTConstants.REFRESH_TOKEN_TYPE
         );
-        return this.buildToken(uid, refreshTokenCustomClaims, refreshTokenExpirationTime);
+        return this.issueToken(uid, refreshTokenCustomClaims, refreshTokenExpirationTime);
     }
 
     @Override
@@ -85,12 +100,7 @@ public class JWTServiceImpl implements JWTService {
 
         return userService.getUser(subject)
                 .flatMap(user -> this.invalidate(refreshToken)
-                        .then(just(
-                                Map.of(
-                                        JWTConstants.ACCESS_TOKEN_TYPE, this.createAccessToken(user.getId(), user.getEmail()),
-                                        JWTConstants.REFRESH_TOKEN_TYPE, this.createRefreshToken(user.getId(), user.getEmail())
-                                ))
-                        )
+                        .then(this.createTokenPacket(user.getId(), user.getEmail()))
                 );
     }
 
@@ -151,15 +161,28 @@ public class JWTServiceImpl implements JWTService {
                 .subscribe();
     }
 
-    private String buildToken(String uid, Map<String, String> customClaims, int expirationTime) {
-
+    // todo - when issuing new token - invalidate all previous user tokens (impl it as transaction with issuing)
+    private Mono<String> issueToken(String uid, Map<String, String> customClaims, int expirationTime) {
+        log.info("Issuing new JWT.");
         final String jti = UUID.randomUUID().toString();
         final Date expiration = new Date(System.currentTimeMillis() + expirationTime);
+        JWTEntity jwtEntity = new JWTEntity(
+                jti,
+                uid,
+                LocalDateTime.ofInstant(expiration.toInstant(), ZoneId.systemDefault())
+        );
 
-        mongoJWTEntityRepository.save(
-                new JWTEntity(jti, uid, LocalDateTime.ofInstant(expiration.toInstant(), ZoneId.systemDefault()))
-        ).subscribe();
+        log.info("Saving new JWT.");
+        return mongoJWTEntityRepository.save(jwtEntity)
+                // this.invalidateAll()
+                .then(Mono.fromCallable(() -> this.buildToken(customClaims, jti, uid, expiration)))
+                .doOnSuccess(token -> log.info("JWT successfully issued."))
+                .doOnError(error -> log.error("Failed to issue JWT: {}", error.getMessage()))
+                .as(transactionalOperator::transactional);
+    }
 
+    private String buildToken(Map<String, String> customClaims, String jti, String uid, Date expiration) {
+        log.info("Building new JWT.");
         return Jwts.builder()
                 .setClaims(customClaims)
                 .setIssuer(this.tokenIssuer)

@@ -3,13 +3,14 @@ package pl.bartlomiej.marineunitmonitoring.security.authentication.service;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTConstants;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.AuthResponse;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.ipauthprotection.service.IpAuthProtectionService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverification.twofactorauth.service.TwoFactorAuthService;
+import pl.bartlomiej.marineunitmonitoring.user.User;
 import reactor.core.publisher.Mono;
-
-import java.util.Map;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -17,25 +18,44 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final IpAuthProtectionService ipAuthProtectionService;
     private final ReactiveAuthenticationManager authenticationManager;
     private final JWTService jwtService;
+    private final TwoFactorAuthService twoFactorAuthService;
 
     public AuthenticationServiceImpl(IpAuthProtectionService ipAuthProtectionService,
                                      @Qualifier("userDetailsReactiveAuthenticationManager") ReactiveAuthenticationManager authenticationManager,
-                                     JWTService jwtService) {
+                                     JWTService jwtService, TwoFactorAuthService twoFactorAuthService) {
         this.ipAuthProtectionService = ipAuthProtectionService;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.twoFactorAuthService = twoFactorAuthService;
     }
 
-    // todo solve it with AuthenticationResponse object additional object fields depending on 2FA on/off
     @Override
-    public Mono<Map<String, String>> authenticate(String id, String email, String password, String ipAddress) {
-        var authenticationToken = new UsernamePasswordAuthenticationToken(id, password);
-        return authenticationManager.authenticate(authenticationToken)
-                .flatMap(ignoredAuthentication -> ipAuthProtectionService.processProtection(id, ipAddress))
-                .then(Mono.just(
-                        Map.of(
-                                JWTConstants.REFRESH_TOKEN_TYPE, jwtService.createRefreshToken(id, email),
-                                JWTConstants.ACCESS_TOKEN_TYPE, jwtService.createAccessToken(id, email))
-                ));
+    public Mono<AuthResponse> authenticate(User user, String passwordCredential, String ipAddress) {
+        return this.authenticateUser(user, passwordCredential)
+                .flatMap(ignored -> ipAuthProtectionService.processProtection(user.getId(), ipAddress))
+                .then(this.processAuthentication(user));
+    }
+
+    private Mono<Authentication> authenticateUser(User user, String passwordCredential) {
+        var authenticationToken = new UsernamePasswordAuthenticationToken(user.getId(), passwordCredential);
+        return authenticationManager.authenticate(authenticationToken);
+    }
+
+    private Mono<AuthResponse> processAuthentication(User user) {
+        if (user.getTwoFactorAuthEnabled()) {
+            return this.handleTwoFactorAuthentication(user);
+        } else {
+            return this.createAuthResponse(user);
+        }
+    }
+
+    private Mono<AuthResponse> handleTwoFactorAuthentication(User user) {
+        return twoFactorAuthService.issue(user.getId(), null)
+                .then(Mono.just(new AuthResponse("2FA_AUTH_ENABLED,CODE_SENT", null)));
+    }
+
+    private Mono<AuthResponse> createAuthResponse(User user) {
+        return jwtService.createTokenPacket(user.getId(), user.getEmail())
+                .map(tokens -> new AuthResponse("AUTHENTICATED", tokens));
     }
 }

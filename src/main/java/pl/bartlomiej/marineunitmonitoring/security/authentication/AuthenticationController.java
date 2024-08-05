@@ -9,6 +9,7 @@ import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.service.AuthenticationService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverification.twofactorauth.service.TwoFactorAuthService;
 import pl.bartlomiej.marineunitmonitoring.user.dto.UserAuthDto;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
@@ -27,13 +28,15 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final UserService userService;
     private final JWTService jwtService;
+    private final TwoFactorAuthService twoFactorAuthService;
 
     public AuthenticationController(AuthenticationService authenticationService,
                                     UserService userService,
-                                    JWTService jwtService) {
+                                    JWTService jwtService, TwoFactorAuthService twoFactorAuthService) {
         this.authenticationService = authenticationService;
         this.userService = userService;
         this.jwtService = jwtService;
+        this.twoFactorAuthService = twoFactorAuthService;
     }
 
     @GetMapping("/authenticate")
@@ -42,19 +45,36 @@ public class AuthenticationController {
             @RequestHeader(name = "X-Forwarded-For") String xForwardedFor) {
         return userService.getUserByEmail(userAuthDto.getEmail())
                 .flatMap(user -> authenticationService.authenticate(
-                                        user.getId(), userAuthDto.getEmail(), userAuthDto.getPassword(), xForwardedFor
+                                        user, userAuthDto.getPassword(), xForwardedFor
                                 )
-                                .map(tokens ->
+                                .map(authResponse ->
                                         ControllerResponseUtil.buildResponse(
                                                 OK,
                                                 ControllerResponseUtil.buildResponseModel(
-                                                        "AUTHENTICATED",
+                                                        authResponse.message(),
                                                         OK,
-                                                        tokens,
+                                                        authResponse.tokens(),
                                                         "authenticationTokens"
                                                 )
                                         )
                                 )
+                );
+    }
+
+    @GetMapping("/authenticate/{code}")
+    public Mono<ResponseEntity<ResponseModel<Map<String, String>>>> authenticate(@PathVariable String code) {
+        return twoFactorAuthService.verify(code)
+                .flatMap(twoFactorAuthService::performVerifiedTokenAction)
+                .map(tokens ->
+                        buildResponse(
+                                OK,
+                                buildResponseModel(
+                                        "AUTHENTICATED",
+                                        OK,
+                                        tokens,
+                                        "authenticationTokens"
+                                )
+                        )
                 );
     }
 

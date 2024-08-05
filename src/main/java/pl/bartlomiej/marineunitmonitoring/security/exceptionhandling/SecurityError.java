@@ -1,8 +1,5 @@
 package pl.bartlomiej.marineunitmonitoring.security.exceptionhandling;
 
-import lombok.Getter;
-
-@Getter
 public enum SecurityError {
     LOCKED("ACCOUNT_LOCKED"),
     FORBIDDEN("INSUFFICIENT_PERMISSIONS"),
@@ -15,5 +12,9 @@ public enum SecurityError {
 
     SecurityError(String message) {
         this.message = message;
+    }
+
+    public String getMessage() {
+        return message;
     }
 }

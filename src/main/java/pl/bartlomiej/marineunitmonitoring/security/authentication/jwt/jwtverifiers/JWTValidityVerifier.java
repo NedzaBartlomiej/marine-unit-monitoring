@@ -42,7 +42,7 @@ public class JWTValidityVerifier extends AbstractJWTVerifier implements WebFilte
     @Override
     protected Mono<Void> verifyToken(ServerWebExchange exchange, WebFilterChain chain, Claims claims) {
         log.info("Verifying JWT.");
-        return jwtService.isValid(claims.getId())
+        return jwtService.isValid(jwtService.extract(exchange))
                 .flatMap(isValid -> {
                     if (!isValid) {
                         log.info("Invalid JWT.");

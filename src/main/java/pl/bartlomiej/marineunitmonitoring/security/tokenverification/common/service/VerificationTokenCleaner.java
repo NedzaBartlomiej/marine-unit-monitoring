@@ -26,7 +26,7 @@ public class VerificationTokenCleaner {
         this.userService = userService;
     }
 
-    @Scheduled(initialDelay = 0, fixedDelayString = "${project-properties.scheduling-delays.in-ms.email-verification.clearing}")
+    @Scheduled(initialDelay = 0, fixedDelayString = "${project-properties.scheduling-delays.in-ms.verification-tokens.clearing}")
     public void clearAbandonedVerificationIngredients() {
         log.info("Clearing abandoned verification tokens.");
         customVerificationTokenRepository.findExpiredTokens()

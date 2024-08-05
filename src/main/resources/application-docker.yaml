@@ -29,10 +29,10 @@ project-properties:
   scheduling-delays:
     in-ms:
       ship-tracking:
-        saving: 300000 # 5 min
+        saving: 300000 # 5min
       jwt-blacklist:
         clearing: 86400000 # 24h
-      email-verification:
+      verification-tokens:
         clearing: 86400000 # 24h
   expiration-times:
     jwt:
@@ -42,6 +42,7 @@ project-properties:
       email-token: 86400000 # 24h
       reset-password: 86400000 # 24h
       ip-address-token: 86400000 # 24h
+      two-fa-token: 300000 # 5min
   security:
     token:
       bearer:

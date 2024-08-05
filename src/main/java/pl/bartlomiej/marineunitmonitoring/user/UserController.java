@@ -41,8 +41,9 @@ public class UserController {
         this.transactionalOperator = transactionalOperator;
     }
 
+
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
-    @GetMapping
+    @GetMapping("/me")
     public Mono<ResponseEntity<ResponseModel<UserReadDto>>> getAuthenticatedUser(Principal principal) {
         return userService.identifyUser(principal.getName())
                 .flatMap(id -> userService.getUser(id)
@@ -97,6 +98,24 @@ public class UserController {
                                 OK,
                                 buildResponseModel(
                                         "DELETED",
+                                        OK,
+                                        null,
+                                        null
+                                )
+                        )
+                ));
+    }
+
+    @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
+    @PatchMapping("/me/two-factor-auth-enabled/{enabled}")
+    public Mono<ResponseEntity<ResponseModel<Void>>> toggleIsTwoFactorAuthEnabled(@PathVariable Boolean enabled, Principal principal) {
+        return userService.identifyUser(principal.getName())
+                .flatMap(id -> userService.updateIsTwoFactorAuthEnabled(id, enabled))
+                .then(just(
+                        buildResponse(
+                                OK,
+                                buildResponseModel(
+                                        "UPDATED",
                                         OK,
                                         null,
                                         null

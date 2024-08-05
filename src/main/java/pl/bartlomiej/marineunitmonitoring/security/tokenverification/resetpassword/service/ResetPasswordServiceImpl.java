@@ -9,6 +9,7 @@ import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.AlreadyVeri
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidVerificationTokenException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
+import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenConstants;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenType;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.repository.MongoVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.service.AbstractVerificationTokenService;
@@ -21,7 +22,7 @@ import static reactor.core.publisher.Mono.error;
 import static reactor.core.publisher.Mono.just;
 
 @Service
-public class ResetPasswordServiceImpl extends AbstractVerificationTokenService<ResetPasswordVerificationToken, Void> implements ResetPasswordService {
+public class ResetPasswordServiceImpl extends AbstractVerificationTokenService<ResetPasswordVerificationToken, Void, Void> implements ResetPasswordService {
 
     private static final Logger log = LoggerFactory.getLogger(ResetPasswordServiceImpl.class);
     private final UserService userService;
@@ -38,7 +39,7 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService<R
                                     @Value("${project-properties.expiration-times.verification.reset-password}") long resetPasswordTokenExpirationTime,
                                     @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
                                     @Value("${project-properties.app.frontend-integration.endpoint-paths.reset-password}") String frontendResetPasswordPath) {
-        super(emailService, mongoVerificationTokenRepository);
+        super(emailService, userService, mongoVerificationTokenRepository);
         this.userService = userService;
         this.resetPasswordTokenExpirationTime = resetPasswordTokenExpirationTime;
         this.frontendUrl = frontendUrl;
@@ -68,7 +69,8 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService<R
                                 this.resetPasswordTokenExpirationTime,
                                 VerificationTokenType.RESET_PASSWORD_VERIFICATION.name()
                         ),
-                        "Marine Unit Monitoring - Reset password message."
+                        ResetPasswordVerificationToken::getId,
+                        VerificationTokenConstants.EMAIL_TITLE_APP_START + "Reset password message."
                 ));
     }
 
@@ -79,9 +81,6 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService<R
                 .flatMap(verificationToken -> verificationToken.getVerified()
                         ? error(AlreadyVerifiedException::new)
                         : just(verificationToken)
-                )
-                .flatMap(verificationToken -> userService.isUserExists(verificationToken.getUid())
-                        .then(just(verificationToken))
                 );
     }
 

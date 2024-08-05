@@ -10,7 +10,9 @@ import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundExc
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.UniqueEmailException;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.RegisterBasedUserNotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.UnverifiedAccountException;
+import pl.bartlomiej.marineunitmonitoring.common.helper.repository.CustomRepository;
 import pl.bartlomiej.marineunitmonitoring.user.User;
+import pl.bartlomiej.marineunitmonitoring.user.UserConstants;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
 import reactor.core.publisher.Mono;
@@ -27,15 +29,17 @@ public class UserServiceImpl implements UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     private final CustomUserRepository customUserRepository;
+    private final CustomRepository customRepository;
     private final MongoUserRepository mongoUserRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final String tokenIssuer;
 
-    public UserServiceImpl(CustomUserRepository customUserRepository,
+    public UserServiceImpl(CustomUserRepository customUserRepository, CustomRepository customRepository,
                            MongoUserRepository mongoUserRepository,
                            BCryptPasswordEncoder passwordEncoder,
                            @Value("${project-properties.security.jwt.issuer}") String tokenIssuer) {
         this.customUserRepository = customUserRepository;
+        this.customRepository = customRepository;
         this.mongoUserRepository = mongoUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenIssuer = tokenIssuer;
@@ -64,17 +68,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<Void> verifyUser(String id) {
-        return customUserRepository.updateIsVerified(id, true);
+        return customRepository.updateOne(id, UserConstants.IS_VERIFIED, true, User.class)
+                .then();
     }
 
     @Override
     public Mono<Void> unlockUser(String id) {
-        return customUserRepository.updateIsLocked(id, false);
+        return customRepository.updateOne(id, UserConstants.IS_LOCKED, false, User.class)
+                .then();
     }
 
     @Override
     public Mono<Void> blockUser(String id) {
-        return customUserRepository.updateIsLocked(id, true);
+        return customRepository.updateOne(id, UserConstants.IS_LOCKED, true, User.class)
+                .then();
     }
 
     @Override
@@ -98,7 +105,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<Void> updatePassword(String id, String newPassword) {
-        return customUserRepository.updatePassword(id, passwordEncoder.encode(newPassword));
+        return customRepository.updateOne(id, UserConstants.PASSWORD, passwordEncoder.encode(newPassword), User.class)
+                .then();
+    }
+
+    @Override
+    public Mono<Void> updateIsTwoFactorAuthEnabled(String id, Boolean isTwoFactorAuthEnabled) {
+        return customRepository.updateOne(id, UserConstants.IS_TWO_FACTOR_AUTH_ENABLED, isTwoFactorAuthEnabled, User.class)
+                .then();
     }
 
     @Override

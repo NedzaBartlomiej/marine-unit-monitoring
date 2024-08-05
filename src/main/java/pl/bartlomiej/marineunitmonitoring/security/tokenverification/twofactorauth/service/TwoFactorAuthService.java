@@ -3,5 +3,7 @@ package pl.bartlomiej.marineunitmonitoring.security.tokenverification.twofactora
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.service.VerificationTokenService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.twofactorauth.TwoFactorAuthVerificationToken;
 
-public interface TwoFactorAuthService extends VerificationTokenService<TwoFactorAuthVerificationToken, Void> {
+import java.util.Map;
+
+public interface TwoFactorAuthService extends VerificationTokenService<TwoFactorAuthVerificationToken, Void, Map<String, String>> {
 }

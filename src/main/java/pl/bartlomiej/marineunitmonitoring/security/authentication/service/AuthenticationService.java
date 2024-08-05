@@ -1,9 +1,9 @@
 package pl.bartlomiej.marineunitmonitoring.security.authentication.service;
 
+import pl.bartlomiej.marineunitmonitoring.security.authentication.AuthResponse;
+import pl.bartlomiej.marineunitmonitoring.user.User;
 import reactor.core.publisher.Mono;
 
-import java.util.Map;
-
 public interface AuthenticationService {
-    Mono<Map<String, String>> authenticate(String id, String email, String password, String ipAddress);
+    Mono<AuthResponse> authenticate(User user, String authPassword, String ipAddress);
 }

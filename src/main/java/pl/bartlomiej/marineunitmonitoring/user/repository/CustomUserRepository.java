@@ -19,11 +19,5 @@ public interface CustomUserRepository {
 
     Mono<User> findByOpenId(String openId);
 
-    Mono<Void> updateIsVerified(String id, boolean isVerified);
-
-    Mono<Void> updateIsLocked(String id, boolean isLocked);
-
-    Mono<Void> updatePassword(String id, String password);
-
     Mono<Void> pushTrustedIpAddress(String id, String ipAddress);
 }

@@ -9,9 +9,11 @@ import java.util.Map;
 
 public interface JWTService {
 
-    String createAccessToken(String uid, String email);
+    Mono<Map<String, String>> createTokenPacket(String uid, String email);
 
-    String createRefreshToken(String uid, String email);
+    Mono<String> createAccessToken(String uid, String email);
+
+    Mono<String> createRefreshToken(String uid, String email);
 
     Mono<Map<String, String>> refreshAccessToken(String refreshToken);
 

@@ -4,7 +4,7 @@ import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.serv
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.ipauthprotection.IpAuthProtectionVerificationToken;
 import reactor.core.publisher.Mono;
 
-public interface IpAuthProtectionService extends VerificationTokenService<IpAuthProtectionVerificationToken, String> {
+public interface IpAuthProtectionService extends VerificationTokenService<IpAuthProtectionVerificationToken, String, Void> {
 
     Mono<Void> trustIpAddress(IpAuthProtectionVerificationToken verificationToken);
 

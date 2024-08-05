@@ -3,13 +3,13 @@ package pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.ser
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationToken;
 import reactor.core.publisher.Mono;
 
-public interface VerificationTokenService<T extends VerificationToken, CarrierObject> {
+public interface VerificationTokenService<T extends VerificationToken, CarrierObject, VerifiedActionObject> {
 
-    Mono<Void> issue(String identifier, CarrierObject carrierObject);
+    Mono<Void> issue(String uid, CarrierObject carrierObject);
 
     Mono<T> verify(String token);
 
-    Mono<Void> performVerifiedTokenAction(T verificationToken);
+    Mono<VerifiedActionObject> performVerifiedTokenAction(T verificationToken);
 
     Mono<T> getVerificationToken(String id);
 

@@ -9,22 +9,26 @@ import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationToken;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.repository.MongoVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.user.User;
+import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.function.Function;
 
 import static reactor.core.publisher.Mono.*;
 
 @Service
-public abstract class AbstractVerificationTokenService<T extends VerificationToken, CarrierObject> implements VerificationTokenService<T, CarrierObject> {
+public abstract class AbstractVerificationTokenService<T extends VerificationToken, CarrierObject, VerifiedActionObject> implements VerificationTokenService<T, CarrierObject, VerifiedActionObject> {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractVerificationTokenService.class);
     private final EmailService emailService;
+    private final UserService userService;
     private final MongoVerificationTokenRepository<T> mongoVerificationTokenRepository;
 
-    protected AbstractVerificationTokenService(EmailService emailService,
+    protected AbstractVerificationTokenService(EmailService emailService, UserService userService,
                                                MongoVerificationTokenRepository<T> mongoVerificationTokenRepository) {
         this.emailService = emailService;
+        this.userService = userService;
         this.mongoVerificationTokenRepository = mongoVerificationTokenRepository;
     }
 
@@ -47,19 +51,19 @@ public abstract class AbstractVerificationTokenService<T extends VerificationTok
 
     @Transactional(transactionManager = "reactiveTransactionManager")
     @Override
-    public Mono<Void> performVerifiedTokenAction(T verificationToken) {
+    public Mono<VerifiedActionObject> performVerifiedTokenAction(T verificationToken) {
         log.info("No default action to perform, with verified token.");
         return empty();
     }
 
-    protected Mono<Void> processIssue(User user, T verificationToken, String emailTitle) {
+    protected Mono<Void> processIssue(User user, T verificationToken, Function<T, String> getTokenField, String emailTitle) {
         log.info("Issuing {} token.", verificationToken.getType().toLowerCase());
         return just(user)
                 .flatMap(u -> this.saveVerificationToken(verificationToken))
                 .flatMap(vt -> this.sendVerificationToken(
                         user.getEmail(),
                         emailTitle,
-                        vt.getId()
+                        getTokenField.apply(vt)
                 ));
     }
 
@@ -84,6 +88,9 @@ public abstract class AbstractVerificationTokenService<T extends VerificationTok
                 .flatMap(verificationToken -> verificationToken.getExpiration().isBefore(LocalDateTime.now())
                         ? error(InvalidVerificationTokenException::new)
                         : just(verificationToken)
+                )
+                .flatMap(verificationToken -> userService.isUserExists(verificationToken.getUid())
+                        .then(just(verificationToken))
                 );
     }
 }

@@ -14,8 +14,8 @@ import org.springframework.security.oauth2.server.resource.authentication.Reacti
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.grantedauthorities.CustomReactiveJwtGrantedAuthoritiesConverter;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifiers.JWTValidityVerifier;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifiers.JWTTypeVerifier;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifiers.JWTValidityVerifier;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAccessDeniedHandler;
 import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAuthenticationEntryPoint;
 
@@ -35,6 +35,7 @@ public class SecurityConfig {
     private final List<String> getEndpoints = List.of(
             "*/points",
             "*/authentication/authenticate",
+            "*/authentication/authenticate/*",
             "*/email-verification/verify/*",
             "*/reset-password/initiate",
             "*/reset-password/verify/*",

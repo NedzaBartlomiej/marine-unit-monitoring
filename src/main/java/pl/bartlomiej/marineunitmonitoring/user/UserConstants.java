@@ -10,6 +10,7 @@ public final class UserConstants implements CommonFields {
     public static final String IS_LOCKED = "isLocked";
     public static final String PASSWORD = "password";
     public static final String TRUSTED_IP_ADDRESSES = "trustedIpAddresses";
+    public static final String IS_TWO_FACTOR_AUTH_ENABLED = "isTwoFactorAuthEnabled";
 
     private UserConstants() {
     }

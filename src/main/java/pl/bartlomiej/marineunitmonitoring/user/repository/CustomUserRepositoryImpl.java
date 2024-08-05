@@ -79,24 +79,6 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     }
 
     @Override
-    public Mono<Void> updateIsVerified(String id, boolean isVerified) {
-        return customRepository.updateOne(id, UserConstants.IS_VERIFIED, isVerified, User.class)
-                .then();
-    }
-
-    @Override
-    public Mono<Void> updateIsLocked(String id, boolean isLocked) {
-        return customRepository.updateOne(id, UserConstants.IS_LOCKED, isLocked, User.class)
-                .then();
-    }
-
-    @Override
-    public Mono<Void> updatePassword(String id, String password) {
-        return customRepository.updateOne(id, UserConstants.PASSWORD, password, User.class)
-                .then();
-    }
-
-    @Override
     public Mono<Void> pushTrustedIpAddress(String id, String ipAddress) {
         return this.push(id, UserConstants.TRUSTED_IP_ADDRESSES, ipAddress)
                 .then();
