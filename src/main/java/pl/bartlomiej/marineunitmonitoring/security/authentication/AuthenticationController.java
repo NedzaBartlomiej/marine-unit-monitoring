@@ -97,9 +97,9 @@ public class AuthenticationController {
     }
 
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
-    @GetMapping("/invalidate-token")
-    public Mono<ResponseEntity<ResponseModel<Void>>> invalidateToken(ServerWebExchange exchange) {
-        return jwtService.invalidate(
+    @GetMapping("/invalidate-authentication")
+    public Mono<ResponseEntity<ResponseModel<Void>>> invalidateAuthentication(ServerWebExchange exchange) {
+        return jwtService.invalidateAuthentication(
                 jwtService.extract(exchange)
         ).then(just(
                 buildResponse(

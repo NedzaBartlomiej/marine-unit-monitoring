@@ -9,13 +9,13 @@ import java.util.Map;
 
 public interface JWTService {
 
-    Mono<Map<String, String>> createTokens(String uid, String email);
+    Mono<Map<String, String>> issueTokens(String uid, String email);
 
     Mono<Map<String, String>> refreshAccessToken(String refreshToken);
 
     Mono<Boolean> isValid(String token);
 
-    Mono<Void> invalidate(String token);
+    Mono<Void> invalidateAuthentication(String token);
 
     Mono<Void> invalidateAll(String uid);
 

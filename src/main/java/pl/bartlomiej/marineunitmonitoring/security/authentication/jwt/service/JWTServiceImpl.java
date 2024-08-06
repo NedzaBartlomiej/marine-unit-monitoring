@@ -59,10 +59,11 @@ public class JWTServiceImpl implements JWTService {
     }
 
     @Override
-    public Mono<Map<String, String>> createTokens(String uid, String email) {
+    public Mono<Map<String, String>> issueTokens(final String uid, final String email) {
+        final String issueId = UUID.randomUUID().toString();
         return transactionalOperator.transactional(
                 this.invalidateAll(uid)
-                        .then(Mono.zip(this.createRefreshToken(uid, email), this.createAccessToken(uid, email),
+                        .then(Mono.zip(this.issueRefreshToken(uid, email, issueId), this.issueAccessToken(uid, email, issueId),
                                 (refreshToken, accessToken) -> Map.of(
                                         JWTConstants.REFRESH_TOKEN_TYPE, refreshToken,
                                         JWTConstants.ACCESS_TOKEN_TYPE, accessToken
@@ -71,56 +72,57 @@ public class JWTServiceImpl implements JWTService {
         );
     }
 
-    public Mono<String> createAccessToken(String uid, String email) {
+    public Mono<String> issueAccessToken(final String uid, final String email, final String issueId) {
         final Map<String, String> accessTokenCustomClaims = Map.of(
                 JWTConstants.EMAIL_CLAIM, email,
-                JWTConstants.TYPE_CLAIM, JWTConstants.ACCESS_TOKEN_TYPE
+                JWTConstants.TYPE_CLAIM, JWTConstants.ACCESS_TOKEN_TYPE,
+                JWTConstants.ISSUE_ID, issueId
         );
-        return this.issueToken(uid, accessTokenCustomClaims, accessTokenExpirationTime);
+        return this.issueToken(uid, accessTokenCustomClaims, accessTokenExpirationTime, issueId);
     }
 
-    public Mono<String> createRefreshToken(String uid, String email) {
+    public Mono<String> issueRefreshToken(final String uid, final String email, final String issueId) {
         final Map<String, String> refreshTokenCustomClaims = Map.of(
                 JWTConstants.EMAIL_CLAIM, email,
-                JWTConstants.TYPE_CLAIM, JWTConstants.REFRESH_TOKEN_TYPE
+                JWTConstants.TYPE_CLAIM, JWTConstants.REFRESH_TOKEN_TYPE,
+                JWTConstants.ISSUE_ID, issueId
         );
-        return this.issueToken(uid, refreshTokenCustomClaims, refreshTokenExpirationTime);
+        return this.issueToken(uid, refreshTokenCustomClaims, refreshTokenExpirationTime, issueId);
     }
 
     @Override
-    public Mono<Map<String, String>> refreshAccessToken(String refreshToken) {
+    public Mono<Map<String, String>> refreshAccessToken(final String refreshToken) {
         Claims claims = this.extractClaims(refreshToken);
-        String tokenType = (String) claims.get(JWTConstants.TYPE_CLAIM);
         String subject = claims.getSubject();
 
-        if (!tokenType.equals(JWTConstants.REFRESH_TOKEN_TYPE)) throw new InvalidBearerTokenException("Invalid JWT.");
-
-        return userService.getUser(subject)
-                .flatMap(user -> this.invalidate(refreshToken)
-                        .then(this.createTokens(user.getId(), user.getEmail()))
+        return this.performIsNotRefreshToken(refreshToken)
+                .then(userService.getUser(subject))
+                .flatMap(user -> this.invalidateAuthentication(refreshToken)
+                        .then(this.issueTokens(user.getId(), user.getEmail()))
                 );
     }
 
     @Override
-    public Mono<Boolean> isValid(String token) {
+    public Mono<Boolean> isValid(final String token) {
         Claims claims = this.extractClaims(token);
         return mongoJWTEntityRepository.existsById(claims.getId());
     }
 
     @Override
-    public Mono<Void> invalidate(String token) {
-        Claims claims = this.extractClaims(token);
-        log.info("Invalidating JWT.");
-        return mongoJWTEntityRepository.deleteById(claims.getId());
+    public Mono<Void> invalidateAuthentication(final String refreshToken) {
+        Claims claims = this.extractClaims(refreshToken);
+        log.info("Invalidating authentication.");
+        return this.performIsNotRefreshToken(refreshToken)
+                .then(mongoJWTEntityRepository.deleteByIssueId(claims.get(JWTConstants.ISSUE_ID, String.class)));
     }
 
     @Override
-    public Mono<Void> invalidateAll(String uid) {
+    public Mono<Void> invalidateAll(final String uid) {
         log.info("Invalidation of all user's JWTs.");
         return mongoJWTEntityRepository.deleteAllByUid(uid);
     }
 
-    public String extract(ServerWebExchange exchange) {
+    public String extract(final ServerWebExchange exchange) {
         final String authorizationHeaderValue = exchange
                 .getRequest()
                 .getHeaders()
@@ -134,7 +136,7 @@ public class JWTServiceImpl implements JWTService {
                 .substring(this.bearerPrefix.length());
     }
 
-    public Claims extractClaims(String token) {
+    public Claims extractClaims(final String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(this.getSigningKey())
                 .build()
@@ -157,13 +159,25 @@ public class JWTServiceImpl implements JWTService {
                 .subscribe();
     }
 
-    private Mono<String> issueToken(String uid, Map<String, String> customClaims, int expirationTime) {
+    private Mono<Void> performIsNotRefreshToken(final String token) {
+        if (!this.getTokenType(token).equals(JWTConstants.REFRESH_TOKEN_TYPE))
+            return Mono.error(new InvalidBearerTokenException("Invalid JWT."));
+        else
+            return Mono.empty();
+    }
+
+    private String getTokenType(final String token) {
+        return this.extractClaims(token).get(JWTConstants.TYPE_CLAIM, String.class);
+    }
+
+    private Mono<String> issueToken(final String uid, final Map<String, String> customClaims, final int expirationTime, final String issueId) {
         log.info("Issuing new JWT.");
         final String jti = UUID.randomUUID().toString();
         final Date expiration = new Date(System.currentTimeMillis() + expirationTime);
         JWTEntity jwtEntity = new JWTEntity(
                 jti,
                 uid,
+                issueId,
                 LocalDateTime.ofInstant(expiration.toInstant(), ZoneId.systemDefault())
         );
 
@@ -175,7 +189,7 @@ public class JWTServiceImpl implements JWTService {
                 .as(transactionalOperator::transactional);
     }
 
-    private String buildToken(Map<String, String> customClaims, String jti, String uid, Date expiration) {
+    private String buildToken(final Map<String, String> customClaims, final String jti, final String uid, final Date expiration) {
         log.info("Building new JWT.");
         return Jwts.builder()
                 .setClaims(customClaims)

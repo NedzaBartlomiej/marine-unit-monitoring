@@ -26,10 +26,10 @@ import java.util.stream.Collectors;
 public class JWTTypeVerifier extends AbstractJWTVerifier implements WebFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JWTTypeVerifier.class);
-    private final ServerAuthenticationFailureHandler serverAuthenticationFailureHandler;
+    private final ServerAuthenticationFailureHandler serverAuthenticationFailureHandler; // todo maybe some refactor this list
     private final List<String> refreshTokenPaths = List.of(
             "/authentication/refresh-access-token",
-            "/authentication/invalidate-token"
+            "/authentication/invalidate-authentication"
     );
 
     public JWTTypeVerifier(JWTService jwtService,

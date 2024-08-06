@@ -5,4 +5,6 @@ import reactor.core.publisher.Mono;
 
 public interface MongoJWTEntityRepository extends ReactiveMongoRepository<JWTEntity, String> {
     Mono<Void> deleteAllByUid(String uid);
+
+    Mono<Void> deleteByIssueId(String issueId);
 }

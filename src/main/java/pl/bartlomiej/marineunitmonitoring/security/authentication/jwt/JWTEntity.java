@@ -8,14 +8,16 @@ import java.time.LocalDateTime;
 public class JWTEntity {
     private String id;
     private String uid;
+    private String issueId;
     private LocalDateTime expiration;
 
     public JWTEntity() {
     }
 
-    public JWTEntity(String id, String uid, LocalDateTime expiration) {
+    public JWTEntity(String id, String uid, String issueId, LocalDateTime expiration) {
         this.id = id;
         this.uid = uid;
+        this.issueId = issueId;
         this.expiration = expiration;
     }
 
@@ -33,5 +35,13 @@ public class JWTEntity {
 
     public void setUid(String uid) {
         this.uid = uid;
+    }
+
+    public String getIssueId() {
+        return issueId;
+    }
+
+    public void setIssueId(String issueId) {
+        this.issueId = issueId;
     }
 }
