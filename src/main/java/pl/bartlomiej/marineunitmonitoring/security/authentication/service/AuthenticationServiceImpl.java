@@ -55,7 +55,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private Mono<AuthResponse> createAuthResponse(User user) {
-        return jwtService.createTokenPacket(user.getId(), user.getEmail())
+        return jwtService.createTokens(user.getId(), user.getEmail())
                 .map(tokens -> new AuthResponse("AUTHENTICATED", tokens));
     }
 }

@@ -15,8 +15,7 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.server.ServerWebExchange;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTConstants;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTEntity;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.repository.CustomJWTEntityRepository;
-import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.repository.MongoJWTEntityRepository;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.MongoJWTEntityRepository;
 import pl.bartlomiej.marineunitmonitoring.user.service.UserService;
 import reactor.core.publisher.Mono;
 
@@ -35,7 +34,6 @@ public class JWTServiceImpl implements JWTService {
     public final String tokenIssuer;
     private final String bearerPrefix;
     private final MongoJWTEntityRepository mongoJWTEntityRepository;
-    private final CustomJWTEntityRepository customJWTEntityRepository;
     private final UserService userService;
     private final int refreshTokenExpirationTime;
     private final int accessTokenExpirationTime;
@@ -49,7 +47,7 @@ public class JWTServiceImpl implements JWTService {
                           @Value("${project-properties.expiration-times.jwt.access-token}") int accessTokenExpirationTime,
                           @Value("${secrets.jwt.secret-key}") String secretKey,
                           @Value("${project-properties.security.token.bearer.type}") String bearerType,
-                          CustomJWTEntityRepository customJWTEntityRepository, TransactionalOperator transactionalOperator) {
+                          TransactionalOperator transactionalOperator) {
         this.bearerPrefix = bearerType + " ";
         this.mongoJWTEntityRepository = mongoJWTEntityRepository;
         this.userService = userService;
@@ -57,22 +55,22 @@ public class JWTServiceImpl implements JWTService {
         this.refreshTokenExpirationTime = refreshTokenExpirationTime;
         this.accessTokenExpirationTime = accessTokenExpirationTime;
         this.secretKey = secretKey;
-        this.customJWTEntityRepository = customJWTEntityRepository;
         this.transactionalOperator = transactionalOperator;
     }
 
     @Override
-    public Mono<Map<String, String>> createTokenPacket(String uid, String email) {
-        return Mono.zip(this.createRefreshToken(uid, email), this.createAccessToken(uid, email),
-                (refreshToken, accessToken) ->
-                        Map.of(
-                                JWTConstants.REFRESH_TOKEN_TYPE, refreshToken,
-                                JWTConstants.ACCESS_TOKEN_TYPE, accessToken
-                        )
+    public Mono<Map<String, String>> createTokens(String uid, String email) {
+        return transactionalOperator.transactional(
+                this.invalidateAll(uid)
+                        .then(Mono.zip(this.createRefreshToken(uid, email), this.createAccessToken(uid, email),
+                                (refreshToken, accessToken) -> Map.of(
+                                        JWTConstants.REFRESH_TOKEN_TYPE, refreshToken,
+                                        JWTConstants.ACCESS_TOKEN_TYPE, accessToken
+                                )
+                        ))
         );
     }
 
-    @Override
     public Mono<String> createAccessToken(String uid, String email) {
         final Map<String, String> accessTokenCustomClaims = Map.of(
                 JWTConstants.EMAIL_CLAIM, email,
@@ -81,7 +79,6 @@ public class JWTServiceImpl implements JWTService {
         return this.issueToken(uid, accessTokenCustomClaims, accessTokenExpirationTime);
     }
 
-    @Override
     public Mono<String> createRefreshToken(String uid, String email) {
         final Map<String, String> refreshTokenCustomClaims = Map.of(
                 JWTConstants.EMAIL_CLAIM, email,
@@ -100,28 +97,27 @@ public class JWTServiceImpl implements JWTService {
 
         return userService.getUser(subject)
                 .flatMap(user -> this.invalidate(refreshToken)
-                        .then(this.createTokenPacket(user.getId(), user.getEmail()))
+                        .then(this.createTokens(user.getId(), user.getEmail()))
                 );
     }
 
     @Override
     public Mono<Boolean> isValid(String token) {
         Claims claims = this.extractClaims(token);
-        return mongoJWTEntityRepository.findById(claims.getId())
-                .map(JWTEntity::getValid);
+        return mongoJWTEntityRepository.existsById(claims.getId());
     }
 
     @Override
     public Mono<Void> invalidate(String token) {
         Claims claims = this.extractClaims(token);
         log.info("Invalidating JWT.");
-        return customJWTEntityRepository.updateIsValid(claims.getId(), false);
+        return mongoJWTEntityRepository.deleteById(claims.getId());
     }
 
     @Override
     public Mono<Void> invalidateAll(String uid) {
         log.info("Invalidation of all user's JWTs.");
-        return customJWTEntityRepository.updateIsValidByUid(uid, false);
+        return mongoJWTEntityRepository.deleteAllByUid(uid);
     }
 
     public String extract(ServerWebExchange exchange) {
@@ -161,7 +157,6 @@ public class JWTServiceImpl implements JWTService {
                 .subscribe();
     }
 
-    // todo - when issuing new token - invalidate all previous user tokens (impl it as transaction with issuing)
     private Mono<String> issueToken(String uid, Map<String, String> customClaims, int expirationTime) {
         log.info("Issuing new JWT.");
         final String jti = UUID.randomUUID().toString();
@@ -174,7 +169,6 @@ public class JWTServiceImpl implements JWTService {
 
         log.info("Saving new JWT.");
         return mongoJWTEntityRepository.save(jwtEntity)
-                // this.invalidateAll()
                 .then(Mono.fromCallable(() -> this.buildToken(customClaims, jti, uid, expiration)))
                 .doOnSuccess(token -> log.info("JWT successfully issued."))
                 .doOnError(error -> log.error("Failed to issue JWT: {}", error.getMessage()))

@@ -62,7 +62,7 @@ public class TwoFactorAuthServiceImpl extends AbstractVerificationTokenService<T
         log.info("Performing two factor auth verified token action:");
         return mongoVerificationTokenRepository.delete(verificationToken)
                 .then(userService.getUser(verificationToken.getUid())
-                        .flatMap(user -> jwtService.createTokenPacket(user.getId(), user.getEmail()))
+                        .flatMap(user -> jwtService.createTokens(user.getId(), user.getEmail()))
                 );
     }
 

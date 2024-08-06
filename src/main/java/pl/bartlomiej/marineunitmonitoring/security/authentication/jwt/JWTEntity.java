@@ -9,7 +9,6 @@ public class JWTEntity {
     private String id;
     private String uid;
     private LocalDateTime expiration;
-    private Boolean isValid;
 
     public JWTEntity() {
     }
@@ -18,7 +17,6 @@ public class JWTEntity {
         this.id = id;
         this.uid = uid;
         this.expiration = expiration;
-        this.isValid = true;
     }
 
     public String getId() {
@@ -27,14 +25,6 @@ public class JWTEntity {
 
     public LocalDateTime getExpiration() {
         return expiration;
-    }
-
-    public Boolean getValid() {
-        return isValid;
-    }
-
-    public void setValid(Boolean valid) {
-        isValid = valid;
     }
 
     public String getUid() {

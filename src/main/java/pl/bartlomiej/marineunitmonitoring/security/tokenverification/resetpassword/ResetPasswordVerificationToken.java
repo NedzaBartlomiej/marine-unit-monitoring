@@ -1,9 +1,7 @@
 package pl.bartlomiej.marineunitmonitoring.security.tokenverification.resetpassword;
 
-import org.springframework.data.mongodb.core.mapping.Document;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationToken;
 
-@Document(collection = "verification_tokens")
 public class ResetPasswordVerificationToken extends VerificationToken {
 
     private Boolean isVerified;
