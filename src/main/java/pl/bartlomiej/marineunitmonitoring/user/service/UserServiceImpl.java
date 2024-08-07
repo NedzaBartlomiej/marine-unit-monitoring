@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NoContentException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.UniqueEmailException;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.RegisterBasedUserNotFoundException;
@@ -15,6 +16,7 @@ import pl.bartlomiej.marineunitmonitoring.user.User;
 import pl.bartlomiej.marineunitmonitoring.user.UserConstants;
 import pl.bartlomiej.marineunitmonitoring.user.repository.CustomUserRepository;
 import pl.bartlomiej.marineunitmonitoring.user.repository.MongoUserRepository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -55,6 +57,12 @@ public class UserServiceImpl implements UserService {
     public Mono<User> getUserByEmail(String email) {
         return mongoUserRepository.findByEmail(email)
                 .switchIfEmpty(error(NotFoundException::new));
+    }
+
+    @Override
+    public Flux<String> getAllEmails() {
+        return customUserRepository.findAllEmails()
+                .switchIfEmpty(error(NoContentException::new));
     }
 
     @Override

@@ -19,5 +19,7 @@ public interface CustomUserRepository {
 
     Mono<User> findByOpenId(String openId);
 
+    Flux<String> findAllEmails();
+
     Mono<Void> pushTrustedIpAddress(String id, String ipAddress);
 }

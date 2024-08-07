@@ -79,6 +79,15 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     }
 
     @Override
+    public Flux<String> findAllEmails() {
+        return reactiveMongoTemplate.findDistinct(
+                UserConstants.EMAIL,
+                User.class,
+                String.class
+        );
+    }
+
+    @Override
     public Mono<Void> pushTrustedIpAddress(String id, String ipAddress) {
         return this.push(id, UserConstants.TRUSTED_IP_ADDRESSES, ipAddress)
                 .then();

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>Template</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap');
+
+        body, table, td, a {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font-family: Arial, sans-serif;
+            text-decoration: none;
+            color: #000;
+        }
+
+        body {
+            background-color: #eee;
+        }
+
+        .container {
+            width: 100%;
+            padding: 20px;
+            background-color: #eee;
+        }
+
+        .card {
+            width: 100%;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .title-section, .description-section {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .title-section img {
+            height: 100px;
+            border-radius: 50%;
+        }
+
+        h2 {
+            margin: 20px 0 0 0;
+        }
+
+        .separation-line {
+            background-color: #ccc;
+            height: 1px;
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        .verification-link {
+            display: inline-block;
+            border-radius: 5px;
+            padding: 10px 20px;
+            color: #ffffff !important;
+            text-decoration: none;
+            background-color: rgb(101, 101, 255) !important;
+            margin-top: 18px;
+            font-weight: bold;
+        }
+
+        .verification-link:hover {
+            background-color: rgb(86, 86, 236) !important;
+        }
+
+        h2 {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<table class="container" role="presentation">
+    <tr>
+        <td>
+            <table class="card" role="presentation">
+                <tr>
+                    <td class="title-section">
+                        <img src="cid:app-logo" alt="app-logo" id="app-logo">
+                        <h2 th:text="${title}" style="color: #000000;"></h2>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="separation-line"></td>
+                </tr>
+                <tr>
+                    <td class="description-section">
+                        <div th:text="${message}" style="color: #000000;"></div>
+                        <a th:href="${verificationLink}" class="verification-link"
+                           style="color: #ffffff; background-color: rgb(101, 101, 255); text-decoration: none; display: inline-block;"
+                           th:text="${verificationButtonText}"></a>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

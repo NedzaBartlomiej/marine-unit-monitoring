@@ -37,8 +37,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private Mono<Authentication> authenticateUser(User user, String passwordCredential) {
-        var authenticationToken = new UsernamePasswordAuthenticationToken(user.getId(), passwordCredential);
-        return authenticationManager.authenticate(authenticationToken);
+        var unauthenticated = UsernamePasswordAuthenticationToken.unauthenticated(user.getId(), passwordCredential);
+        return authenticationManager.authenticate(unauthenticated);
     }
 
     private Mono<AuthResponse> processAuthentication(User user) {

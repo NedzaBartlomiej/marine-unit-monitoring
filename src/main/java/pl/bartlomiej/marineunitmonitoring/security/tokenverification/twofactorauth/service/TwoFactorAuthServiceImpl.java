@@ -4,7 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
+import org.springframework.transaction.annotation.Transactional;
+import pl.bartlomiej.marineunitmonitoring.emailsending.common.EmailService;
+import pl.bartlomiej.marineunitmonitoring.emailsending.verificationemail.VerificationEmail;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenConstants;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenType;
@@ -16,6 +18,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
+import static reactor.core.publisher.Mono.just;
+
 @Service
 public class TwoFactorAuthServiceImpl extends AbstractVerificationTokenService<TwoFactorAuthVerificationToken, Void, Map<String, String>> implements TwoFactorAuthService {
 
@@ -25,7 +29,7 @@ public class TwoFactorAuthServiceImpl extends AbstractVerificationTokenService<T
     private final JWTService jwtService;
     private final long twoFactorAuthTokenExpirationTime;
 
-    protected TwoFactorAuthServiceImpl(EmailService emailService,
+    protected TwoFactorAuthServiceImpl(EmailService<VerificationEmail> emailService,
                                        MongoTwoFactorAuthVerificationTokenRepository mongoVerificationTokenRepository,
                                        UserService userService,
                                        @Value("${project-properties.expiration-times.verification.two-fa-token}") long twoFactorAuthTokenExpirationTime, JWTService jwtService) {
@@ -36,9 +40,12 @@ public class TwoFactorAuthServiceImpl extends AbstractVerificationTokenService<T
         this.jwtService = jwtService;
     }
 
+    @Transactional(transactionManager = "reactiveTransactionManager")
     @Override
     public Mono<Void> issue(String uid, Void unused) {
         return userService.getUser(uid)
+                .flatMap(user -> mongoVerificationTokenRepository.deleteByUid(user.getId())
+                        .then(just(user)))
                 .flatMap(user -> super.processIssue(
                         user,
                         new TwoFactorAuthVerificationToken(
@@ -68,16 +75,16 @@ public class TwoFactorAuthServiceImpl extends AbstractVerificationTokenService<T
 
     @Override
     protected Mono<Void> sendVerificationToken(String target, String title, String token) {
-        return super.sendVerificationEmail(target, title, token);
+        return super.sendVerificationEmail(target, title, token, token);
     }
 
     @Override
-    protected String buildVerificationMessage(String verificationItem) {
-        return "Your two factor authentication code: " + verificationItem;
+    protected String getVerificationMessage() {
+        return "Your two factor authentication code:";
     }
 
     @Override
-    protected String buildVerificationItem(String token) {
-        return token;
+    protected String getVerificationLink(String token) {
+        return "";
     }
 }

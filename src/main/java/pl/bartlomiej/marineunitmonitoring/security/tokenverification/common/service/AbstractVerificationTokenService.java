@@ -5,7 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidVerificationTokenException;
-import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
+import pl.bartlomiej.marineunitmonitoring.emailsending.common.EmailService;
+import pl.bartlomiej.marineunitmonitoring.emailsending.verificationemail.VerificationEmail;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationToken;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.repository.MongoVerificationTokenRepository;
 import pl.bartlomiej.marineunitmonitoring.user.User;
@@ -21,11 +22,12 @@ import static reactor.core.publisher.Mono.*;
 public abstract class AbstractVerificationTokenService<T extends VerificationToken, CarrierObject, VerifiedActionObject> implements VerificationTokenService<T, CarrierObject, VerifiedActionObject> {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractVerificationTokenService.class);
-    private final EmailService emailService;
+    private final EmailService<VerificationEmail> emailService;
     private final UserService userService;
     private final MongoVerificationTokenRepository<T> mongoVerificationTokenRepository;
 
-    protected AbstractVerificationTokenService(EmailService emailService, UserService userService,
+    protected AbstractVerificationTokenService(EmailService<VerificationEmail> emailService,
+                                               UserService userService,
                                                MongoVerificationTokenRepository<T> mongoVerificationTokenRepository) {
         this.emailService = emailService;
         this.userService = userService;
@@ -34,9 +36,9 @@ public abstract class AbstractVerificationTokenService<T extends VerificationTok
 
     protected abstract Mono<Void> sendVerificationToken(String target, String title, String token);
 
-    protected abstract String buildVerificationMessage(String verificationItem);
+    protected abstract String getVerificationMessage();
 
-    protected abstract String buildVerificationItem(String token);
+    protected abstract String getVerificationLink(String token);
 
     @Override
     public Mono<T> getVerificationToken(String id) {
@@ -56,6 +58,7 @@ public abstract class AbstractVerificationTokenService<T extends VerificationTok
         return empty();
     }
 
+    @Transactional(transactionManager = "reactiveTransactionManager")
     protected Mono<Void> processIssue(User user, T verificationToken, Function<T, String> getTokenField, String emailTitle) {
         log.info("Issuing {} token.", verificationToken.getType().toLowerCase());
         return just(user)
@@ -67,17 +70,21 @@ public abstract class AbstractVerificationTokenService<T extends VerificationTok
                 ));
     }
 
-    protected Mono<T> saveVerificationToken(T verificationToken) {
+    protected Mono<T> saveVerificationToken(final T verificationToken) {
         log.info("Saving new {}", verificationToken.getType().toLowerCase());
         return mongoVerificationTokenRepository.save(verificationToken);
     }
 
-    protected Mono<Void> sendVerificationEmail(String email, String title, String token) {
+    protected Mono<Void> sendVerificationEmail(final String email, final String title, final String token, final String verificationButtonText) {
         log.info("Sending verification email.");
         return emailService.sendEmail(
-                email,
-                title,
-                this.buildVerificationMessage(this.buildVerificationItem(token))
+                new VerificationEmail(
+                        email,
+                        title,
+                        this.getVerificationMessage(),
+                        this.getVerificationLink(token),
+                        verificationButtonText
+                )
         );
     }
 

@@ -4,7 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
+import pl.bartlomiej.marineunitmonitoring.emailsending.common.EmailService;
+import pl.bartlomiej.marineunitmonitoring.emailsending.verificationemail.VerificationEmail;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenConstants;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenType;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.repository.MongoVerificationTokenRepository;
@@ -25,7 +26,7 @@ public class EmailVerificationServiceImpl extends AbstractVerificationTokenServi
 
     public EmailVerificationServiceImpl(
             UserService userService,
-            EmailService emailService,
+            EmailService<VerificationEmail> emailService,
             @Value("${project-properties.expiration-times.verification.email-token}") long emailTokenExpirationTime,
             @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
             @Value("${project-properties.app.frontend-integration.endpoint-paths.email-verification}") String frontendEmailVerificationPath,
@@ -72,14 +73,16 @@ public class EmailVerificationServiceImpl extends AbstractVerificationTokenServi
 
     @Override
     protected Mono<Void> sendVerificationToken(String target, String title, String token) {
-        return super.sendVerificationEmail(target, title, token);
+        return super.sendVerificationEmail(target, title, token, "Verify");
     }
 
-    protected String buildVerificationMessage(String verificationItem) {
-        return "To verify your email click this link: " + verificationItem;
+    @Override
+    protected String getVerificationMessage() {
+        return "To verify your email click this link:";
     }
 
-    protected String buildVerificationItem(String token) {
+    @Override
+    protected String getVerificationLink(String token) {
         return this.frontendUrl + this.frontendEmailVerificationPath + "/" + token;
     }
 }

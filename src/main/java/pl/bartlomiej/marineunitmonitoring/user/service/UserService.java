@@ -1,6 +1,7 @@
 package pl.bartlomiej.marineunitmonitoring.user.service;
 
 import pl.bartlomiej.marineunitmonitoring.user.User;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface UserService {
@@ -8,6 +9,8 @@ public interface UserService {
     Mono<User> getUser(String id);
 
     Mono<User> getUserByEmail(String email);
+
+    Flux<String> getAllEmails();
 
     Mono<User> createUser(User user, String ipAddress);
 

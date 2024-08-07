@@ -5,6 +5,7 @@ import pl.bartlomiej.marineunitmonitoring.common.util.CommonFields;
 public final class UserConstants implements CommonFields {
 
     public static final String TRACKED_SHIPS = "trackedShips";
+    public static final String EMAIL = "email";
     public static final String OPEN_IDS = "openIds";
     public static final String IS_VERIFIED = "isVerified";
     public static final String IS_LOCKED = "isLocked";

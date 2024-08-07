@@ -5,7 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
+import pl.bartlomiej.marineunitmonitoring.emailsending.common.EmailService;
+import pl.bartlomiej.marineunitmonitoring.emailsending.verificationemail.VerificationEmail;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenConstants;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenType;
@@ -29,12 +30,13 @@ public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenServic
     private final String frontendUntrustedAuthenticationPath;
     private final JWTService jwtService;
 
-    public IpAuthProtectionServiceImpl(EmailService emailService,
+    public IpAuthProtectionServiceImpl(EmailService<VerificationEmail> emailService,
                                        MongoVerificationTokenRepository<IpAuthProtectionVerificationToken> mongoVerificationTokenRepository,
                                        UserService userService,
                                        @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
                                        @Value("${project-properties.expiration-times.verification.ip-address-token}") long ipAuthProtectionTokenExpirationTime,
-                                       @Value("${project-properties.app.frontend-integration.endpoint-paths.untrusted-authentication}") String frontendUntrustedAuthenticationPath, JWTService jwtService) {
+                                       @Value("${project-properties.app.frontend-integration.endpoint-paths.untrusted-authentication}") String frontendUntrustedAuthenticationPath,
+                                       JWTService jwtService) {
         super(emailService, userService, mongoVerificationTokenRepository);
         this.frontendUrl = frontendUrl;
         this.userService = userService;
@@ -68,16 +70,16 @@ public class IpAuthProtectionServiceImpl extends AbstractVerificationTokenServic
 
     @Override
     protected Mono<Void> sendVerificationToken(String target, String title, String token) {
-        return super.sendVerificationEmail(target, title, token);
+        return super.sendVerificationEmail(target, title, token, "Check");
     }
 
     @Override
-    protected String buildVerificationMessage(String verificationItem) {
-        return "We have detected untrusted authentication activity on your account, please check it: " + verificationItem;
+    protected String getVerificationMessage() {
+        return "We have detected untrusted authentication activity on your account, please check it:";
     }
 
     @Override
-    protected String buildVerificationItem(String token) {
+    protected String getVerificationLink(String token) {
         return frontendUrl + frontendUntrustedAuthenticationPath + "/" + token;
     }
 

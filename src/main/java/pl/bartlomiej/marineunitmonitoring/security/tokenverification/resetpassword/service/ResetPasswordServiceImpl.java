@@ -8,7 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.AlreadyVerifiedException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidVerificationTokenException;
 import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.NotFoundException;
-import pl.bartlomiej.marineunitmonitoring.emailsending.EmailService;
+import pl.bartlomiej.marineunitmonitoring.emailsending.common.EmailService;
+import pl.bartlomiej.marineunitmonitoring.emailsending.verificationemail.VerificationEmail;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenConstants;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.VerificationTokenType;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.common.repository.MongoVerificationTokenRepository;
@@ -35,7 +36,7 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService<R
     public ResetPasswordServiceImpl(UserService userService,
                                     CustomResetPasswordVerificationTokenRepository customResetPasswordVerificationTokenRepository,
                                     MongoVerificationTokenRepository<ResetPasswordVerificationToken> mongoVerificationTokenRepository,
-                                    EmailService emailService,
+                                    EmailService<VerificationEmail> emailService,
                                     @Value("${project-properties.expiration-times.verification.reset-password}") long resetPasswordTokenExpirationTime,
                                     @Value("${project-properties.app.frontend-integration.base-url}") String frontendUrl,
                                     @Value("${project-properties.app.frontend-integration.endpoint-paths.reset-password}") String frontendResetPasswordPath) {
@@ -51,6 +52,7 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService<R
     /**
      * @throws NotFoundException when the user is based only on OAuth2 data (when the user isn't created by registration)
      */
+    @Transactional(transactionManager = "reactiveTransactionManager")
     @Override
     public Mono<Void> issue(String email, Void carrierObject) {
         return userService.getUserByEmail(email)
@@ -95,16 +97,16 @@ public class ResetPasswordServiceImpl extends AbstractVerificationTokenService<R
 
     @Override
     protected Mono<Void> sendVerificationToken(String target, String title, String token) {
-        return super.sendVerificationEmail(target, title, token);
+        return super.sendVerificationEmail(target, title, token, "Reset password");
     }
 
     @Override
-    protected String buildVerificationMessage(String verificationItem) {
-        return "To reset password click this link: " + verificationItem;
+    protected String getVerificationMessage() {
+        return "To reset password click this link:";
     }
 
     @Override
-    protected String buildVerificationItem(String token) {
+    protected String getVerificationLink(String token) {
         return this.frontendUrl + this.frontendResetPasswordPath + "/" + token;
     }
 
