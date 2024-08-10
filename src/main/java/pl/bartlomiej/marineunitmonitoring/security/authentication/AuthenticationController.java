@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import pl.bartlomiej.marineunitmonitoring.common.util.ControllerResponseUtil;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.refreshtokenendpoint.RefreshTokenConsumer;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.service.AuthenticationService;
 import pl.bartlomiej.marineunitmonitoring.security.tokenverification.twofactorauth.service.TwoFactorAuthService;
@@ -78,11 +79,15 @@ public class AuthenticationController {
                 );
     }
 
+    @RefreshTokenConsumer
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
     @GetMapping("/refresh-access-token")
     public Mono<ResponseEntity<ResponseModel<Map<String, String>>>> refreshAccessToken(ServerWebExchange exchange) {
+        String token = jwtService.extract(exchange);
         return jwtService.refreshAccessToken(
-                jwtService.extract(exchange)
+                token,
+                jwtService.extractSubject(token),
+                jwtService.extractEmail(token)
         ).map(tokens ->
                 buildResponse(
                         OK,
@@ -96,6 +101,7 @@ public class AuthenticationController {
         );
     }
 
+    @RefreshTokenConsumer
     @PreAuthorize("hasRole(T(pl.bartlomiej.marineunitmonitoring.user.nested.Role).SIGNED.name())")
     @GetMapping("/invalidate-authentication")
     public Mono<ResponseEntity<ResponseModel<Void>>> invalidateAuthentication(ServerWebExchange exchange) {

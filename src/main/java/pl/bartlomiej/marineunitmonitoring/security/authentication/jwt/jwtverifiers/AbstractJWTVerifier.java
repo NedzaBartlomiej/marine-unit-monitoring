@@ -7,18 +7,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTConstants;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
 import reactor.core.publisher.Mono;
 
 public abstract class AbstractJWTVerifier {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractJWTVerifier.class);
-    private final String bearerRegex;
     private final JWTService jwtService;
 
-    protected AbstractJWTVerifier(JWTService jwtService, String bearerRegex) {
+    protected AbstractJWTVerifier(JWTService jwtService) {
         this.jwtService = jwtService;
-        this.bearerRegex = bearerRegex;
     }
 
     protected Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain, boolean shouldNotFilter) {
@@ -50,7 +49,7 @@ public abstract class AbstractJWTVerifier {
             log.error("Authorization header doesn't exist, or is empty.");
             return true;
         }
-        if (!authHeader.matches(this.bearerRegex)) {
+        if (!authHeader.matches(JWTConstants.BEARER_REGEX)) {
             log.error("Authorization header is not matching with bearer token requirements.");
             return true;
         }

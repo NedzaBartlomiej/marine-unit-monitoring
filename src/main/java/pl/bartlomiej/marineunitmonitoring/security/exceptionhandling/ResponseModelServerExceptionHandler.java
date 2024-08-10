@@ -11,9 +11,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidJWTException;
 import pl.bartlomiej.marineunitmonitoring.common.error.authexceptions.UnverifiedAccountException;
 import pl.bartlomiej.marineunitmonitoring.common.helper.ResponseModel;
 import reactor.core.publisher.Flux;
@@ -57,7 +57,7 @@ public abstract class ResponseModelServerExceptionHandler {
                 return writeExchange(exchange,
                         buildErrorResponse(UNAUTHORIZED, unverifiedAccountException.getMessage()));
             }
-            case InvalidBearerTokenException ignoredInvalidBearerTokenException -> {
+            case InvalidJWTException ignoredInvalidJWTException -> {
                 return writeExchange(exchange,
                         buildErrorResponse(UNAUTHORIZED, SecurityError.INVALID_TOKEN.getMessage()));
             }

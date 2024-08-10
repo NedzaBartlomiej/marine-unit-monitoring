@@ -26,7 +26,7 @@ public class HereGeocodeServiceImpl implements GeocodeService {
     private final String geocodeApiKey;
 
     public HereGeocodeServiceImpl(WebClient webClient,
-                                  @Value("${secrets.geocode-api.api-key}") String geocodeApiKey) {
+                                  @Value("${geocode-api.api-key}") String geocodeApiKey) {
         this.webClient = webClient;
         this.geocodeApiKey = geocodeApiKey;
     }

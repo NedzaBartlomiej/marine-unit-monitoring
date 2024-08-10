@@ -3,10 +3,9 @@ package pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.jwtverifi
 import io.jsonwebtoken.Claims;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.server.PathContainer;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.lang.NonNull;
-import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
+import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.ServerAuthenticationEntryPointFailureHandler;
 import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
@@ -14,29 +13,27 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import pl.bartlomiej.marineunitmonitoring.common.error.apiexceptions.InvalidJWTException;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.JWTConstants;
+import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.refreshtokenendpoint.RefreshTokenEndpointsProvider;
 import pl.bartlomiej.marineunitmonitoring.security.authentication.jwt.service.JWTService;
-import pl.bartlomiej.marineunitmonitoring.security.exceptionhandling.ResponseModelServerAuthenticationEntryPoint;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class JWTTypeVerifier extends AbstractJWTVerifier implements WebFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JWTTypeVerifier.class);
     private final ServerAuthenticationFailureHandler serverAuthenticationFailureHandler; // todo maybe some refactor this list
-    private final List<String> refreshTokenPaths = List.of(
-            "/authentication/refresh-access-token",
-            "/authentication/invalidate-authentication"
-    );
+    private final List<String> refreshTokenPaths;
 
     public JWTTypeVerifier(JWTService jwtService,
-                           ResponseModelServerAuthenticationEntryPoint serverAuthenticationEntryPoint,
-                           @Value("${project-properties.security.token.bearer.regex}") String bearerRegex) {
-        super(jwtService, bearerRegex);
+                           @Qualifier("responseModelServerAuthenticationEntryPoint") ServerAuthenticationEntryPoint serverAuthenticationEntryPoint,
+                           RefreshTokenEndpointsProvider refreshTokenEndpointsProvider) {
+        super(jwtService);
         this.serverAuthenticationFailureHandler = new ServerAuthenticationEntryPointFailureHandler(serverAuthenticationEntryPoint);
+        this.refreshTokenPaths = refreshTokenEndpointsProvider.getRefreshTokenPaths();
     }
 
     @NonNull
@@ -53,12 +50,12 @@ public class JWTTypeVerifier extends AbstractJWTVerifier implements WebFilter {
                 .flatMap(type -> {
                     if (type.equals(JWTConstants.REFRESH_TOKEN_TYPE)) {
                         log.info("Invalid JWT.");
-                        return Mono.error(new InvalidBearerTokenException("Invalid JWT."));
+                        return Mono.error(new InvalidJWTException());
                     }
                     log.info("Valid JWT, forwarding to further flow.");
                     return chain.filter(exchange);
                 })
-                .onErrorResume(InvalidBearerTokenException.class, ex ->
+                .onErrorResume(InvalidJWTException.class, ex ->
                         serverAuthenticationFailureHandler.onAuthenticationFailure(
                                 new WebFilterExchange(exchange, chain), ex)
                 );
@@ -66,20 +63,10 @@ public class JWTTypeVerifier extends AbstractJWTVerifier implements WebFilter {
 
     @Override
     protected boolean shouldNotFilter(ServerWebExchange exchange) {
-        String uriWithoutVersion = this.cutVersionFromUrl(
-                exchange.getRequest().getPath().pathWithinApplication()
-        );
-        if (refreshTokenPaths.contains(uriWithoutVersion)) {
+        if (refreshTokenPaths.contains(exchange.getRequest().getPath().pathWithinApplication().value())) {
             log.info("Refresh access token request, forwarding to further flow..");
             return true;
         }
         return super.shouldNotFilter(exchange);
-    }
-
-    private String cutVersionFromUrl(PathContainer pathContainer) {
-        return pathContainer.elements().stream()
-                .skip(2)
-                .map(PathContainer.Element::value)
-                .collect(Collectors.joining());
     }
 }

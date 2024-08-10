@@ -7,6 +7,7 @@ spring:
       host: redis
       port: 6379
 
+
 project-properties:
   app:
     frontend-integration:
@@ -30,23 +31,18 @@ project-properties:
     in-ms:
       ship-tracking:
         saving: 300000 # 5min
-      jwt-blacklist:
-        clearing: 86400000 # 24h
       verification-tokens:
         clearing: 86400000 # 24h
   expiration-times:
-    jwt:
-      refresh-token: 86400000 # ms - 24h
-      access-token: 3600000 # ms - 1h
     verification:
       email-token: 86400000 # 24h
       reset-password: 86400000 # 24h
       ip-address-token: 86400000 # 24h
       two-fa-token: 300000 # 5min
-  security:
-    token:
-      bearer:
-        type: Bearer
-        regex: ^Bearer\s+(\S+)
-    jwt:
-      issuer: marine-unit-monitoring
+
+jwt:
+  issuer: marine-unit-monitoring
+  expiration:
+    refresh-token: 86400000 # ms - 24h
+    access-token: 3600000 # ms - 1h
+  store-clearing: 86400000 # 24h

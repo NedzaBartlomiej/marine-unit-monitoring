@@ -11,17 +11,21 @@ public interface JWTService {
 
     Mono<Map<String, String>> issueTokens(String uid, String email);
 
-    Mono<Map<String, String>> refreshAccessToken(String refreshToken);
+    Mono<Map<String, String>> refreshAccessToken(String refreshToken, String uid, String email);
 
     Mono<Boolean> isValid(String token);
 
-    Mono<Void> invalidateAuthentication(String token);
+    Mono<Void> invalidateAuthentication(String refreshToken);
 
     Mono<Void> invalidateAll(String uid);
 
     String extract(ServerWebExchange exchange);
 
     Claims extractClaims(String token);
+
+    String extractSubject(String token);
+
+    String extractEmail(String token);
 
     Key getSigningKey();
 }

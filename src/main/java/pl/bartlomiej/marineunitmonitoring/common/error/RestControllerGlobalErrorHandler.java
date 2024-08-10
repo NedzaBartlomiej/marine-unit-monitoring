@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -67,8 +66,8 @@ public class RestControllerGlobalErrorHandler {
         return buildErrorResponse(e.getMessage(), CONFLICT);
     }
 
-    @ExceptionHandler({InvalidBearerTokenException.class, JwtException.class})
-    public ResponseEntity<ResponseModel<Void>> handleInvalidBearerTokenException(Exception e) {
+    @ExceptionHandler({InvalidJWTException.class, JwtException.class})
+    public ResponseEntity<ResponseModel<Void>> handleInvalidJWTException(Exception e) {
         log.error("Invalid JWT: {}", e.getMessage());
         return buildErrorResponse(SecurityError.INVALID_TOKEN.getMessage(), UNAUTHORIZED);
     }

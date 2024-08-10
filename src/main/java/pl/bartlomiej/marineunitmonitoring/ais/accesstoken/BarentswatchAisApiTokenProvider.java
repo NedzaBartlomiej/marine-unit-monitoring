@@ -33,11 +33,11 @@ public class BarentswatchAisApiTokenProvider implements AisApiAuthTokenProvider 
     private final String accessTokenApiUrl;
 
     public BarentswatchAisApiTokenProvider(WebClient webClient,
-                                           @Value("${secrets.ais-api.auth.client-id}") String clientId,
-                                           @Value("${secrets.ais-api.auth.scope}") String scope,
-                                           @Value("${secrets.ais-api.auth.client-secret}") String clientSecret,
-                                           @Value("${secrets.ais-api.auth.grant-type}") String grantType,
-                                           @Value("${secrets.ais-api.auth.url}") String accessTokenApiUrl) {
+                                           @Value("${ais-api.auth.client-id}") String clientId,
+                                           @Value("${ais-api.auth.scope}") String scope,
+                                           @Value("${ais-api.auth.client-secret}") String clientSecret,
+                                           @Value("${ais-api.auth.grant-type}") String grantType,
+                                           @Value("${ais-api.auth.url}") String accessTokenApiUrl) {
         this.webClient = webClient;
         this.clientId = clientId;
         this.scope = scope;
